@@ -1,12 +1,10 @@
-import { env } from "@/config/env";
 import express from "express";
-import swaggerUi from "swagger-ui-express";
+import { setupApiDocs } from "../docs";
 import http from "node:http";
 import socketService from "@/infra/services/socket";
 import cookieParser from "cookie-parser";
 import { errorMiddleware } from "@/core/middlewares";
 import { registerRoutes } from "@/routes/index";
-import { swaggerSpec } from "../docs/swagger";
 import applySecurity from "./config/security";
 
 const createApp = () => {
@@ -21,10 +19,7 @@ const createApp = () => {
 
   applySecurity(app);
   registerRoutes(app);
-
-  if (env.NODE_ENV !== "production") {
-    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-  }
+  setupApiDocs(app);
 
   app.use(errorMiddleware.notFoundErrorHandler);
   app.use(errorMiddleware.generalErrorHandler);

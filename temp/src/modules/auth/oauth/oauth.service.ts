@@ -2,12 +2,12 @@ import axios from "axios";
 import { Request } from "express";
 import { env } from "@/config/env";
 import cache from "@/infra/services/cache/index";
-import * as authRepo from "@/modules/auth/auth.repo";
+import AuthRepo from "@/modules/auth/auth.repo";
 import tokenService from "@/modules/auth/tokens/token.service";
-import { ApiError } from "@/core/http";
+import { HttpError } from "@/core/http";
 
 class OAuthService {
-  handleGoogleOAuth = async (code: string, req: Request) => {
+  static handleGoogleOAuth = async (code: string, req: Request) => {
     // 1. Exchange code for access token
     const { data } = await axios.post(
       "https://oauth2.googleapis.com/token",
@@ -35,7 +35,7 @@ class OAuthService {
     const user = userInfoRes.data;
 
     // 3. Check existing user
-    const existingUser = await authRepo.findByEmail(user.email);
+    const existingUser = await AuthRepo.CachedRead.findByEmail(user.email);
 
     let redirectUrl: string;
 
@@ -62,12 +62,12 @@ class OAuthService {
     return { redirectUrl };
   };
 
-  createUserFromOAuth = async (
+  static createUserFromOAuth = async (
     email: string,
     username: string,
     req: Request
   ) => {
-    const createdUser = await authRepo.create({
+    const createdUser = await AuthRepo.Write.create({
       email,
       username,
       authType: "oauth",
@@ -76,11 +76,7 @@ class OAuthService {
     });
 
     if (!createdUser)
-      throw new ApiError({
-        statusCode: 500,
-        message: "Failed to create user",
-        data: { service: "authService.handleUserOAuth" },
-      });
+      throw HttpError.internal("Failed to create user", { code: "USER_CREATION_FAILED", meta: { service: "authService.handleUserOAuth" } });
 
     const { accessToken, refreshToken } =
       await tokenService.generateAndPersistTokens(
@@ -90,12 +86,7 @@ class OAuthService {
       );
 
     if (!accessToken || !refreshToken) {
-      throw new ApiError({
-        statusCode: 500,
-        message: "Failed to generate access and refresh token",
-        code: "INTERNAL_SERVER_ERROR",
-        data: { service: "authService.handleUserOAuth" },
-      });
+      throw HttpError.internal("Failed to generate access and refresh token", { code: "TOKEN_GENERATION_FAILED", meta: { service: "authService.handleUserOAuth" } });
     }
 
     return {
@@ -106,4 +97,4 @@ class OAuthService {
   };
 }
 
-export default new OAuthService();
+export default OAuthService;

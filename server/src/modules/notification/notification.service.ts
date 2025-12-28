@@ -1,33 +1,32 @@
-import { subHours } from "date-fns";
-import { NotificationModel } from "../models/notification.model.js";
 import { v4 as uuid } from "uuid";
-import { io } from "../app.js";
 import { userIdToSocketMap } from "./socket.service.js";
-import { toObjectId } from "../utils/toObject.js";
-import { Types } from "mongoose";
+import NotificationRepo from "./notification.repo.js";
+import socketService from "@/infra/services/socket/index.js";
 
-type TNotificationType =
+const io = socketService.get();
+
+type NotificationType =
   | "general"
   | "upvoted_post"
   | "upvoted_comment"
   | "replied"
   | "posted";
 
-type TBaseNotification = {
-  postId: string;
+type BaseNotification = {
+  postId: number;
   receiverId: string;
-  type: TNotificationType;
+  type: NotificationType;
   content?: string;
 };
-export type TNotification = TBaseNotification & {
+export type Notification = BaseNotification & {
   actorUsernames: string[];
-  _id?: string | Types.ObjectId;
+  id?: number;
 };
-export type TRawNotification = TBaseNotification & { actorUsername: string };
+export type RawNotification = BaseNotification & { actorUsername: string };
 
 export default class NotificationService {
-  private async emitNotificationIfOnline(
-    notification: TRawNotification
+  private static async emitNotificationIfOnline(
+    notification: RawNotification
   ): Promise<boolean> {
     const socketId = userIdToSocketMap.get(notification.receiverId.toString());
     if (socketId) {
@@ -40,18 +39,18 @@ export default class NotificationService {
     return false;
   }
 
-  public bundleNotifications = (
-    rawNotifications: TNotification[]
+  public static bundleNotifications = (
+    rawNotifications: Notification[]
   ): {
-    bundled: TNotification[];
+    bundled: Notification[];
     deleteIds: string[];
   } => {
     const bundleMap = new Map<
       string,
       {
-        postId: string;
+        postId: number;
         receiverId: string;
-        type: TNotification["type"];
+        type: Notification["type"];
         content?: string;
         actorSet: Set<string>;
         originalIds: string[];
@@ -59,10 +58,9 @@ export default class NotificationService {
     >();
 
     for (const raw of rawNotifications) {
-      if (!raw._id) continue;
-      const key = `${raw.receiverId}:${raw.postId}:${raw.type}:${
-        raw.content || ""
-      }`;
+      if (!raw.id) continue;
+      const key = `${raw.receiverId}:${raw.postId}:${raw.type}:${raw.content || ""
+        }`;
       const existing = bundleMap.get(key);
 
       const currentActors = raw.actorUsernames || [];
@@ -74,15 +72,15 @@ export default class NotificationService {
           type: raw.type,
           content: raw.content,
           actorSet: new Set(currentActors),
-          originalIds: [raw._id.toString()],
+          originalIds: [raw.id.toString()],
         });
       } else {
         currentActors.forEach((username) => existing.actorSet.add(username));
-        existing.originalIds.push(raw._id.toString());
+        existing.originalIds.push(raw.id.toString());
       }
     }
 
-    const bundled: TNotification[] = [];
+    const bundled: Notification[] = [];
     const deleteIds: string[] = [];
 
     for (const {
@@ -93,7 +91,7 @@ export default class NotificationService {
       actorSet,
       originalIds,
     } of bundleMap.values()) {
-      const notification: TNotification = {
+      const notification: Notification = {
         postId,
         receiverId,
         type,
@@ -108,22 +106,19 @@ export default class NotificationService {
     return { bundled, deleteIds };
   };
 
-  public async handleNotification(
-    notification: TRawNotification
+  public static async handleNotification(
+    notification: RawNotification
   ): Promise<void> {
-    await this.emitNotificationIfOnline(notification);
-    await this.insertNotificationToDB(notification);
+    await NotificationService.emitNotificationIfOnline(notification);
+    await NotificationService.insertNotificationToDB(notification);
   }
 
   public getLast24HourNotifications = async (userId: string, limit = 1000) => {
     try {
-      const twentyFourHoursAgo = subHours(new Date(), 24);
-      const notifications = await NotificationModel.find({
-        receiverId: toObjectId(userId),
-        createdAt: { $gte: twentyFourHoursAgo },
-      })
-        .sort({ createdAt: -1 })
-        .limit(limit);
+      const notifications = await NotificationRepo.Read.getLatestNotifications(
+        userId,
+        limit
+      );
 
       return notifications;
     } catch (error) {
@@ -140,43 +135,38 @@ export default class NotificationService {
     return entries;
   }
 
-  public async getMongoNotificationsByUserId(userId: string, populate = false) {
+  public static async getNotificationsByUserId(userId: string, populate = false) {
     let notifications;
     if (populate) {
-      const rawNotifications = await NotificationModel.find({
-        receiverId: userId,
-      })
-        .populate("postId", "title content _id")
-        .sort({ createdAt: -1 })
-        .lean();
+      const rawNotifications = await NotificationRepo.CachedRead.getAllJoinedNotifications(
+        userId
+      );
 
       notifications = rawNotifications.map((n) => ({
         ...n,
-        post: n.postId,
+        post: n.post.id,
         postId: undefined,
       }));
     } else {
-      notifications = await NotificationModel.find({ receiverId: userId }).sort(
-        {
-          createdAt: -1,
-        }
+      notifications = await NotificationRepo.CachedRead.getAllNotifications(
+        userId,
       );
     }
     return notifications;
   }
 
-  public async insertNotificationToDB(
-    notification: TRawNotification
+  public static async insertNotificationToDB(
+    notification: RawNotification
   ): Promise<boolean> {
     try {
       const data = {
-        postId: toObjectId(notification.postId),
-        receiverId: toObjectId(notification.receiverId),
+        postId: notification.postId,
+        receiverId: notification.receiverId,
         type: notification.type,
         content: notification.content ?? undefined,
         actorUsernames: [notification.actorUsername],
       };
-      const result = await NotificationModel.insertOne(data);
+      const result = await NotificationRepo.Write.create(data);
 
       if (!result) {
         console.log("Error inserting to Mongo");

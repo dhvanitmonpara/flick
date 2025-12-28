@@ -1,6 +1,6 @@
 import { Router } from "express";
 import UserController from "@/modules/user/user.controller";
-import { verifyUserJWT, validate } from "@/core/middlewares";
+import { authenticate, validate } from "@/core/middlewares";
 import * as authSchemas from "@/modules/user/user.schema";
 
 const router = Router();
@@ -151,31 +151,7 @@ router.post(
 );
 
 // Protected routes
-router.use(verifyUserJWT);
-
-/**
- * @openapi
- * /api/v1/auth/oauth:
- *   post:
- *     summary: Handle user OAuth
- *     tags: [User]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/userOAuthSchema'
- *     responses:
- *       200:
- *         description: User OAuth handled successfully
- *       400:
- *         description: Invalid input
- */
-router.post(
-  "/oauth",
-  validate(authSchemas.userOAuthSchema),
-  UserController.handleUserOAuth
-);
+router.use(authenticate);
 
 /**
  * @openapi

@@ -4,14 +4,9 @@ import { env } from "@/config/env";
 import { asyncHandlerCb as asyncHandler, ApiError } from "@/core/http";
 import * as authRepo from "@/modules/auth/auth.repo";
 import { jwtPayloadSchema } from "@/shared/validators/auth.schema";
-import { User } from "@/shared/types/User";
 
-interface AuthenticatedRequest extends Request {
-  user?: User;
-}
-
-const verifyUserJWT = asyncHandler(
-  async (req: AuthenticatedRequest, _res: Response, next: NextFunction) => {
+const authenticate = asyncHandler(
+  async (req: Request, _res: Response, next: NextFunction) => {
     const token =
       req.cookies?.accessToken ||
       req.header("Authorization")?.replace("Bearer ", "");
@@ -20,6 +15,7 @@ const verifyUserJWT = asyncHandler(
       throw new ApiError({
         statusCode: 401,
         message: "Unauthorized",
+        code: "UNAUTHORIZED",
         data: { service: "authMiddleware.verifyUserJWT" },
       });
     }
@@ -47,7 +43,7 @@ const verifyUserJWT = asyncHandler(
         statusCode: 401,
         message: "User not found",
         code: "USER_NOT_FOUND",
-        data: { service: "authMiddleware.verifyUserJWT" },
+        data: { service: "authMiddleware.authenticate" },
       });
     }
 
@@ -56,7 +52,7 @@ const verifyUserJWT = asyncHandler(
         statusCode: 401,
         message: "Refresh token session is not valid",
         code: "INVALID_SESSION",
-        data: { service: "authMiddleware.verifyUserJWT" },
+        data: { service: "authMiddleware.authenticate" },
       });
     }
 
@@ -71,4 +67,4 @@ const verifyUserJWT = asyncHandler(
   }
 );
 
-export { verifyUserJWT, AuthenticatedRequest };
+export { authenticate };

@@ -1,17 +1,15 @@
 import { Request, Response } from "express";
-import NotificationService from "../services/notification.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import handleError from "../utils/HandleError.js";
-import { NotificationModel } from "../models/notification.model.js";
-
-const notificationService = new NotificationService();
+import NotificationRepo from "./notification.repo.js";
+import NotificationService from "./notification.service.js";
 
 const listNotifications = async (req: Request, res: Response) => {
   try {
     if (!req.user) throw new ApiError(401, "Unauthorized");
     const notifications =
-      await notificationService.getMongoNotificationsByUserId(
-        req.user._id.toString(),
+      await NotificationService.getNotificationsByUserId(
+        req.user.id.toString(),
         true
       );
     res.status(200).json({ notifications });
@@ -32,14 +30,7 @@ const markAsSeen = async (req: Request, res: Response) => {
     if (!ids) throw new ApiError(400, "Ids are required");
     if (!Array.isArray(ids)) throw new ApiError(400, "Ids must be an array");
 
-    const notifications = await NotificationModel.updateMany(
-      { _id: { $in: ids }, receiverId: req.user._id.toString() },
-      { seen: true }
-    );
-
-    if (notifications.modifiedCount === 0) {
-      throw new ApiError(404, "Notifications not found");
-    }
+    await NotificationRepo.Write.markNotificationsAsSeen(req.user.id, ids);
 
     res.status(200).json({ message: "Notifications marked as seen" });
   } catch (error) {

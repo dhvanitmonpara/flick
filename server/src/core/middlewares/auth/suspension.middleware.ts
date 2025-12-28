@@ -1,5 +1,5 @@
 import { ApiError, asyncHandlerCb } from "@/core/http";
-import { AuthenticatedRequest } from "./jwt.middleware";
+import { AuthenticatedRequest } from "./auth.middleware";
 import { NextFunction, Response } from "express";
 
 export const blockSuspensionMiddleware = asyncHandlerCb(async (

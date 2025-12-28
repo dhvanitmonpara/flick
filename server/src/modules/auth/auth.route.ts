@@ -1,9 +1,11 @@
 import { Router } from "express";
 import AuthController from "@/modules/auth/auth.controller";
-import { verifyUserJWT, validate } from "@/core/middlewares";
+import { authenticate, validate, rateLimitMiddleware } from "@/core/middlewares";
 import * as authSchemas from "@/modules/auth/auth.schema";
 
 const router = Router();
+
+router.use(rateLimitMiddleware.authRateLimiter);
 
 /**
  * @openapi
@@ -126,7 +128,7 @@ router.post(
 );
 
 // Protected routes
-router.use(verifyUserJWT);
+router.use(authenticate);
 
 /**
  * @openapi

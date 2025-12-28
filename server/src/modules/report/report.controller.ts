@@ -109,22 +109,22 @@ function buildReportPipeline(
   const targetLookups: mongoose.PipelineStage[] =
     type === "Both"
       ? [
-          lookupTarget("posts", "postDetails"),
-          {
-            $unwind: { path: "$postDetails", preserveNullAndEmptyArrays: true },
+        lookupTarget("posts", "postDetails"),
+        {
+          $unwind: { path: "$postDetails", preserveNullAndEmptyArrays: true },
+        },
+        lookupTarget("comments", "commentDetails"),
+        {
+          $unwind: {
+            path: "$commentDetails",
+            preserveNullAndEmptyArrays: true,
           },
-          lookupTarget("comments", "commentDetails"),
-          {
-            $unwind: {
-              path: "$commentDetails",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-        ]
+        },
+      ]
       : [
-          lookupTarget(type === "Post" ? "posts" : "comments", "targetDetails"),
-          { $unwind: "$targetDetails" },
-        ];
+        lookupTarget(type === "Post" ? "posts" : "comments", "targetDetails"),
+        { $unwind: "$targetDetails" },
+      ];
 
   const groupStage: mongoose.PipelineStage.Group = {
     $group: {
@@ -475,7 +475,7 @@ export const bulkDeleteReports = async (req: Request, res: Response) => {
 
 export const updateReportStatus = async (req: Request, res: Response) => {
   try {
-    if(!req.admin) throw new ApiError(401, "Unauthorized");
+    if (!req.admin) throw new ApiError(401, "Unauthorized");
     const { reportId } = req.params;
     const { status } = req.body;
 

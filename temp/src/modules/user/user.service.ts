@@ -1,25 +1,20 @@
-import { ApiError } from "@/core/http";
-import * as authRepo from "@/modules/auth/auth.repo";
+import { HttpError } from "@/core/http";
+import AuthRepo from "@/modules/auth/auth.repo";
 
 class UserService {
-  getUserByIdService = async (userId: string) => {
-    const user = await authRepo.findById(userId);
+  static getUserByIdService = async (userId: string) => {
+    const user = await AuthRepo.CachedRead.findById(userId);
 
     if (!user)
-      throw new ApiError({
-        statusCode: 404,
-        message: "User doesn't exists",
-        data: { service: "authService.getUserByIdService" },
-      });
+      throw HttpError.notFound("User doesn't exists", { code: "USER_NOT_FOUND", meta: { service: "authService.getUserByIdService" } });
 
     return user;
   };
 
-  searchUsersService = async (query: string) => {
-    const users = await authRepo.searchUsers(query);
-
+  static searchUsersService = async (query: string) => {
+    const users = await AuthRepo.CachedRead.searchUsers(query);
     return users;
   };
 }
 
-export default new UserService();
+export default UserService;

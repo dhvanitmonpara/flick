@@ -1,18 +1,12 @@
 import type { Application } from "express";
-import cors, { type CorsOptions } from "cors";
-import { env } from "./env";
+import cors from "cors";
 import helmet from "helmet";
+import corsOptions from "./cors";
 
 export const applySecurity = (app: Application) => {
   app.disable("x-powered-by");
+  app.set("trust proxy", true);
   app.use(helmet());
-  const corsOptions: CorsOptions = {
-    origin: env.ACCESS_CONTROL_ORIGINS,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    optionsSuccessStatus: 200,
-  };
   app.use(cors(corsOptions));
 };
 

@@ -1,13 +1,12 @@
-import { Response } from "express";
-import { AuthenticatedRequest } from "@/core/middlewares/auth/jwt.middleware.js";
 import ApiResponse from "@/core/http/ApiResponse.js";
 import { AsyncHandler } from "@/core/http/asyncHandler.js";
 import bookmarkService from "./bookmark.service";
+import { Request } from "express";
 
 class BookmarkController {
 
   @AsyncHandler()
-  async createBookmark(req: AuthenticatedRequest) {
+  async createBookmark(req: Request) {
     const { postId } = req.body;
     const userId = req.user.id;
 
@@ -19,7 +18,7 @@ class BookmarkController {
   };
 
   @AsyncHandler()
-  async getUserBookmarkedPosts(req: AuthenticatedRequest) {
+  async getUserBookmarkedPosts(req: Request) {
     const userId = req.user.id;
 
     const posts = await bookmarkService.getUserBookmarkedPosts(userId);
@@ -31,7 +30,7 @@ class BookmarkController {
   };
 
   @AsyncHandler()
-  async deleteBookmark(req: AuthenticatedRequest) {
+  async deleteBookmark(req: Request) {
     const { postId } = req.params;
     const userId = req.user.id;
 
@@ -40,7 +39,7 @@ class BookmarkController {
   };
 
   @AsyncHandler()
-  async getBookmark(req: AuthenticatedRequest) {
+  async getBookmark(req: Request) {
     const { postId } = req.params;
     const userId = req.user.id;
 

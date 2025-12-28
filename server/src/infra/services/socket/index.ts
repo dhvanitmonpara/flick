@@ -12,7 +12,7 @@ class SocketService {
 
     this.io = new SocketServer(server, {
       cors: {
-        origin: env.ACCESS_CONTROL_ORIGIN,
+        origin: env.ACCESS_CONTROL_ORIGINS,
         methods: ["GET", "POST"],
       },
       transports: ["websocket"],

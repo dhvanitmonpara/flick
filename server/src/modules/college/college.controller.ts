@@ -1,32 +1,15 @@
-import { Request, Response } from "express";
-import CollegeModel from "../models/college.model.js";
-import mongoose from "mongoose";
-import { ApiError } from "../utils/ApiError.js";
-import { logEvent } from "../services/log.service.js";
-import { AuthenticatedRequest } from "@/core/middlewares/index.js";
+import { Request } from "express";
+import ApiResponse from "@/core/http/ApiResponse.js";
 import { AsyncHandler } from "@/core/http/asyncHandler.js";
-
-interface CollegeFilter {
-  city?: string;
-  state?: string;
-}
+import collegeService from "./college.service";
 
 class CollegeController {
 
   @AsyncHandler()
-  async createCollege(req: AuthenticatedRequest, res: Response) {
+  async createCollege(req: Request) {
     const { name, emailDomain, city, state, profile } = req.body;
 
-    // if (!name || !emailDomain || !city || !state) {
-    //   throw new ApiError(400, "Missing required fields.");
-    // }
-
-    const existing = await CollegeModel.findOne({ emailDomain });
-    if (existing) {
-      throw new ApiError(409, "College with this domain already exists.");
-    }
-
-    const college = await CollegeModel.create({
+    const newCollege = await collegeService.createCollege({
       name,
       emailDomain,
       city,
@@ -34,120 +17,58 @@ class CollegeController {
       profile,
     });
 
-    logEvent({
-      action: "admin_created_college",
-      platform: "web",
-      metadata: {
-        name,
-        emailDomain,
-      },
-      sessionId: req.sessionId,
-      userId: req.admin._id.toString(),
+    return ApiResponse.created({
+      message: "College created successfully",
+      college: newCollege,
     });
-
-    res
-      .status(201)
-      .json({ message: "College created successfully.", data: college });
-  };
+  }
 
   @AsyncHandler()
-  async getColleges(req: Request, res: Response) {
+  async getColleges(req: Request) {
     const { city, state } = req.query as { city?: string; state?: string };
 
-    const filter: CollegeFilter = {};
-    if (city) filter.city = city;
-    if (state) filter.state = state;
+    const colleges = await collegeService.getColleges({ city, state });
 
-    const colleges = await CollegeModel.find(filter).sort({ name: 1 });
-    res.status(200).json({ colleges });
-  };
+    return ApiResponse.ok({
+      colleges,
+      count: colleges.length,
+    });
+  }
 
   @AsyncHandler()
-  async getCollegeById(req: Request, res: Response) {
+  async getCollegeById(req: Request) {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new ApiError(400, "Invalid college ID.");
-    }
+    const college = await collegeService.getCollegeById(id);
 
-    const college = await CollegeModel.findById(id);
-    if (!college) {
-      throw new ApiError(404, "College not found.");
-    }
-
-    res.status(200).json({ data: college });
-  };
+    return ApiResponse.ok({
+      college,
+    });
+  }
 
   @AsyncHandler()
-  async updateCollege(req: Request, res: Response) {
-    if (!req.admin) throw new ApiError(404, "Unauthorized");
-
+  async updateCollege(req: Request) {
     const { id } = req.params;
     const updates = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new ApiError(400, "Invalid college ID.");
-    }
+    const updatedCollege = await collegeService.updateCollege(id, updates);
 
-    const college = await CollegeModel.findByIdAndUpdate(id, updates, {
-      new: true,
-      runValidators: true,
+    return ApiResponse.ok({
+      message: "College updated successfully",
+      college: updatedCollege,
     });
-    if (!college) {
-      throw new ApiError(404, "College not found.");
-    }
-
-    logEvent({
-      action: "admin_updated_college",
-      platform: "web",
-      metadata: {
-        updatedFields: {
-          name: updates.name ? 1 : 0,
-          emailDomain: updates.emailDomain ? 1 : 0,
-          city: updates.city ? 1 : 0,
-          state: updates.state ? 1 : 0,
-          profile: updates.profile ? 1 : 0,
-        },
-        name: college.name,
-        emailDomain: college.emailDomain,
-      },
-      sessionId: req.sessionId,
-      userId: req.admin._id.toString(),
-    });
-
-    res
-      .status(200)
-      .json({ message: "College updated successfully.", data: college });
-
-  };
+  }
 
   @AsyncHandler()
-  async deleteCollege(req: Request, res: Response) {
-    if (!req.admin) throw new ApiError(404, "Unauthorized");
+  async deleteCollege(req: Request) {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new ApiError(400, "Invalid college ID.");
-    }
+    await collegeService.deleteCollege(id);
 
-    const college = await CollegeModel.findByIdAndDelete(id);
-    if (!college) {
-      throw new ApiError(404, "College not found.");
-    }
-
-    logEvent({
-      action: "admin_deleted_admin_account",
-      platform: "web",
-      metadata: {
-        name: college.name,
-      },
-      sessionId: req.sessionId,
-      userId: req.admin._id.toString(),
+    return ApiResponse.ok({
+      message: "College deleted successfully",
     });
-
-    res.status(200).json({ message: "College deleted successfully." });
-  };
-
+  }
 }
 
 export default new CollegeController();

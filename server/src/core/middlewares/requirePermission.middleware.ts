@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import { getUserPermissions } from "@/core/security/rbac";
-import { AuthenticatedRequest } from "./auth/jwt.middleware";
+import { AuthenticatedRequest } from "./auth/auth.middleware";
 import { Permission } from "@/config/roles";
 
 export const requirePermission =

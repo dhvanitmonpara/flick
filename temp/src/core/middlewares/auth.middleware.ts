@@ -1,26 +1,29 @@
 import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { env } from "@/config/env";
-import { asyncHandlerCb as asyncHandler, ApiError } from "@/core/http";
-import * as authRepo from "@/modules/auth/auth.repo";
+import { HttpError } from "@/core/http";
+import AuthRepo from "@/modules/auth/auth.repo";
 import { Role } from "@/config/roles";
 import { jwtPayloadSchema } from "@/shared/validators/auth.schema";
+import { middlewareHandler } from "../http/controller";
+import { toInternalUser } from "@/modules/user/user.dto";
 
 interface AuthenticatedRequest extends Request {
   user?: { id: string; email: string; roles: Role[] };
 }
 
-const verifyUserJWT = asyncHandler(
-  async (req: AuthenticatedRequest, _res: Response, next: NextFunction) => {
+const verifyUserJWT = middlewareHandler(
+  async (req: AuthenticatedRequest, _, next: NextFunction) => {
     const token =
       req.cookies?.accessToken ||
       req.header("Authorization")?.replace("Bearer ", "");
 
+    const hasRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
     if (!token) {
-      throw new ApiError({
-        statusCode: 401,
-        message: "Unauthorized",
-        data: { service: "authMiddleware.verifyUserJWT" },
+      throw HttpError.unauthorized("Unauthorized request", {
+        code: "UNAUTHORIZED_REQUEST",
+        meta: { service: "authMiddleware.verifyUserJWT", hasRefreshToken: Boolean(hasRefreshToken) }
       });
     }
 
@@ -30,43 +33,27 @@ const verifyUserJWT = asyncHandler(
     ) as JwtPayload;
 
     if (!decodedToken || typeof decodedToken === "string") {
-      throw new ApiError({
-        statusCode: 401,
-        message: "Invalid Access Token",
-        code: "INVALID_ACCESS_TOKEN",
-        data: { service: "authMiddleware.verifyUserJWT" },
+      throw HttpError.unauthorized("Invalid Access Token", {
+        code: "UNAUTHORIZED_REQUEST",
+        meta: { service: "authMiddleware.verifyUserJWT", hasRefreshToken: Boolean(hasRefreshToken) }
       });
     }
 
     const parsed = jwtPayloadSchema.parse(decodedToken);
 
-    const user = await authRepo.findById(parsed.id);
+    const user = await AuthRepo.Read.findById(parsed.id);
 
-    if (!user) {
-      throw new ApiError({
-        statusCode: 401,
-        message: "User not found",
-        code: "USER_NOT_FOUND",
-        data: { service: "authMiddleware.verifyUserJWT" },
-      });
-    }
+    if (!user) throw HttpError.unauthorized("User not found", {
+      code: "UNAUTHORIZED_REQUEST",
+      meta: { service: "authMiddleware.verifyUserJWT" }
+    });
 
-    if (!user.refreshToken) {
-      throw new ApiError({
-        statusCode: 401,
-        message: "Refresh token session is not valid",
-        code: "INVALID_SESSION",
-        data: { service: "authMiddleware.verifyUserJWT" },
-      });
-    }
+    if (!user.refreshToken) throw HttpError.unauthorized("Refresh token session is not valid", {
+      code: "UNAUTHORIZED_REQUEST",
+      meta: { service: "authMiddleware.verifyUserJWT" }
+    });
 
-    const mappedUser = {
-      ...user,
-      password: null,
-      refreshToken: null,
-    };
-
-    req.user = mappedUser;
+    req.user = toInternalUser(user);
     next();
   }
 );
