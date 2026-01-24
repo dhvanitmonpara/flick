@@ -1,23 +1,32 @@
 import { BookmarkAdapter } from "@/infra/db/adapters";
 import { DB } from "@/infra/db/types";
 import { cached } from "@/lib/cached";
+import bookmarkCacheKeys from "./bookmark.cache-keys";
 
-const keys = {
-  id: (id: string) => `bookmark:id:${id}`,
-  multiId: (...ids: string[]) => `bookmark:ids:${ids.join(",")}`,
-};
+const BookmarkRepo = {
+  Read: {
+    findBookmark: (userId: string, postId: string, dbTx?: DB) => BookmarkAdapter.findByUserAndPostId(userId, postId, dbTx),
 
-export const findBookmark = (userId: string, postId: string, dbTx?: DB) =>
-  cached(keys.multiId(userId, postId), () => BookmarkAdapter.findByUserAndPostId(userId, postId, dbTx))
+    findBookmarkWithPost: (userId: string, postId: string, dbTx?: DB) => BookmarkAdapter.findByUserAndPostIdWithPost(userId, postId, dbTx),
 
-export const findBookmarkWithPost = (userId: string, postId: string, dbTx?: DB) =>
-  cached(keys.multiId(userId, postId), () => BookmarkAdapter.findByUserAndPostIdWithPost(userId, postId, dbTx));
+    getUserBookmarkedPosts: (userId: string, dbTx?: DB) => BookmarkAdapter.findBookmarkedPostsByUserId(userId, dbTx),
+  },
 
-export const getUserBookmarkedPosts = (userId: string, dbTx?: DB) =>
-  cached(keys.id(userId), () => BookmarkAdapter.findBookmarkedPostsByUserId(userId, dbTx));
+  CachedRead: {
+    findBookmark: (userId: string, postId: string, dbTx?: DB) =>
+      cached(bookmarkCacheKeys.multiId(userId, postId), () => BookmarkAdapter.findByUserAndPostId(userId, postId, dbTx)),
 
-export const createBookmark = (userId: string, postId: string, dbTx?: DB) =>
-  BookmarkAdapter.create({ userId, postId }, dbTx);
+    findBookmarkWithPost: (userId: string, postId: string, dbTx?: DB) =>
+      cached(bookmarkCacheKeys.multiId(userId, postId), () => BookmarkAdapter.findByUserAndPostIdWithPost(userId, postId, dbTx)),
 
-export const deleteBookmark = (userId: string, postId: string, dbTx?: DB) =>
-  BookmarkAdapter.deleteBookmarkByUserAndPostId(userId, postId, dbTx);
+    getUserBookmarkedPosts: (userId: string, dbTx?: DB) =>
+      cached(bookmarkCacheKeys.id(userId), () => BookmarkAdapter.findBookmarkedPostsByUserId(userId, dbTx)),
+  },
+
+  Write: {
+    createBookmark: BookmarkAdapter.create,
+    deleteBookmark: BookmarkAdapter.deleteBookmarkByUserAndPostId
+  }
+}
+
+export default BookmarkRepo

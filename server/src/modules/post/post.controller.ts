@@ -1,13 +1,22 @@
 import { Request } from "express";
-import { AuthenticatedRequest } from "@/core/middlewares/auth/auth.middleware.js";
-import ApiResponse from "@/core/http/ApiResponse.js";
-import { AsyncHandler } from "@/core/http/asyncHandler.js";
+import { AsyncHandler, HttpResponse } from "@/core/http";
 import postService from "./post.service";
+import * as postSchemas from "./post.schema";
+import { withBodyValidation, withQueryValidation, withParamsValidation } from "@/lib/validation";
+import { validateRequest } from "@/core/middlewares";
+
+type FilterType = {
+  page?: number;
+  limit?: number;
+  sortBy?: "createdAt" | "updatedAt" | "views";
+  sortOrder?: "asc" | "desc";
+};
 
 class PostController {
+  static createPost = withBodyValidation(postSchemas.createPostSchema, this.createPostHandler)
 
   @AsyncHandler()
-  async createPost(req: AuthenticatedRequest) {
+  private static async createPostHandler(req: Request) {
     const { title, content, topic } = req.body;
     const userId = req.user.id;
 
@@ -18,25 +27,20 @@ class PostController {
       postedBy: userId,
     });
 
-    return ApiResponse.created({
-      message: "Post created successfully",
-      post: newPost,
-    });
+    return HttpResponse.created("Post created successfully", { post: newPost });
   }
 
+  static getPosts = withQueryValidation(postSchemas.getPostsQuerySchema, this.getPostsHandler)
+
   @AsyncHandler()
-  async getPosts(req: Request) {
-    const { page, limit, sortBy, sortOrder, topic, collegeId, branch } = req.query as {
-      page?: number;
-      limit?: number;
-      sortBy?: "createdAt" | "updatedAt" | "views";
-      sortOrder?: "asc" | "desc";
+  private static async getPostsHandler(req: Request) {
+    const { page, limit, sortBy, sortOrder, topic, collegeId, branch } = req.query as FilterType & {
       topic?: string;
       collegeId?: string;
       branch?: string;
     };
 
-    const userId = (req as AuthenticatedRequest).user?.id;
+    const userId = req.user?.id;
 
     const result = await postService.getPosts({
       page,
@@ -49,23 +53,31 @@ class PostController {
       userId,
     });
 
-    return ApiResponse.ok(result);
+    return HttpResponse.ok("Posts retrieved successfully", result);
   }
 
+  static getPostById = withParamsValidation(postSchemas.postIdSchema, this.getPostByIdHandler)
+
   @AsyncHandler()
-  async getPostById(req: Request) {
+  private static async getPostByIdHandler(req: Request) {
     const { id } = req.params;
-    const userId = (req as AuthenticatedRequest).user?.id;
+    const userId = req.user?.id;
 
     const post = await postService.getPostById(id, userId);
 
-    return ApiResponse.ok({
+    return HttpResponse.ok("Post retrieved successfully", {
       post,
     });
   }
 
+  static updatePost = [
+    validateRequest(postSchemas.postIdSchema, "params"),
+    validateRequest(postSchemas.updatePostSchema),
+    this.updatePostHandler
+  ]
+
   @AsyncHandler()
-  async updatePost(req: AuthenticatedRequest) {
+  private static async updatePostHandler(req: Request) {
     const { id } = req.params;
     const { title, content, topic } = req.body;
     const userId = req.user.id;
@@ -76,46 +88,44 @@ class PostController {
       topic,
     });
 
-    return ApiResponse.ok({
-      message: "Post updated successfully",
-      post: updatedPost,
-    });
+    return HttpResponse.ok("Post updated successfully", { post: updatedPost });
   }
 
+  static deletePost = withParamsValidation(postSchemas.postIdSchema, this.deletePostHandler)
+
   @AsyncHandler()
-  async deletePost(req: AuthenticatedRequest) {
+  private static async deletePostHandler(req: Request) {
     const { id } = req.params;
     const userId = req.user.id;
 
     await postService.deletePost(id, userId);
 
-    return ApiResponse.ok({
-      message: "Post deleted successfully",
-    });
+    return HttpResponse.ok("Post deleted successfully");
   }
 
+  static incrementPostViews = withParamsValidation(postSchemas.postIdSchema, this.incrementPostViewsHandler)
+
   @AsyncHandler()
-  async incrementPostViews(req: Request) {
+  private static async incrementPostViewsHandler(req: Request) {
     const { id } = req.params;
 
     await postService.incrementPostViews(id);
 
-    return ApiResponse.ok({
-      message: "Post view incremented",
-    });
+    return HttpResponse.ok("Post view incremented")
   }
 
-  @AsyncHandler()
-  async getPostsByCollege(req: Request) {
-    const { collegeId } = req.params;
-    const { page, limit, sortBy, sortOrder } = req.query as {
-      page?: number;
-      limit?: number;
-      sortBy?: "createdAt" | "updatedAt" | "views";
-      sortOrder?: "asc" | "desc";
-    };
+  static getPostsByCollege = [
+    validateRequest(postSchemas.collegeIdSchema, "params"),
+    validateRequest(postSchemas.getPostsQuerySchema),
+    this.getPostsByCollegeHandler
+  ]
 
-    const userId = (req as AuthenticatedRequest).user?.id;
+  @AsyncHandler()
+  private static async getPostsByCollegeHandler(req: Request) {
+    const { collegeId } = req.params;
+    const { page, limit, sortBy, sortOrder } = req.query as FilterType
+
+    const userId = req.user?.id;
 
     const result = await postService.getPostsByCollege(collegeId, {
       page,
@@ -125,20 +135,21 @@ class PostController {
       userId,
     });
 
-    return ApiResponse.ok(result);
+    return HttpResponse.ok("Posts retrieved successfully by college", result);
   }
 
-  @AsyncHandler()
-  async getPostsByBranch(req: Request) {
-    const { branch } = req.params;
-    const { page, limit, sortBy, sortOrder } = req.query as {
-      page?: number;
-      limit?: number;
-      sortBy?: "createdAt" | "updatedAt" | "views";
-      sortOrder?: "asc" | "desc";
-    };
+  static getPostsByBranch = [
+    validateRequest(postSchemas.branchSchema, "params"),
+    validateRequest(postSchemas.getPostsQuerySchema),
+    this.getPostsByBranchHandler
+  ]
 
-    const userId = (req as AuthenticatedRequest).user?.id;
+  @AsyncHandler()
+  private static async getPostsByBranchHandler(req: Request) {
+    const { branch } = req.params;
+    const { page, limit, sortBy, sortOrder } = req.query as FilterType
+
+    const userId = req.user?.id;
 
     const result = await postService.getPostsByBranch(branch, {
       page,
@@ -148,8 +159,8 @@ class PostController {
       userId,
     });
 
-    return ApiResponse.ok(result);
+    return HttpResponse.ok("Posts retrieved successfully by branch", result);
   }
 }
 
-export default new PostController();
+export default PostController;

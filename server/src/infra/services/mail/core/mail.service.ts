@@ -3,6 +3,7 @@ import { ProviderManager } from "./provider.manager";
 import { TemplateEngine } from "./template.engine";
 import { MailDetails, MailTemplate, MailType, SendResult } from "../types/mail.types";
 import { MailPayloadMap } from "../types/template.types";
+import logger from "@/core/logger";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,7 +28,10 @@ export class MailService {
     details: MailDetails<T>,
     options: { from?: string } = {}
   ): Promise<SendResult> {
+    logger.info("Sending email", { to, type, from: options.from || this.defaultFrom });
+    
     if (!this.validateEmail(to)) {
+      logger.warn("Invalid email address", { to, type });
       throw new Error("Invalid email address");
     }
 
@@ -44,25 +48,43 @@ export class MailService {
       template = await this.engine.render(type, payload);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      logger.error("Template rendering failed", { to, type, error: msg });
       return { status: "error", error: msg };
     }
 
     if (!template.subject || !template.html) {
+      logger.error("Invalid mail template output", { to, type });
       return { status: "error", error: "Invalid mail template output" };
     }
 
     const from = options.from ?? this.defaultFrom;
 
     try {
-      return await this.providers.send({
+      const data = await this.providers.send({
         from,
         to,
         subject: template.subject,
         text: template.text,
         html: template.html,
       });
+
+      const isError = data.status === "error"
+      if (isError) {
+        logger.error("Email send failed", { to, type, error: data.error });
+        throw new Error(data.error)
+      }
+
+      logger.info("Email sent successfully", { to, type, messageId: data.id });
+
+      if ("otp" in payload) {
+        return { ...data, otp: payload.otp }
+      }
+
+      return data
+
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      logger.error("Email send error", { to, type, error: msg });
       return { status: "error", error: msg };
     }
   }

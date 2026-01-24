@@ -1,5 +1,8 @@
-import { ApiError } from "@/core/http";
-import * as collegeRepo from "./college.repo";
+import { HttpError } from "@/core/http";
+import CollegeRepo from "./college.repo";
+import recordAudit from "@/lib/record-audit";
+import { CollegeUpdates } from "./college.types";
+import logger from "@/core/logger";
 
 class CollegeService {
   async createCollege(collegeData: {
@@ -9,14 +12,17 @@ class CollegeService {
     state: string;
     profile?: string;
   }) {
+    logger.info("Creating college", { emailDomain: collegeData.emailDomain, name: collegeData.name });
+    
     // Check if college with this email domain already exists
-    const existing = await collegeRepo.findByEmailDomain(collegeData.emailDomain);
+    const existing = await CollegeRepo.CachedRead.findByEmailDomain(collegeData.emailDomain);
     if (existing) {
-      throw new ApiError({
+      logger.warn("College with email domain already exists", { emailDomain: collegeData.emailDomain });
+      throw new HttpError({
         statusCode: 409,
         message: "College with this email domain already exists",
         code: "COLLEGE_ALREADY_EXISTS",
-        data: { service: "CollegeService.createCollege" },
+        meta: { source: "CollegeService.createCollege" },
         errors: [
           {
             field: "emailDomain",
@@ -26,57 +32,65 @@ class CollegeService {
       });
     }
 
-    const newCollege = await collegeRepo.create(collegeData);
+    const newCollege = await CollegeRepo.Write.create(collegeData);
+    logger.info("College created successfully", { collegeId: newCollege.id, emailDomain: newCollege.emailDomain });
+
+    await recordAudit({
+      action: "admin:created:college",
+      entityType: "college",
+      entityId: newCollege.id,
+      after: { id: newCollege.id },
+      metadata: { emailDomain: newCollege.emailDomain }
+    })
+
     return newCollege;
   }
 
   async getColleges(filters?: { city?: string; state?: string }) {
-    const colleges = await collegeRepo.findAll(filters);
+    logger.info("Fetching colleges", { filters });
+    
+    const colleges = await CollegeRepo.CachedRead.findAll(filters);
+    logger.info("Retrieved colleges", { count: colleges.length, filters });
     return colleges;
   }
 
   async getCollegeById(id: string) {
-    const college = await collegeRepo.findById(id);
+    logger.info("Fetching college by ID", { collegeId: id });
+    
+    const college = await CollegeRepo.CachedRead.findById(id);
     if (!college) {
-      throw new ApiError({
-        statusCode: 404,
-        message: "College not found",
+      logger.warn("College not found", { collegeId: id });
+      throw HttpError.notFound("College not found", {
         code: "COLLEGE_NOT_FOUND",
-        data: { service: "CollegeService.getCollegeById" },
+        meta: { source: "CollegeService.getCollegeById" },
         errors: [{ field: "id", message: "College not found" }],
       });
     }
+    
+    logger.info("College retrieved successfully", { collegeId: id, emailDomain: college.emailDomain });
     return college;
   }
 
-  async updateCollege(id: string, updates: {
-    name?: string;
-    emailDomain?: string;
-    city?: string;
-    state?: string;
-    profile?: string;
-  }) {
+  async updateCollege(id: string, updates: CollegeUpdates) {
     // Check if college exists
-    const existing = await collegeRepo.findById(id);
+    const existing = await CollegeRepo.CachedRead.findById(id);
     if (!existing) {
-      throw new ApiError({
-        statusCode: 404,
-        message: "College not found",
+      throw HttpError.notFound("College not found", {
         code: "COLLEGE_NOT_FOUND",
-        data: { service: "CollegeService.updateCollege" },
+        meta: { source: "CollegeService.updateCollege" },
         errors: [{ field: "id", message: "College not found" }],
       });
     }
 
     // If updating email domain, check for conflicts
     if (updates.emailDomain && updates.emailDomain !== existing.emailDomain) {
-      const emailConflict = await collegeRepo.findByEmailDomain(updates.emailDomain);
+      const emailConflict = await CollegeRepo.CachedRead.findByEmailDomain(updates.emailDomain);
       if (emailConflict) {
-        throw new ApiError({
+        throw new HttpError({
           statusCode: 409,
           message: "College with this email domain already exists",
           code: "COLLEGE_ALREADY_EXISTS",
-          data: { service: "CollegeService.updateCollege" },
+          meta: { source: "CollegeService.updateCollege" },
           errors: [
             {
               field: "emailDomain",
@@ -87,23 +101,47 @@ class CollegeService {
       }
     }
 
-    const updatedCollege = await collegeRepo.updateById(id, updates);
+    const updatedCollege = await CollegeRepo.Write.updateById(id, updates);
+    const before: CollegeUpdates = {}
+
+    if (updates.city) before.city = existing.city
+    if (updates.emailDomain) before.emailDomain = existing.emailDomain
+    if (updates.name) before.emailDomain = existing.emailDomain
+    if (updates.profile) before.profile = existing.profile
+    if (updates.state) before.state = existing.state
+
+    await recordAudit({
+      action: "admin:updated:college",
+      entityType: "college",
+      entityId: updatedCollege.id,
+      before: before,
+      after: updates,
+      metadata: { emailDomain: updatedCollege.emailDomain }
+    })
+
     return updatedCollege;
   }
 
   async deleteCollege(id: string) {
-    const existing = await collegeRepo.findById(id);
+    const existing = await CollegeRepo.CachedRead.findById(id);
     if (!existing) {
-      throw new ApiError({
-        statusCode: 404,
-        message: "College not found",
+      throw HttpError.notFound("College not found", {
         code: "COLLEGE_NOT_FOUND",
-        data: { service: "CollegeService.deleteCollege" },
+        meta: { source: "CollegeService.deleteCollege" },
         errors: [{ field: "id", message: "College not found" }],
       });
     }
 
-    const deletedCollege = await collegeRepo.deleteById(id);
+    const deletedCollege = await CollegeRepo.Write.deleteById(id);
+
+    await recordAudit({
+      action: "admin:deleted:college",
+      entityType: "college",
+      entityId: deletedCollege.id,
+      before: { id: deletedCollege.id },
+      metadata: { emailDomain: deletedCollege.emailDomain }
+    })
+
     return deletedCollege;
   }
 }

@@ -1,12 +1,19 @@
 import { Request } from "express";
-import ApiResponse from "@/core/http/ApiResponse.js";
-import { AsyncHandler } from "@/core/http/asyncHandler.js";
+import { AsyncHandler, HttpResponse } from "@/core/http";
 import commentService from "./comment.service";
+import { withBodyValidation, withParamsValidation, withQueryValidation } from "@/lib/validation";
+import * as commentSchemas from "./comment.schema";
+import { validateRequest } from "@/core/middlewares";
 
 class CommentController {
+  static getCommentsByPostId = [
+    validateRequest(commentSchemas.postIdSchema, "params"),
+    validateRequest(commentSchemas.getCommentsQuerySchema, "query"),
+    this.getCommentsByPostIdHandler
+  ]
 
   @AsyncHandler()
-  async getCommentsByPostId(req: Request) {
+  private static async getCommentsByPostIdHandler(req: Request) {
     const { postId } = req.params;
     const { page, limit, sortBy, sortOrder } = req.query as {
       page?: number;
@@ -25,11 +32,17 @@ class CommentController {
       userId,
     });
 
-    return ApiResponse.ok(result);
+    return HttpResponse.ok("Comment retrieved successfully", result);
   }
 
+  static createComment = [
+    validateRequest(commentSchemas.postIdSchema, 'params'),
+    validateRequest(commentSchemas.createCommentSchema),
+    this.createCommentHandler
+  ]
+
   @AsyncHandler()
-  async createComment(req: Request) {
+  private static async createCommentHandler(req: Request) {
     const { content, parentCommentId } = req.body;
     const { postId } = req.params;
     const userId = req.user.id;
@@ -41,48 +54,48 @@ class CommentController {
       parentCommentId,
     });
 
-    return ApiResponse.created({
-      message: "Comment created successfully",
-      comment: newComment,
-    });
+    return HttpResponse.created("Comment created successfully", { comment: newComment });
   }
 
+  static updateComment = [
+    validateRequest(commentSchemas.commentIdSchema, "params"),
+    validateRequest(commentSchemas.updateCommentSchema),
+    this.updateCommentHandler
+  ]
+
   @AsyncHandler()
-  async updateComment(req: Request) {
+  private static async updateCommentHandler(req: Request) {
     const { content } = req.body;
     const { commentId } = req.params;
     const userId = req.user.id;
 
     const updatedComment = await commentService.updateComment(commentId, userId, content);
 
-    return ApiResponse.ok({
-      message: "Comment updated successfully",
-      comment: updatedComment,
-    });
+    return HttpResponse.ok("Comment updated successfully", { comment: updatedComment });
   }
 
+  static deleteComment = withParamsValidation(commentSchemas.commentIdSchema, this.deleteCommentHandler)
+
   @AsyncHandler()
-  async deleteComment(req: Request) {
+  private static async deleteCommentHandler(req: Request) {
     const { commentId } = req.params;
     const userId = req.user.id;
 
     await commentService.deleteComment(commentId, userId);
 
-    return ApiResponse.ok({
-      message: "Comment deleted successfully",
-    });
+    return HttpResponse.ok("Comment deleted successfully")
   }
 
+  static getCommentById = withParamsValidation(commentSchemas.commentIdSchema, this.getCommentByIdHandler)
+
   @AsyncHandler()
-  async getCommentById(req: Request) {
+  private static async getCommentByIdHandler(req: Request) {
     const { commentId } = req.params;
 
     const comment = await commentService.getCommentById(commentId);
 
-    return ApiResponse.ok({
-      comment,
-    });
+    return HttpResponse.ok("Comments retrieved successfully", { comment });
   }
 }
 
-export default new CommentController();
+export default CommentController;

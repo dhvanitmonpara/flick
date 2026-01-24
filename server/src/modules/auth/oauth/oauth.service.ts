@@ -2,13 +2,20 @@ import axios from "axios";
 import { Request } from "express";
 import { env } from "@/config/env";
 import cache from "@/infra/services/cache/index";
-import * as authRepo from "@/modules/auth/auth.repo";
+import AuthRepo from "@/modules/auth/auth.repo";
 import tokenService from "@/modules/auth/tokens/token.service";
-import { ApiError } from "@/core/http";
+import { HttpError } from "@/core/http";
+import recordAudit from "@/lib/record-audit";
+import logger from "@/core/logger";
 
 class OAuthService {
   handleGoogleOAuth = async (code: string, req: Request) => {
-    // 1. Exchange code for access token
+    logger.info("Handling Google OAuth", { code: code.substring(0, 10) + "..." });
+    
+    // Exchange code for access token
+    // Get user info
+    // Check existing user
+
     const { data } = await axios.post(
       "https://oauth2.googleapis.com/token",
       null,
@@ -26,20 +33,23 @@ class OAuthService {
 
     const { access_token } = data;
 
-    // 2. Get user info
     const userInfoRes = await axios.get(
       "https://www.googleapis.com/oauth2/v2/userinfo",
       { headers: { Authorization: `Bearer ${access_token}` } }
     );
 
     const user = userInfoRes.data;
+    logger.info("Retrieved Google user info", { email: user.email });
 
-    // 3. Check existing user
-    const existingUser = await authRepo.findByEmail(user.email);
+    const existingUser = await AuthRepo.Read.findByEmail(user.email);
 
     let redirectUrl: string;
 
+    const baseOrigin = env.ACCESS_CONTROL_ORIGINS[0] // make sure this is the main origin
+
     if (existingUser) {
+      logger.info("Existing user found, generating tokens", { userId: existingUser.id });
+      
       const { accessToken, refreshToken } =
         await tokenService.generateAndPersistTokens(
           existingUser.id,
@@ -54,9 +64,11 @@ class OAuthService {
         createdAt: Date.now(),
       });
 
-      redirectUrl = `${env.ACCESS_CONTROL_ORIGIN}/auth/oauth/signin?tempToken=${tempToken}`;
+      redirectUrl = `${baseOrigin}/auth/oauth/signin?tempToken=${tempToken}`;
+      logger.info("OAuth signin redirect prepared", { userId: existingUser.id });
     } else {
-      redirectUrl = `${env.ACCESS_CONTROL_ORIGIN}/auth/oauth/callback?email=${user.email}`;
+      logger.info("New user, redirecting to registration", { email: user.email });
+      redirectUrl = `${baseOrigin}/auth/oauth/callback?email=${user.email}`;
     }
 
     return { redirectUrl };
@@ -67,18 +79,19 @@ class OAuthService {
     username: string,
     req: Request
   ) => {
-    const createdUser = await authRepo.create({
+    const createdUser = await AuthRepo.Write.create({
       email,
       username,
       authType: "oauth",
       password: null,
+      roles: ["user"],
+      isBlocked: false,
+      suspension: null
     });
 
     if (!createdUser)
-      throw new ApiError({
-        statusCode: 500,
-        message: "Failed to create user",
-        data: { service: "authService.handleUserOAuth" },
+      throw HttpError.internal("Failed to create user", {
+        meta: { source: "authService.handleUserOAuth" },
       });
 
     const { accessToken, refreshToken } =
@@ -89,13 +102,22 @@ class OAuthService {
       );
 
     if (!accessToken || !refreshToken) {
-      throw new ApiError({
-        statusCode: 500,
-        message: "Failed to generate access and refresh token",
+      throw HttpError.internal("Failed to generate access and refresh token", {
         code: "INTERNAL_SERVER_ERROR",
-        data: { service: "authService.handleUserOAuth" },
+        meta: { source: "authService.handleUserOAuth" },
       });
     }
+
+    await recordAudit({
+      action: "user:created:account",
+      entityType: "user",
+      entityId: createdUser.id,
+      after: {id: createdUser.id},
+      metadata: {
+        registrationMethod: "oauth",
+        provider: "google"
+      }
+    })
 
     return {
       createdUser,

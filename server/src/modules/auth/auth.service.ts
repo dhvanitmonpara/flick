@@ -1,14 +1,16 @@
 import { CookieOptions, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "@/config/env";
-import { ApiError } from "@/core/http";
+import { HttpError } from "@/core/http";
 import cache from "@/infra/services/cache/index";
-import * as authRepo from "@/modules/auth/auth.repo";
+import AuthRepo from "@/modules/auth/auth.repo";
 import { hashPassword, verifyPassword } from "@/lib/crypto";
 import oauthService from "@/modules/auth/oauth/oauth.service";
 import tokenService from "@/modules/auth/tokens/token.service";
 import otpService from "@/modules/auth/otp/otp.service";
 import { runTransaction } from "@/infra/db/transactions";
+import recordAudit from "@/lib/record-audit";
+import logger from "@/core/logger";
 
 class AuthService {
   options: CookieOptions = {
@@ -56,32 +58,44 @@ class AuthService {
     username: string,
     password: string
   ) => {
-    const existingUser = await authRepo.findByEmail(email);
+    const existingUser = await AuthRepo.CachedRead.findByEmail(email);
 
-    if (existingUser)
-      throw new ApiError({
-        statusCode: 400,
-        message: "User with this email already exists",
-        data: { service: "authService.initializeAuthService" },
+    if (existingUser) {
+      logger.error("User with this email already exists", {
+        source: "initialize_auth_service"
+      })
+      throw HttpError.badRequest("User with this email already exists", {
+        meta: { source: "authService.initializeAuthService" },
       });
+    }
 
-    const usernameTaken = await authRepo.findByUsername(username);
-    if (usernameTaken)
-      throw new ApiError({
-        statusCode: 400,
-        message: "Username is already taken",
-        data: { service: "authService.initializeAuthService" },
+    const usernameTaken = await AuthRepo.CachedRead.findByUsername(username);
+    if (usernameTaken){
+       logger.error("Username is already taken", {
+        source: "initialize_auth_service"
+      })
+      throw HttpError.badRequest("Username is already taken", {
+        meta: { source: "authService.initializeAuthService" },
       });
+    }
 
     const user = { email: email.toLowerCase(), username, password };
 
     const cacheSuccess = await cache.set(`pending:${email}`, user, 300);
-    if (!cacheSuccess)
-      throw new ApiError({
-        statusCode: 500,
-        message: "Failed to set user in cache",
-        data: { service: "authService.initializeAuthService" },
+    if (!cacheSuccess) {
+      logger.error("Failed to set user in cache", {
+        source: "initialize_auth_service"
+      })
+      throw HttpError.internal("Failed to set user in cache", {
+        meta: { source: "authService.initializeAuthService" },
       });
+    }
+
+    await recordAudit({
+      action: "user:initialized:account",
+      entityType: "user",
+      entityId: existingUser.id,
+    });
 
     return email;
   };
@@ -89,10 +103,8 @@ class AuthService {
   registerAuthService = async (email: string, req: Request) => {
     const user = await cache.get(`pending:${email}`);
     if (!user)
-      throw new ApiError({
-        statusCode: 404,
-        message: "User doesn't exists",
-        data: { service: "authService.registerAuthService" },
+      throw HttpError.notFound("User doesn't exists", {
+        meta: { source: "authService.registerAuthService" },
       });
 
     const { password, username } = user as {
@@ -104,7 +116,7 @@ class AuthService {
 
     const { createdUser, accessToken, refreshToken } = await runTransaction(
       async (tx) => {
-        const createdUser = await authRepo.create(
+        const createdUser = await AuthRepo.Write.create(
           {
             email,
             password: encryptedPassword,
@@ -112,11 +124,7 @@ class AuthService {
             authType: "manual",
             roles: ["user"],
             isBlocked: false,
-            suspension: {
-              reason: null,
-              ends: null,
-              howManyTimes: 0,
-            }
+            suspension: null,
           },
           tx
         );
@@ -130,10 +138,8 @@ class AuthService {
           );
 
         if (!accessToken || !refreshToken)
-          throw new ApiError({
-            statusCode: 500,
-            message: "Failed to generate access and refresh token",
-            data: { service: "authService.registerAuthService" },
+          throw HttpError.internal("Failed to generate access and refresh token", {
+            meta: { source: "authService.registerAuthService" },
           });
 
         // Cleanup cache
@@ -144,49 +150,63 @@ class AuthService {
       }
     );
 
+    await recordAudit({
+      action: "user:created:account",
+      entityType: "user",
+      entityId: createdUser.id,
+      after: { id: createdUser.id },
+      metadata: {
+        registrationMethod: "jwt"
+      }
+    });
+
     return { createdUser, accessToken, refreshToken };
   };
 
   loginAuthService = async (email: string, password: string, req: Request) => {
-    const user = await authRepo.findByEmail(email);
+    const user = await AuthRepo.CachedRead.findByEmail(email);
 
     if (!user)
-      throw new ApiError({
-        statusCode: 404,
-        message: "User doesn't exists",
-        data: { service: "authService.loginAuthService" },
+      throw HttpError.notFound("User doesn't exists", {
+        meta: { source: "authService.loginAuthService" },
       });
     if (!user.password)
-      throw new ApiError({
-        statusCode: 400,
-        message: "Password not set",
-        data: { service: "authService.loginAuthService" },
+      throw HttpError.badRequest("Password not set", {
+        meta: { source: "authService.loginAuthService" },
       });
 
     const passwordValid = await verifyPassword(password, user.password);
     if (!passwordValid)
-      throw new ApiError({
-        statusCode: 400,
-        message: "Invalid password",
-        data: { service: "authService.loginAuthService" },
+      throw HttpError.badRequest("Invalid password", {
+        meta: { source: "authService.loginAuthService" },
       });
 
     const { accessToken, refreshToken } =
       await tokenService.generateAndPersistTokens(user.id, user.username, req);
 
+    await recordAudit({
+      action: "user:logged:in:self",
+      entityType: "auth",
+      entityId: user.id,
+    });
+
     return { user, accessToken, refreshToken };
   };
 
   logoutAuthService = async (userId: string) => {
-    const user = await authRepo.findById(userId);
+    const user = await AuthRepo.CachedRead.findById(userId);
     if (!user)
-      throw new ApiError({
-        statusCode: 404,
-        message: "User doesn't exists",
-        data: { service: "authService.logoutAuthService" },
+      throw HttpError.notFound("User doesn't exists", {
+        meta: { source: "authService.logoutAuthService" },
       });
 
-    await authRepo.updateRefreshToken(user.id, "");
+    await AuthRepo.Write.updateRefreshToken(user.id, "");
+
+    await recordAudit({
+      action: "user:logged:out:self",
+      entityType: "auth",
+      entityId: user.id,
+    });
   };
 
   refreshAccessTokenService = async (
@@ -194,10 +214,8 @@ class AuthService {
     req: Request
   ) => {
     if (!incomingRefreshToken)
-      throw new ApiError({
-        statusCode: 401,
-        message: "Unauthorized request",
-        data: { service: "authService.refreshAccessTokenService" },
+      throw HttpError.unauthorized("Unauthorized request", {
+        meta: { source: "authService.refreshAccessTokenService" },
       });
 
     const decodedToken = jwt.verify(
@@ -205,26 +223,20 @@ class AuthService {
       env.REFRESH_TOKEN_SECRET
     );
     if (!decodedToken || typeof decodedToken === "string")
-      throw new ApiError({
-        statusCode: 401,
-        message: "Invalid Access Token",
-        data: { service: "authService.refreshAccessTokenService" },
+      throw HttpError.unauthorized("Invalid Access Token", {
+        meta: { source: "authService.refreshAccessTokenService" },
       });
 
-    const user = await authRepo.findById(decodedToken.id);
+    const user = await AuthRepo.CachedRead.findById(decodedToken.id);
 
     if (!user || !user.refreshToken)
-      throw new ApiError({
-        statusCode: 401,
-        message: "Invalid Refresh Token",
-        data: { service: "authService.refreshAccessTokenService" },
+      throw HttpError.unauthorized("Invalid Refresh Token", {
+        meta: { source: "authService.refreshAccessTokenService" },
       });
 
     if (!user.refreshToken.includes(incomingRefreshToken))
-      throw new ApiError({
-        statusCode: 401,
-        message: "Refresh token is invalid or not recognized",
-        data: { service: "authService.refreshAccessTokenService" },
+      throw HttpError.unauthorized("Refresh token is invalid or not recognized", {
+        meta: { source: "authService.refreshAccessTokenService" },
       });
 
     const { accessToken, refreshToken } =
@@ -243,11 +255,11 @@ class AuthService {
 
   async handleGoogleOAuth(code: string, req: Request) {
     return oauthService.handleGoogleOAuth(code, req);
-  }
+  };
 
   async handleUserOAuth(email: string, username: string, req: Request) {
     return oauthService.createUserFromOAuth(email, username, req);
-  }
+  };
 }
 
 export default new AuthService();

@@ -1,12 +1,15 @@
 import { Request } from "express";
-import ApiResponse from "@/core/http/ApiResponse.js";
-import { AsyncHandler } from "@/core/http/asyncHandler.js";
+import { AsyncHandler, HttpResponse } from "@/core/http";
 import collegeService from "./college.service";
+import { withBodyValidation, withParamsValidation, withQueryValidation } from "@/lib/validation";
+import * as collegeSchemas from "./college.schema";
+import { validateRequest } from "@/core/middlewares";
 
 class CollegeController {
+  static createCollege = withBodyValidation(collegeSchemas.createCollegeSchema, this.createCollegeHandler)
 
   @AsyncHandler()
-  async createCollege(req: Request) {
+  private static async createCollegeHandler(req: Request) {
     const { name, emailDomain, city, state, profile } = req.body;
 
     const newCollege = await collegeService.createCollege({
@@ -17,58 +20,66 @@ class CollegeController {
       profile,
     });
 
-    return ApiResponse.created({
-      message: "College created successfully",
+    return HttpResponse.created("College created successfully", {
       college: newCollege,
     });
   }
 
+  static getColleges = withQueryValidation(collegeSchemas.collegeFiltersSchema, this.getCollegesHandler)
+
   @AsyncHandler()
-  async getColleges(req: Request) {
+  private static async getCollegesHandler(req: Request) {
     const { city, state } = req.query as { city?: string; state?: string };
 
     const colleges = await collegeService.getColleges({ city, state });
 
-    return ApiResponse.ok({
+    return HttpResponse.ok("Colleges retrieved successfully", {
       colleges,
       count: colleges.length,
     });
   }
 
+  static getCollegeById = withParamsValidation(collegeSchemas.collegeIdSchema, this.getCollegeByIdHandler)
+
   @AsyncHandler()
-  async getCollegeById(req: Request) {
+  private static async getCollegeByIdHandler(req: Request) {
     const { id } = req.params;
 
     const college = await collegeService.getCollegeById(id);
 
-    return ApiResponse.ok({
+    return HttpResponse.ok("College retrieved successfully", {
       college,
     });
   }
 
+  static updateCollege = [
+    validateRequest(collegeSchemas.collegeIdSchema, "params"),
+    validateRequest(collegeSchemas.updateCollegeSchema),
+    this.updateCollegeHandler
+  ]
+
   @AsyncHandler()
-  async updateCollege(req: Request) {
+  private static async updateCollegeHandler(req: Request) {
     const { id } = req.params;
     const updates = req.body;
 
     const updatedCollege = await collegeService.updateCollege(id, updates);
 
-    return ApiResponse.ok({
-      message: "College updated successfully",
+    return HttpResponse.ok("College updated successfully", {
       college: updatedCollege,
     });
   }
 
+  static deleteCollege = withParamsValidation(collegeSchemas.collegeIdSchema, this.deleteCollegeHandler)
+
   @AsyncHandler()
-  async deleteCollege(req: Request) {
+  private static async deleteCollegeHandler(req: Request) {
     const { id } = req.params;
 
     await collegeService.deleteCollege(id);
 
-    return ApiResponse.ok({
-      message: "College deleted successfully",
-    });
+    return HttpResponse.ok("College deleted successfully");
   }
 }
 
-export default new CollegeController();
+export default CollegeController;

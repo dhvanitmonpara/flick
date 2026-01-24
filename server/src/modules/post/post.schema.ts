@@ -43,3 +43,11 @@ export const getPostsQuerySchema = z.object({
   collegeId: z.uuid("Invalid college ID").optional(),
   branch: z.string().optional(),
 });
+
+export const collegeIdSchema = z.object({
+  collegeId: z.uuid("Invalid college ID format"),
+});
+
+export const branchSchema = z.object({
+  branch: z.string().min(1, "Branch is required"),
+});

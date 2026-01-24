@@ -1,77 +1,31 @@
 import { Router } from "express";
 import postController from "./post.controller";
-import { authenticate } from "@/core/middlewares/auth";
-import { validate } from "@/core/middlewares";
-import * as postSchemas from "./post.schema";
+import { authenticate } from "@/core/middlewares";
 
 const router = Router();
 
 // Create post (authenticated users)
-router
-  .route("/")
-  .post(
-    authenticate,
-    validate(postSchemas.createPostSchema),
-    postController.createPost
-  );
+router.route("/").post(authenticate, postController.createPost);
 
 // Get all posts with filtering
-router
-  .route("/")
-  .get(
-    validate(postSchemas.getPostsQuerySchema, "query"),
-    postController.getPosts
-  );
+router.route("/").get(postController.getPosts);
 
 // Get single post by ID
-router
-  .route("/:id")
-  .get(
-    validate(postSchemas.postIdSchema, "params"),
-    postController.getPostById
-  );
+router.route("/:id").get(postController.getPostById);
 
 // Update post (author only)
-router
-  .route("/:id")
-  .patch(
-    authenticate,
-    validate(postSchemas.postIdSchema, "params"),
-    validate(postSchemas.updatePostSchema),
-    postController.updatePost
-  );
+router.route("/:id").patch(authenticate, postController.updatePost);
 
 // Delete post (author only)
-router
-  .route("/:id")
-  .delete(
-    authenticate,
-    validate(postSchemas.postIdSchema, "params"),
-    postController.deletePost
-  );
+router.route("/:id").delete(authenticate, postController.deletePost);
 
 // Increment post views
-router
-  .route("/:id/view")
-  .post(
-    validate(postSchemas.postIdSchema, "params"),
-    postController.incrementPostViews
-  );
+router.route("/:id/view").post(postController.incrementPostViews);
 
 // Get posts by college
-router
-  .route("/college/:collegeId")
-  .get(
-    validate(postSchemas.getPostsQuerySchema, "query"),
-    postController.getPostsByCollege
-  );
+router.route("/college/:collegeId").get(postController.getPostsByCollege);
 
 // Get posts by branch
-router
-  .route("/branch/:branch")
-  .get(
-    validate(postSchemas.getPostsQuerySchema, "query"),
-    postController.getPostsByBranch
-  );
+router.route("/branch/:branch").get(postController.getPostsByBranch);
 
 export default router;

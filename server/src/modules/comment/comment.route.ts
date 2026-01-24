@@ -1,57 +1,27 @@
 import { Router } from "express";
 import commentController from "./comment.controller";
-import { authenticate } from "@/core/middlewares/auth";
-import { rateLimitMiddleware, validate } from "@/core/middlewares";
-import * as commentSchemas from "./comment.schema";
+import { authenticate, ensureRatelimit } from "@/core/middlewares";
 
 const router = Router();
 
-router.use(rateLimitMiddleware.apiRateLimiter);
+router.use(ensureRatelimit.api);
 
 // Get comments by post ID
-router
-  .route("/post/:postId")
-  .get(
-    validate(commentSchemas.postIdSchema, "params"),
-    validate(commentSchemas.getCommentsQuerySchema, "query"),
-    commentController.getCommentsByPostId
-  );
-
-// Create comment for a post
-router
-  .route("/post/:postId")
-  .post(
-    authenticate,
-    validate(commentSchemas.postIdSchema, "params"),
-    validate(commentSchemas.createCommentSchema),
-    commentController.createComment
-  );
+router.route("/post/:postId").get(commentController.getCommentsByPostId);
 
 // Get single comment by ID
-router
-  .route("/:commentId")
-  .get(
-    validate(commentSchemas.commentIdSchema, "params"),
-    commentController.getCommentById
-  );
+router.route("/:commentId").get(commentController.getCommentById);
+
+// protected routes
+router.use(authenticate)
+
+// Create comment for a post
+router.route("/post/:postId").post(commentController.createComment);
 
 // Update comment
-router
-  .route("/:commentId")
-  .patch(
-    authenticate,
-    validate(commentSchemas.commentIdSchema, "params"),
-    validate(commentSchemas.updateCommentSchema),
-    commentController.updateComment
-  );
+router.route("/:commentId").patch(commentController.updateComment);
 
 // Delete comment
-router
-  .route("/:commentId")
-  .delete(
-    authenticate,
-    validate(commentSchemas.commentIdSchema, "params"),
-    commentController.deleteComment
-  );
+router.route("/:commentId").delete(commentController.deleteComment);
 
 export default router;

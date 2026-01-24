@@ -14,7 +14,7 @@ export const commentIdSchema = z.object({
 });
 
 export const postIdSchema = z.object({
-  postId: z.string().uuid("Invalid post ID format"),
+  postId: z.uuid("Invalid post ID format"),
 });
 
 export const getCommentsQuerySchema = z.object({

@@ -21,5 +21,5 @@ export interface MailTemplate {
 }
 
 export type SendResult =
-  | { status: "success"; id: string }
+  | { status: "success"; id: string, otp?: string }
   | { status: "error"; error: string };

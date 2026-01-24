@@ -1,12 +1,15 @@
 import { Request } from "express";
-import ApiResponse from "@/core/http/ApiResponse.js";
-import { AsyncHandler } from "@/core/http/asyncHandler.js";
+import { AsyncHandler, HttpResponse } from "@/core/http";
 import feedbackService from "./feedback.service";
+import { withBodyValidation, withParamsValidation, withQueryValidation } from "@/lib/validation";
+import * as feedbackSchemas from "./feedback.schema";
+import { validateRequest } from "@/core/middlewares";
 
 class FeedbackController {
+  static createFeedback = withBodyValidation(feedbackSchemas.createFeedbackSchema, this.createFeedbackHandler)
 
   @AsyncHandler()
-  async createFeedback(req: Request) {
+  private static async createFeedbackHandler(req: Request) {
     const { title, content, type } = req.body;
     const userId = req.user.id;
 
@@ -17,25 +20,24 @@ class FeedbackController {
       userId,
     });
 
-    return ApiResponse.created({
-      message: "Feedback created successfully",
-      feedback: newFeedback,
-    });
+    return HttpResponse.created("Feedback created successfully", { feedback: newFeedback });
   }
 
+  static getFeedbackById = withParamsValidation(feedbackSchemas.feedbackIdSchema, this.getFeedbackByIdHandler)
+
   @AsyncHandler()
-  async getFeedbackById(req: Request) {
+  private static async getFeedbackByIdHandler(req: Request) {
     const { id } = req.params;
 
     const feedback = await feedbackService.getFeedbackById(id, true);
 
-    return ApiResponse.ok({
-      feedback,
-    });
+    return HttpResponse.ok("Feedback retrieved successfully", { feedback });
   }
 
+  static listFeedbacks = withQueryValidation(feedbackSchemas.listFeedbacksQuerySchema, this.listFeedbacksHandler)
+
   @AsyncHandler()
-  async listFeedbacks(req: Request) {
+  private static async listFeedbacksHandler(req: Request) {
     const { limit, skip, type, status } = req.query as {
       limit?: number;
       skip?: number;
@@ -50,32 +52,35 @@ class FeedbackController {
       status,
     });
 
-    return ApiResponse.ok(result);
+    return HttpResponse.ok("Feedbacks retrieved successfully", result);
   }
 
+  static updateFeedbackStatus = [
+    validateRequest(feedbackSchemas.feedbackIdSchema, "params"),
+    validateRequest(feedbackSchemas.updateFeedbackStatusSchema),
+    this.updateFeedbackStatusHandler
+  ]
+
   @AsyncHandler()
-  async updateFeedbackStatus(req: Request) {
+  private static async updateFeedbackStatusHandler(req: Request) {
     const { id } = req.params;
     const { status } = req.body;
 
     const updatedFeedback = await feedbackService.updateFeedbackStatus(id, status);
 
-    return ApiResponse.ok({
-      message: "Feedback status updated successfully",
-      feedback: updatedFeedback,
-    });
+    return HttpResponse.ok("Feedback status updated successfully", { feedback: updatedFeedback });
   }
 
+  static deleteFeedback = withParamsValidation(feedbackSchemas.feedbackIdSchema, this.deleteFeedbackHandler)
+
   @AsyncHandler()
-  async deleteFeedback(req: Request) {
+  private static async deleteFeedbackHandler(req: Request) {
     const { id } = req.params;
 
     await feedbackService.deleteFeedback(id);
 
-    return ApiResponse.ok({
-      message: "Feedback deleted successfully",
-    });
+    return HttpResponse.ok("Feedback deleted successfully");
   }
 }
 
-export default new FeedbackController();
+export default FeedbackController;
