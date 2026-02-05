@@ -1,20 +1,15 @@
-import { AsyncHandler, HttpResponse, HttpError } from "@/core/http";
+import { Controller, HttpResponse, HttpError } from "@/core/http";
 import { Request, Response } from "express";
 import authService from "./auth.service";
-import { withBodyValidation } from "@/lib/validation";
 import * as authSchemas from "./auth.schema";
 
+@Controller()
 class AuthController {
-  static loginUser = withBodyValidation(authSchemas.loginSchema, this.loginUserHandler)
+  static async loginUser(req: Request, res: Response) {
+    const { email, password } = authSchemas.loginSchema.parse(req.body);
 
-  @AsyncHandler()
-  private static async loginUserHandler(req: Request, res: Response) {
-    const { email, password } = req.body;
-
-    const { user, accessToken, refreshToken } =
-      await authService.loginAuthService(email, password, req);
-
-    authService.setAuthCookies(res, accessToken, refreshToken);
+    const user =
+      await authService.loginAuth(email, password, res);
 
     return HttpResponse.ok(
       "User logged in successfully!",
@@ -26,22 +21,13 @@ class AuthController {
     );
   }
 
-  @AsyncHandler()
   static async logoutUser(req: Request, res: Response) {
-    if (!req.user?.id)
-      throw HttpError.notFound("User doesn't exists", {
-        meta: { source: "authService.logoutAuthService" },
-      });
-
-    await authService.logoutAuthService(req.user.id);
-
-    authService.clearAuthCookies(res);
+    await authService.logoutAuth(req, res, req.user?.id);
 
     return HttpResponse.ok("User logged out successfully");
   }
 
-  @AsyncHandler()
-  static async refreshAccessToken(req: Request, res: Response) {
+  static async refreshAccessToken(req: Request) {
     const incomingRefreshToken =
       req.cookies.refreshToken || req.body.refreshToken;
 
@@ -50,30 +36,24 @@ class AuthController {
         meta: { source: "authService.refreshAccessTokenService" },
       });
 
-    const { accessToken, refreshToken } =
-      await authService.refreshAccessTokenService(incomingRefreshToken, req);
+    // const { accessToken, refreshToken } =
+    //   await authService.refreshAccessTokenService(incomingRefreshToken, req);
 
-    authService.setAuthCookies(res, accessToken, refreshToken);
+    // authService.setAuthCookies(res, accessToken, refreshToken);
 
     return HttpResponse.ok("Access token refreshed successfully");
   }
 
-  static sendOtp = withBodyValidation(authSchemas.otpSchema, this.sendOtpHandler)
-
-  @AsyncHandler()
-  private static async sendOtpHandler(req: Request, _res: Response) {
-    const { email } = req.body;
+   static async sendOtp(req: Request) {
+    const { email } = authSchemas.otpSchema.parse(req.body);
 
     const { messageId } = await authService.sendOtpService(email);
 
     return HttpResponse.ok("OTP sent successfully", { messageId });
   }
 
-  static verifyOtp = withBodyValidation(authSchemas.verifyOtpSchema, this.verifyOtpHandler)
-
-  @AsyncHandler()
-  private static async verifyOtpHandler(req: Request, _res: Response) {
-    const { email, otp } = req.body;
+  static async verifyOtp(req: Request) {
+    const { email, otp } = authSchemas.verifyOtpSchema.parse(req.body);
 
     const isVerified = await authService.verifyOtpService(email, otp);
 
@@ -82,6 +62,14 @@ class AuthController {
       { isVerified },
     );
   }
+
+  // TODO: missing APIs
+  // delete account functionality is missing
+  // forget password functionality is missing
+  // reset password functionality is missing
+  // logout all devices (also called terminate all sessions in the old user controller) functionality is missing (removeAuthorizedDevices in old controller)
+  // get all admins
+  // get all users for admin
 }
 
 export default AuthController;
