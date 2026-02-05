@@ -1,4 +1,7 @@
 packages:
-  - "web"
-  - "server"
-  - "shared"
+  - web
+  - server
+  - shared
+
+ignoredBuiltDependencies:
+  - sharp
