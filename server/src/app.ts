@@ -2,10 +2,10 @@ import express from "express";
 import http from "node:http";
 import socketService from "@/infra/services/socket";
 import cookieParser from "cookie-parser";
-import { errorHandlers } from "@/core/middlewares";
+import { errorHandlers, observeRequest } from "@/core/middlewares";
 import { registerRoutes } from "@/routes/index";
 import applySecurity from "./config/security";
-import { injectRequestContext, registerRequestLogging } from "./core/middlewares";
+import { registerRequestLogging } from "./core/middlewares";
 
 const createApp = () => {
   const app = express();
@@ -17,7 +17,7 @@ const createApp = () => {
   app.use(express.static("public"));
   app.use(cookieParser());
 
-  app.use(injectRequestContext)
+  app.use(observeRequest);
   app.use(registerRequestLogging)
 
   applySecurity(app);

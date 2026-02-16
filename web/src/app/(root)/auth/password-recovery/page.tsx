@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { env } from "@/config/env";
+import { authApi } from "@/services/api/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios, { isAxiosError } from "axios";
 import { Loader2 } from "lucide-react";
@@ -46,6 +46,10 @@ function ResetPassword() {
   })
 
   const onSubmit = async (data: ResetFormData) => {
+    if (!email) {
+      navigate("/auth/password-recovery/enter-email")
+      return
+    }
     setIsSubmitting(true)
     try {
 
@@ -54,13 +58,9 @@ function ResetPassword() {
         return
       }
 
-      const res = await axios.post(
-        `${env.serverApiEndpoint}/users/reset-password/init`,
-        { email, password: data.password },
-        { withCredentials: true }
-      )
+      const isResetSuccess = await authApi.resetPassword.finalize(email, data.password)
 
-      if (res.status !== 200) {
+      if (!isResetSuccess) {
         toast.error("Error resetting password, Try again")
         return
       }

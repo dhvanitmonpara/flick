@@ -88,14 +88,14 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
       let res = null
 
       if (isUpdating) {
-        res = await axios.patch(`${env.serverApiEndpoint}/posts/update/${id}`, data, {
+        res = await axios.patch(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/posts/update/${id}`, data, {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
           },
         })
       } else {
-        res = await axios.post(`${env.serverApiEndpoint}/posts`, data, {
+        res = await axios.post(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/posts`, data, {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
@@ -140,7 +140,7 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
 
   const onSubmitTerms = async () => {
     try {
-      await axios.post(`${env.serverApiEndpoint}/users/accept-terms`, {}, { withCredentials: true });
+      await axios.post(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/users/accept-terms`, {}, { withCredentials: true });
       toast.success("Terms accepted!");
       setShowTerms(false);
       form.handleSubmit(onSubmit)();

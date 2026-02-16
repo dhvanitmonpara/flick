@@ -15,7 +15,7 @@ function TerminateSessions() {
       toastId = toast.loading("Terminating sessions...")
 
       const response = await axios.post(
-        `${env.serverApiEndpoint}/users/devices/terminate`,
+        `${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/users/devices/terminate`,
         {},
         { withCredentials: true }
       )

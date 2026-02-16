@@ -1,21 +1,9 @@
-import { bookmarks } from "./bookmark.table";
-import { comments } from "./comment.table";
-import { feedbacks } from "./feedback.table";
-import { auditLogs } from "./audit-log.table";
-import { posts } from "./post.table";
-import { users } from "./user.table";
-import { votes } from "./vote.table";
-import { colleges } from "./college.table";
-import { notifications } from "./notification.table"
-
-export {
-  bookmarks,
-  comments,
-  feedbacks,
-  auditLogs,
-  notifications,
-  posts,
-  users,
-  votes,
-  colleges,
-};
+export { bookmarks } from "./bookmark.table";
+export { comments } from "./comment.table";
+export { feedbacks } from "./feedback.table";
+export { auditLogs } from "./audit-log.table";
+export { posts } from "./post.table";
+export { votes } from "./vote.table";
+export { colleges } from "./college.table";
+export { users, sessions, accounts, verification, twoFactor, auth } from "./auth.table";
+export { notifications } from "./notification.table";

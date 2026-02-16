@@ -1,0 +1,99 @@
+import { Link, NavLink } from "react-router-dom"
+import UserProfile from "./UserProfile";
+import { useCallback, useEffect } from "react";
+import axios, { isAxiosError } from "axios";
+import useProfileStore from "@/store/profileStore";
+import { toast } from "sonner";
+
+const navLinks = [
+  { to: "/home", label: "Home" },
+  { to: "/", label: "Feed" },
+];
+
+function Header() {
+
+  const { setProfile, removeProfile } = useProfileStore()
+
+  const refreshAccessToken = useCallback(async () => {
+    try {
+
+      const res = await axios.post(`${import.meta.env.VITE_SERVER_API_URL}/users/refresh`, {}, {
+        withCredentials: true,
+      })
+
+      if (res.status !== 200) {
+        toast.error(res.data.message || "Something went wrong while refreshing access token")
+        return
+      }
+
+      setProfile(res.data)
+    } catch (error) {
+      if (isAxiosError(error)) {
+        toast.error(error.response?.data?.error || "Something went wrong while refreshing access token")
+      } else {
+        console.log(error)
+      }
+      removeProfile()
+    }
+  }, [removeProfile, setProfile])
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await axios.get(`${import.meta.env.VITE_SERVER_API_URL}/users/me`, {
+          withCredentials: true,
+        })
+
+        if (user.status !== 201) {
+          toast.error(user.data.message || "Something went wrong while fetching user")
+          return
+        }
+
+        setProfile(user.data.data)
+      } catch (error) {
+        if (isAxiosError(error)) {
+          if (error.response?.status === 401 || error.response?.data?.error === "Access token not found") {
+            await refreshAccessToken()
+          } else {
+            toast.error(error.response?.data?.message || "Something went wrong while fetching user")
+          }
+        } else {
+          console.log(error)
+        }
+      }
+    }
+
+    fetchUser()
+  }, [refreshAccessToken, setProfile])
+
+  return (
+    <>
+      <nav className="fixed h-14 z-50 bg-zinc-100 dark:bg-zinc-900 dark:border-b-2 dark:border-zinc-800 top-0 left-0 shadow-md w-full">
+        <div className="max-w-[88rem] flex justify-between mx-auto items-center px-4">
+          <Link to="/">
+            <img className="h-14 w-14" src="/Logo.png" alt="logo" />
+          </Link>
+          <ul className="flex gap-4 h-14">
+            {navLinks.map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `font-semibold h-full border-b-2 flex items-center ${isActive ? "text-zinc-950 dark:text-zinc-100 border-zinc-950 dark:border-zinc-100" : "text-gray-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 border-transparent"}`
+                }
+              >
+                {label}
+              </NavLink>
+            ))}
+          </ul>
+          <div className="flex gap-4">
+            <UserProfile />
+          </div>
+        </div>
+      </nav>
+      <div className="h-14"></div>
+    </>
+  )
+}
+
+export default Header

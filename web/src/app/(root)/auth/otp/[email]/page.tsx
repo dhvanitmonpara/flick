@@ -8,8 +8,8 @@ import {
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { toast } from 'sonner'
 import { Button } from "@/components/ui/button";
-import { env } from "@/config/env";
 import { useParams, useRouter } from "next/navigation";
+import { authApi } from "@/services/api/auth";
 
 const OTP_EXPIRE_TIME = 60;
 const MAX_ATTEMPTS = 5;
@@ -47,13 +47,9 @@ const OtpVerificationPage = ({ onVerifiedRedirect, onFailedRedirect }: { onVerif
   const sendOtp = useCallback(async () => {
     if (!email) navigate(onFailedRedirect)
     try {
-      const mailResponse: AxiosResponse = await axios.post(
-        `${env.serverApiEndpoint}/users/otp/send`,
-        { email: email },
-        { withCredentials: true }
-      );
+      const isMailSent = await authApi.otp.send(email as string);
 
-      if (mailResponse.status === 200) {
+      if (isMailSent) {
         setTimeLeft(OTP_EXPIRE_TIME);
       }
     } catch (error) {
@@ -79,18 +75,14 @@ const OtpVerificationPage = ({ onVerifiedRedirect, onFailedRedirect }: { onVerif
         return
       }
 
-      const response = await axios.post(
-        `${env.serverApiEndpoint}/users/otp/verify`,
-        { email: email, otp },
-        { withCredentials: true }
-      );
+      const isVerified = await authApi.otp.verify(email as string, otp);
 
-      if (response.status !== 200 && response.status !== 400) {
-        toast.error(response.data.message || "failed to verify otp")
+      if (!isVerified) {
+        toast.error("failed to verify otp")
         return
       }
 
-      if (response.data.isVerified) {
+      if (isVerified) {
         toast.success("OTP verified successfully!");
         navigate(`${onVerifiedRedirect}/${email}`);
       }

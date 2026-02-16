@@ -27,11 +27,14 @@ async function flushAuditBuffer() {
 
 function observeRequest(req: Request, res: Response, next: NextFunction) {
 
-  const reqIdArray = req.headers['x-request-id']
-  const reqId = Array.isArray(reqIdArray) ? reqIdArray[0] : reqIdArray
+  const requestId =
+    req.headers["x-request-id"]?.toString() ??
+    crypto.randomUUID();
+
+  req.id = requestId;
 
   const ctx = {
-    requestId: reqId ?? crypto.randomUUID(),
+    requestId,
     userId: req.user?.id,
     roles: req.user?.roles,
     ip: req.headers["x-forwarded-for"]?.toString().split(",")[0]

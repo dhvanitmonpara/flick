@@ -1,85 +1,86 @@
-import type { User } from "@/shared/types/User";
-import { eq, or, sql } from "drizzle-orm";
-import db from "@/infra/db/index";
-import { users } from "@/infra/db/tables/user.table";
+import { eq } from "drizzle-orm";
+import db from "@/infra/db";
 import type { DB } from "@/infra/db/types";
+import { auth } from "@/infra/db/tables/auth.table";
 
-export const findById = async (userId: string, dbTx?: DB) => {
+export const findById = async (authId: string, dbTx?: DB) => {
   const client = dbTx ?? db;
-  const user = await client.query.users.findFirst({
-    where: eq(users.id, userId),
+
+  return client.query.auth.findFirst({
+    where: eq(auth.id, authId),
   });
-
-  return user;
-};
-
-export const updateRefreshToken = async (
-  id: string,
-  refreshToken: string,
-  dbTx?: DB
-) => {
-  const client = dbTx ?? db;
-  await client
-    .update(users)
-    .set({ refreshToken })
-    .where(eq(users.id, id))
 };
 
 export const findByEmail = async (email: string, dbTx?: DB) => {
   const client = dbTx ?? db;
-  const user = await client.query.users.findFirst({
-    where: eq(users.email, email.toLowerCase()),
+
+  return client.query.auth.findFirst({
+    where: eq(auth.email, email.toLowerCase()),
   });
-
-  return user;
 };
 
-export const create = async (user: User, dbTx?: DB) => {
+export const findByLookupEmail = async (lookupEmail: string, dbTx?: DB) => {
   const client = dbTx ?? db;
-  const createdUser = await client
-    .insert(users)
-    .values(user)
-    .returning()
-    .then((r) => r?.[0] || null);
 
-  return createdUser;
-};
-
-export const update = async (karmaChange: number, ownerId: string, dbTx?: DB) => {
-  const client = dbTx ?? db;
-  const [updatedUser] = await client
-    .update(users)
-    .set({
-      karma: sql`${users.karma} + ${karmaChange}`,
-    })
-    .where(eq(users.id, ownerId))
-    .returning({ karma: users.karma });
-
-  return updatedUser;
-};
-
-export const findByUsername = async (username: string, dbTx?: DB) => {
-  const client = dbTx ?? db;
-  const user = await client.query.users.findFirst({
-    where: eq(users.username, username),
+  return client.query.auth.findFirst({
+    where: eq(auth.lookupEmail, lookupEmail),
   });
-
-  return user;
 };
 
-export const searchUsers = async (query: string, dbTx?: DB) => {
+export const create = async (
+  data: typeof auth.$inferInsert,
+  dbTx?: DB
+) => {
   const client = dbTx ?? db;
-  const results = await client.query.users.findMany({
-    where: or(
-      sql`LOWER(${users.username}) LIKE LOWER(${`%${query}%`})`,
-      sql`LOWER(${users.email}) LIKE LOWER(${`%${query}%`})`
-    ),
+
+  const [created] = await client.insert(auth).values(data).returning();
+  return created;
+};
+
+export type SearchUsersOptions = {
+  query: string;
+  limit?: number;
+  offset?: number;
+  collegeId?: string;
+};
+
+export const searchUsers = async (
+  options: SearchUsersOptions,
+  dbTx?: DB
+) => {
+  const client = dbTx ?? db;
+
+  const {
+    query,
+    limit = 10,
+    offset = 0,
+    collegeId,
+  } = options;
+
+  const normalizedQuery = query.toLowerCase();
+
+  return client.query.users.findMany({
+    where: (u, { and, sql, eq }) => {
+      const conditions = [
+        sql`LOWER(${u.username}) LIKE ${`%${normalizedQuery}%`}`,
+      ];
+
+      // Optional college filter
+      if (collegeId) {
+        conditions.push(eq(u.collegeId, collegeId));
+      }
+
+      return and(...conditions);
+    },
+
     columns: {
       id: true,
       username: true,
-      email: true,
+      karma: true,
+      collegeId: true,
     },
-  });
 
-  return results;
+    limit,
+    offset,
+  });
 };

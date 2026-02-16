@@ -1,12 +1,48 @@
 import db from "@/infra/db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth"
-import { twoFactor, organization, admin } from "better-auth/plugins"
+import { twoFactor, admin } from "better-auth/plugins"
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
-    provider: "pg", // or "mysql", "sqlite"
+    provider: "pg",
   }),
+  user: {
+    modelName: "auth_user",
+    fields: {
+      name: undefined,
+      image: undefined,
+    },
+    additionalFields: {
+      lookupEmail: {
+        type: "string",
+        required: true,
+        fieldName: "lookup_email",
+      },
+      collegeId: {
+        type: "string",
+        required: true,
+        fieldName: "college_id",
+      },
+      branch: {
+        type: "string",
+        required: true,
+        fieldName: "branch",
+      },
+      karma: {
+        type: "number",
+        required: false,
+        fieldName: "karma",
+        defaultValue: 0
+      },
+      isAcceptedTerms: {
+        type: "boolean",
+        required: true,
+        fieldName: "is_accepted_terms",
+        defaultValue: false
+      },
+    }
+  },
   emailAndPassword: {
     enabled: true,
   },
@@ -31,6 +67,5 @@ export const auth = betterAuth({
   plugins: [
     twoFactor(),
     admin(),
-    // organization()
   ]
 });

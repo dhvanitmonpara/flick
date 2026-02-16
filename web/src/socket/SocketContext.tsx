@@ -1,6 +1,6 @@
 import { createContext, useEffect, useState, ReactNode } from "react";
 import io, { Socket } from "socket.io-client";
-import { env } from "@/conf/env";
+import { env } from "@/config/env";
 import useProfileStore from "@/store/profileStore";
 
 // Define a type for your socket context
@@ -18,7 +18,7 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   useEffect(() => {
     if (!profile._id) return;
 
-    const newSocket = io(env.serverUri, {
+    const newSocket = io(env.SERVER_URI, {
       transports: ["websocket"],
       auth: {
         userId: profile._id,

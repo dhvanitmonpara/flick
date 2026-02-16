@@ -1,3 +1,5 @@
+"use client"
+
 import { Toaster } from "sonner"
 import { useEffect } from "react"
 import axios from "axios"
@@ -10,8 +12,8 @@ function RootLayout({ children }: { children: React.ReactElement }) {
 
   useEffect(() => {
     (async () => {
-      if (!env.serverUri || env.environment === "development") return
-      const res = await axios.get(`${env.serverUri}/health-check`)
+      if (!env.SERVER_URI || env.NODE_ENV === "development") return
+      const res = await axios.get(`${env.SERVER_URI}/health-check`)
       if (res.status !== 200) {
         navigate("/server-booting")
       }

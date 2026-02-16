@@ -55,7 +55,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
 
   const onSubmitTerms = async () => {
     try {
-      await axios.post(`${env.serverApiEndpoint}/users/accept-terms`, {}, { withCredentials: true });
+      await axios.post(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/users/accept-terms`, {}, { withCredentials: true });
       toast.success("Terms accepted!");
       setShowTerms(false);
       form.handleSubmit(onSubmit)();
@@ -72,7 +72,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
       let res = null
 
       if (isUpdating) {
-        res = await axios.patch(`${env.serverApiEndpoint}/comments/update/${commentId}`,
+        res = await axios.patch(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/comments/update/${commentId}`,
           data,
           {
             withCredentials: true,
@@ -82,7 +82,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
           }
         )
       } else {
-        res = await axios.post(`${env.serverApiEndpoint}/comments/create/${id}`,
+        res = await axios.post(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/comments/create/${id}`,
           { ...data, parentCommentId: parentCommentId ?? null },
           {
             withCredentials: true,

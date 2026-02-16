@@ -7,7 +7,6 @@ import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import axios from "axios"
 import {
   Select,
   SelectContent,
@@ -15,10 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { env } from "@/config/env"
 import { branch } from "@/constants/branch"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { authApi } from "@/services/api/auth"
 
 const signInSchema = z.object({
   branch: branch,
@@ -53,13 +52,9 @@ function OAuthSetupPage() {
         return
       }
 
-      const response = await axios.post(
-        `${env.serverApiEndpoint}/users/oauth`,
-        { email: email, branch: branch.parse(data.branch) },
-        { withCredentials: true }
-      )
+      const isSetupSuccess = await authApi.oauth.setup(email, branch.parse(data.branch))
 
-      if (response.status !== 201) {
+      if (!isSetupSuccess) {
         toast.error("Failed to initialize user")
         return
       }

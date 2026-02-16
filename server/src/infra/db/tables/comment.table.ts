@@ -1,6 +1,6 @@
 import { pgTable, uuid, text, boolean, timestamp } from "drizzle-orm/pg-core";
 import { posts } from "./post.table";
-import { users } from "./user.table";
+import { users } from "./auth.table";
 
 export const comments = pgTable("comments", {
   id: uuid("id").defaultRandom().primaryKey(),

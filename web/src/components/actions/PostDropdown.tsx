@@ -83,7 +83,7 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
       setLoading(true);
 
       const res = await axios.delete(
-        `${env.serverApiEndpoint}/${type}s/delete/${id}`,
+        `${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/${type}s/delete/${id}`,
         { withCredentials: true }
       )
 
@@ -107,12 +107,12 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
       let res = null
       if (marked) {
         res = await axios.delete(
-          `${env.serverApiEndpoint}/bookmarks/delete/${id}`,
+          `${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/bookmarks/delete/${id}`,
           { withCredentials: true }
         )
       } else {
         res = await axios.post(
-          `${env.serverApiEndpoint}/bookmarks`,
+          `${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/bookmarks`,
           { postId: id },
           { withCredentials: true }
         )
@@ -138,7 +138,7 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
       setLoading(true)
 
       const res = await axios.post(
-        `${env.serverApiEndpoint}/reports`,
+        `${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/reports`,
         {
           targetId: id,
           type: type.charAt(0).toUpperCase() + type.slice(1),

@@ -1,4 +1,4 @@
-import { env } from "@/conf/env";
+import { env } from "@/config/env/server-env";
 
 const handleGoogleOAuthRedirect = (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();

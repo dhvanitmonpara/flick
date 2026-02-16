@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { email, z } from "zod";
 
 const EmailSchema = z.email("Email is required");
 
@@ -20,9 +20,10 @@ export const registrationSchema = z.object({
 });
 
 export const initializeUserSchema = registrationSchema.extend({
-  username: z
-    .string("Username is required")
-    .min(1, "Username must be at least 1 characters long"),
+  branch: z
+    .string("Branch is required")
+    .min(1, "Branch must be at least 1 characters long"),
+  email: EmailSchema,
   password: z
     .string("Password is required")
     .min(6, "Password must be at least 6 characters"),

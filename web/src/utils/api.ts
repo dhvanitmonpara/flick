@@ -1,6 +1,6 @@
 // api.ts
 import axios from "axios";
-import { env } from "@/conf/env";
+import { env } from "@/config/env/server-env";
 import useProfileStore from "@/store/profileStore";
 import { toast } from "sonner";
 

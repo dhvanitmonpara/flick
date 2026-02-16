@@ -10,7 +10,7 @@ function ShareButton({ id }: { id: string }) {
   const handleShare = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.stopPropagation()
     setShared(true)
-    navigator.clipboard.writeText(`${env.baseUrl}/p/${id}`)
+    navigator.clipboard.writeText(`${env.NEXT_PUBLIC_BASE_URL}/p/${id}`)
     toast.success("Link copied to clipboard")
     setTimeout(() => {
       setShared(false)

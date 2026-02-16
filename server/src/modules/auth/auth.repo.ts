@@ -9,9 +9,9 @@ const AuthRepo = {
 
     findByEmail: (email: string, dbTx?: DB) => authAdapter.findByEmail(email, dbTx),
 
-    findByUsername: (username: string, dbTx?: DB) => authAdapter.findByUsername(username, dbTx),
+    findByLookupEmail: (lookupEmail: string, dbTx?: DB) => authAdapter.findByLookupEmail(lookupEmail, dbTx),
 
-    searchUsers: (query: string, dbTx?: DB) => authAdapter.searchUsers(query, dbTx)
+    searchUsers: (options: authAdapter.SearchUsersOptions, dbTx?: DB) => authAdapter.searchUsers(options, dbTx),
   },
 
   CachedRead: {
@@ -21,19 +21,15 @@ const AuthRepo = {
     findByEmail: (email: string, dbTx?: DB) =>
       cached(authCacheKeys.email(email), () => authAdapter.findByEmail(email, dbTx)),
 
-    findByUsername: (username: string, dbTx?: DB) =>
-      cached(authCacheKeys.username(username), () =>
-        authAdapter.findByUsername(username, dbTx)
-      ),
-    searchUsers: (query: string, dbTx?: DB) =>
-      cached(authCacheKeys.search(query), () => authAdapter.searchUsers(query, dbTx))
+    findByLookupEmail: (lookupEmail: string, dbTx?: DB) =>
+      cached(authCacheKeys.email(lookupEmail), () => authAdapter.findByLookupEmail(lookupEmail, dbTx)),
+
+    searchUsers: (options: authAdapter.SearchUsersOptions, dbTx?: DB) =>
+      cached(authCacheKeys.search(options.query), () => authAdapter.searchUsers(options, dbTx)),
   },
 
   Write: {
-    updateRefreshToken: authAdapter.updateRefreshToken,
     create: authAdapter.create,
-    update: authAdapter.update,
-    updateKarma: authAdapter.updateKarma
   }
 }
 

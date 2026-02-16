@@ -1,4 +1,4 @@
-import compose from "@/lib/compose";
+import compose from "@/lib/compose-middleware";
 import { requireRole } from "./auth/require-roles.middleware";
 import { authenticate } from "./auth/authenticate.middleware";
 import { requireAuth } from "./auth/require-auth.middleware";

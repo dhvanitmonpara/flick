@@ -3,6 +3,12 @@ export interface CacheProvider {
   set<T>(key: string, value: T, ttl?: number): Promise<boolean>;
   del(key: string): Promise<boolean>;
   flush(): Promise<void>;
-  keys(): Promise<string[]>;
   has(key: string): Promise<boolean>;
+}
+
+export interface RedisSessionStoreInterface {
+  setKeepTtl<T>(key: string, value: T): Promise<boolean>;
+  hincrby(key: string, field: string, increment: number): Promise<number>;
+  hget(key: string, field: string): Promise<string | null>;
+  hset(key: string, field: string, value: string): Promise<number>;
 }

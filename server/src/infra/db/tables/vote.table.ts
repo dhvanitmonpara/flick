@@ -1,7 +1,7 @@
 import { index, pgEnum, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { posts } from "./post.table";
 import { comments } from "./comment.table";
-import { users } from "./user.table";
+import { users } from "./auth.table";
 import { eq } from "drizzle-orm";
 
 export const voteTypeEnum = pgEnum("vote_type_enum", [
@@ -14,7 +14,7 @@ export const VoteEntityEnum = pgEnum("vote_entity_enum", [
   "comment",
 ]);
 
-export const votes = pgTable("vote", {
+export const votes = pgTable("votes", {
   id: uuid("id").defaultRandom().primaryKey(),
 
   postId: uuid("postId")

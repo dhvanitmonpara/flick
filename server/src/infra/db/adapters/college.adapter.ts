@@ -1,4 +1,4 @@
-import { and, eq, ilike, or } from "drizzle-orm";
+import { and, eq, ilike } from "drizzle-orm";
 import db from "@/infra/db/index";
 import type { DB } from "@/infra/db/types";
 import { colleges } from "../tables";
@@ -23,13 +23,13 @@ export const findByEmailDomain = async (emailDomain: string, dbTx?: DB) => {
 
 export const findAll = async (filters?: { city?: string; state?: string }, dbTx?: DB) => {
   const client = dbTx ?? db;
-  
+
   let whereConditions = [];
-  
+
   if (filters?.city) {
     whereConditions.push(ilike(colleges.city, `%${filters.city}%`));
   }
-  
+
   if (filters?.state) {
     whereConditions.push(ilike(colleges.state, `%${filters.state}%`));
   }

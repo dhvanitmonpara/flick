@@ -3,7 +3,7 @@ import { Request } from "express";
 import { env } from "@/config/env";
 import cache from "@/infra/services/cache/index";
 import AuthRepo from "@/modules/auth/auth.repo";
-import tokenService from "@/modules/auth/tokens/token.service";
+import tokenService from "@/modules/auth/cookie/cookie.service";
 import { HttpError } from "@/core/http";
 import recordAudit from "@/lib/record-audit";
 import logger from "@/core/logger";
@@ -11,7 +11,7 @@ import logger from "@/core/logger";
 class OAuthService {
   handleGoogleOAuth = async (code: string, req: Request) => {
     logger.info("Handling Google OAuth", { code: code.substring(0, 10) + "..." });
-    
+
     // Exchange code for access token
     // Get user info
     // Check existing user
@@ -49,7 +49,7 @@ class OAuthService {
 
     if (existingUser) {
       logger.info("Existing user found, generating tokens", { userId: existingUser.id });
-      
+
       const { accessToken, refreshToken } =
         await tokenService.generateAndPersistTokens(
           existingUser.id,
@@ -112,7 +112,7 @@ class OAuthService {
       action: "user:created:account",
       entityType: "user",
       entityId: createdUser.id,
-      after: {id: createdUser.id},
+      after: { id: createdUser.id },
       metadata: {
         registrationMethod: "oauth",
         provider: "google"

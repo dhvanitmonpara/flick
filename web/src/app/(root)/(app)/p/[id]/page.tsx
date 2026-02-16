@@ -2,7 +2,7 @@ import Comment from "@/components/general/Comment";
 import CreateComment from "@/components/general/CreateComment";
 import Post from "@/components/general/Post"
 import SkeletonCard from "@/components/skeletons/PostSkeleton";
-import { env } from "@/config/env";
+import { env } from "@/config/env/server-env";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import useCommentStore from "@/store/commentStore";
 import usePostStore from "@/store/postStore";

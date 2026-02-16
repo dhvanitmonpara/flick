@@ -7,13 +7,13 @@ import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import axios, { isAxiosError } from "axios"
 import { toast } from "sonner"
-import { env } from "@/config/env"
 import { IoMdEye, IoMdEyeOff } from "react-icons/io"
 import { FaGoogle } from "react-icons/fa6"
 import { handleGoogleOAuthRedirect } from "@/utils/googleOAuthRedirect"
 import { Separator } from "@/components/ui/separator"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { authApi } from "@/services/api/auth"
 
 const signInSchema = z.object({
   email: z.string().email("Email is invalid"),
@@ -38,11 +38,9 @@ function SignInPage() {
   const onSubmit = async (data: SignInFormData) => {
     setIsSubmitting(true)
     try {
-      const res = await axios.post(`${env.serverApiEndpoint}/users/login`, data, {
-        withCredentials: true
-      })
+      const isSuccess = await authApi.session.login(data.email, data.password)
 
-      if (res.status !== 200) {
+      if (!isSuccess) {
         toast.error("Error signing in, Try again")
         return
       }
@@ -52,7 +50,7 @@ function SignInPage() {
     } catch (err) {
       console.error("Sign in error", err)
       if (isAxiosError(err)) {
-        if(err.response?.status === 400 && err.response?.data.code === "NO_PASSWORD_FOUND_ERROR") {
+        if (err.response?.status === 400 && err.response?.data.code === "NO_PASSWORD_FOUND_ERROR") {
           navigate(`/auth/password-recovery?email=${data.email}`)
           return
         }

@@ -93,18 +93,18 @@ const EngagementComponent = ({
     setIsVoting(true);
     try {
       if (action === 'post') {
-        await axios.post(`${env.serverApiEndpoint}/votes`, {
+        await axios.post(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/votes`, {
           voteType: type,
           targetId: _id,
           targetType
         }, { withCredentials: true });
       } else if (action === 'delete') {
-        await axios.delete(`${env.serverApiEndpoint}/votes`, {
+        await axios.delete(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/votes`, {
           data: { targetId: _id, targetType },
           withCredentials: true,
         });
       } else if (action === 'patch') {
-        await axios.patch(`${env.serverApiEndpoint}/votes`, {
+        await axios.patch(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/votes`, {
           voteType: type,
           targetId: _id,
           targetType,

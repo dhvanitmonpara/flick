@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { HttpError } from "@/core/http";
-import cache from "@/infra/services/cache/index";
+import cache, { redis } from "@/infra/services/cache/index";
 import AuthRepo from "@/modules/auth/auth.repo";
 import oauthService from "@/modules/auth/oauth/oauth.service";
 import otpService from "@/modules/auth/otp/otp.service";
@@ -9,6 +9,13 @@ import logger from "@/core/logger";
 import { auth } from "@/infra/auth/auth";
 import { forwardSetCookieHeaders } from "@/lib/better-auth/http-helpers";
 import parseHeaders from "@/lib/better-auth/parse-headers";
+import { isDisposableEmailDomain } from "disposable-email-domains-js";
+import CollegeRepo from "../college/college.repo";
+import { nanoid } from "nanoid";
+import CryptoTools from "@/lib/crypto-tools";
+import crypto from "node:crypto";
+import { PendingUser } from "./auth.types";
+import { env } from "@/config/env";
 
 class AuthService {
 
@@ -23,82 +30,168 @@ class AuthService {
     return stored;
   };
 
-  initializeAuthService = async (
+  getPendingUser = async (signupId: string) => {
+    const stored = (await cache.get(`pending:${signupId}`)) as PendingUser;
+
+    if (!stored) {
+      throw HttpError.forbidden("Invalid or expired signup session");
+    }
+
+    return stored;
+  };
+
+  initializeRegistration = async (
     email: string,
-    username: string,
-    password: string
+    branch: string,
+    res: Response
   ) => {
     const existingUser = await AuthRepo.CachedRead.findByEmail(email);
 
     if (existingUser) {
-      logger.error("User with this email already exists", {
-        source: "initialize_auth_service"
+      logger.warn("User with this email already exists", {
+        source: "initialize_registration"
       })
-      throw HttpError.badRequest("User with this email already exists", {
-        meta: { source: "authService.initializeAuthService" },
+      throw HttpError.forbidden("User with this email already exists", {
+        meta: { source: "authService.initializeRegistration" },
       });
     }
 
-    const usernameTaken = await AuthRepo.CachedRead.findByUsername(username);
-    if (usernameTaken) {
-      logger.error("Username is already taken", {
-        source: "initialize_auth_service"
+    this.validateStudentEmail(email);
+
+    const college = await CollegeRepo.CachedRead.findByEmailDomain(email.split("@")[1]);
+
+    if (!college) {
+      logger.error("College not found", {
+        source: "authService.initializeRegistration"
       })
-      throw HttpError.badRequest("Username is already taken", {
-        meta: { source: "authService.initializeAuthService" },
+      throw HttpError.notFound("College not found", {
+        code: "COLLEGE_NOT_FOUND",
+        meta: { source: "initialize_registration" },
       });
     }
 
-    const user = { email: email.toLowerCase(), username, password };
+    this.checkDisposableMail(email)
 
-    const cacheSuccess = await cache.set(`pending:${email}`, user, 300);
+    const encryptedEmail = CryptoTools.email.encrypt(email.toLowerCase());
+    const signupId = crypto.randomBytes(32).toString("hex");
+
+    const otpData = await this.sendOtp(signupId, email);
+
+    const cacheSuccess = await cache.set(
+      `pending:${signupId}`,
+      {
+        branch,
+        collegeId: college.id,
+        email: encryptedEmail,
+        verified: false
+      },
+      900
+    );
+
     if (!cacheSuccess) {
       logger.error("Failed to set user in cache", {
-        source: "initialize_auth_service"
+        source: "authService.initializeRegistration"
       })
       throw HttpError.internal("Failed to set user in cache", {
-        meta: { source: "authService.initializeAuthService" },
+        meta: { source: "initialize_registration" },
       });
     }
+
+    res.cookie("pending_signup", signupId, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 900 * 1000,
+      path: "/",
+      domain: env.COOKIE_DOMAIN
+    });
 
     await recordAudit({
       action: "user:initialized:account",
       entityType: "user",
-      entityId: existingUser.id,
+      entityId: signupId,
     });
 
-    return email;
+    return { success: true };
   };
 
-  registerAuth = async (email: string, res: Response) => {
-    const user = await cache.get(`pending:${email}`);
-    if (!user)
-      throw HttpError.notFound("User doesn't exists", {
-        meta: { source: "authService.registerAuthService" },
+  verifyUserOtp = async (signupId: string, otp: string) => {
+    const stored = await this.getPendingUser(signupId);
+
+    const attemptsKey = `otp_attempts:${signupId}`;
+
+    const attempts =
+      ((await cache.get(attemptsKey)) as number) || 0;
+
+    if (attempts >= 5) {
+      await cache.del(`otp:${signupId}`);
+      await cache.del(`pending:${signupId}`);
+      throw HttpError.forbidden("Too many OTP attempts. Try later.");
+    }
+
+    const isOTPValid = await this.verifyOtp(signupId, otp);
+
+    if (!isOTPValid) {
+      const newAttempts = attempts + 1;
+
+      await cache.set(attemptsKey, newAttempts, 900);
+
+      logger.warn("Invalid OTP", {
+        source: "verify_user_otp",
+        attempts: newAttempts,
       });
 
-    const { password, username } = user as {
-      readonly password: string;
-      readonly username: string;
+      if (newAttempts >= 5) {
+        throw HttpError.forbidden("Too many OTP attempts. Try later.");
+      }
+
+      throw HttpError.forbidden("Invalid OTP");
     };
 
-    // Call BetterAuth signUp — pass plain password; BetterAuth handles hashing
+    await cache.del(attemptsKey);
+    await cache.del(`otp:${signupId}`);
+
+    // Mark verified
+    await redis.setKeepTtl(
+      `pending:${signupId}`,
+      { ...stored, verified: true },
+    );
+
+    return { verified: true };
+  };
+
+  finishRegistration = async (req: Request, password: string, res: Response) => {
+    const signupId = req.cookies.pending_signup;
+    const stored = await this.getPendingUser(signupId);
+    const { email, branch, collegeId, verified } = stored;
+
+    if (!verified) {
+      throw HttpError.forbidden("User not verified");
+    }
+
+    const username = nanoid(12);
+    const decryptedEmail = CryptoTools.email.decrypt(email)
+    const lookupEmail = CryptoTools.email.hash(decryptedEmail)
+
     const response = await auth.api.signUpEmail({
-      body: { email, password, name: username },
-      // body: { email, password, name: username, username },
+      body: {
+        email: decryptedEmail,
+        lookupEmail,
+        password,
+        name: username,
+        collegeId,
+        branch,
+      },
       asResponse: true,
       returnHeaders: true,
     });
 
-    // Forward cookies to client
     if (res && response.headers) forwardSetCookieHeaders(response.headers, res);
 
     const data = await response.json();
     const createdUser = data.user;
 
-    // cleanup cache/otp
-    await cache.del(`pending:${email}`);
-    await cache.del(`otp:${email}`);
+    await cache.del(`pending:${signupId}`);
 
     await recordAudit({
       action: "user:created:account",
@@ -125,7 +218,7 @@ class AuthService {
     await recordAudit({
       action: "user:logged:in:self",
       entityType: "auth",
-      entityId: data.id,
+      entityId: data.user.id,
     });
 
     return data
@@ -133,8 +226,8 @@ class AuthService {
 
   logoutAuth = async (req: Request, res: Response, userId: string) => {
     const headers = parseHeaders(req.headers)
-    await auth.api.signOut({ headers, asResponse: true, returnHeaders: true });
-    forwardSetCookieHeaders(headers, res);
+    const response = await auth.api.signOut({ headers, asResponse: true, returnHeaders: true });
+    forwardSetCookieHeaders(response.headers, res);
 
     await recordAudit({
       action: "user:logged:out:self",
@@ -143,17 +236,39 @@ class AuthService {
     });
   };
 
-  sendOtpService = async (email: string) => {
-    return otpService.sendOtp(email);
+  validateStudentEmail(email: string) {
+    if (typeof email !== "string") {
+      throw HttpError.badRequest("Invalid email format");
+    }
+
+    const parts = email.split("@");
+    if (parts.length !== 2) {
+      throw HttpError.badRequest("Invalid email structure");
+    }
+
+    const [localPart] = parts;
+
+    if (!/^\d+$/.test(localPart)) {
+      throw HttpError.badRequest("Enrollment ID must be numeric");
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(email)) {
+      throw HttpError.badRequest("Invalid email address format");
+    }
+  }
+
+  checkDisposableMail = (email: string) => {
+    const domain = email.split("@")[1];
+
+    if (isDisposableEmailDomain(domain)) {
+      throw HttpError.badRequest("Disposable emails not allowed");
+    }
   };
 
-  verifyOtpService = async (email: string, otp: string): Promise<boolean> => {
-    return otpService.verifyOtp(email, otp);
-  };
-
-  async handleGoogleOAuth(code: string, req: Request) {
-    return oauthService.handleGoogleOAuth(code, req);
-  };
+  sendOtp = otpService.sendOtp;
+  verifyOtp = otpService.verifyOtp
+  handleGoogleOAuth = oauthService.handleGoogleOAuth
 }
 
 export default new AuthService();

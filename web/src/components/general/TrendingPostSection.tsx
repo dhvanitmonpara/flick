@@ -21,7 +21,7 @@ function TrendingPostSection() {
       setLoading(true)
 
       // TODO: make an API for this
-      const res = await axios.get(`${env.serverApiEndpoint}/`)
+      const res = await axios.get(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/`)
 
       if (res.status !== 200) {
         toast.error("Error fetching trending posts")

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { env } from "@/conf/env";
+import { env } from "@/config/env";
 import useProfileStore from "@/store/profileStore";
 import { IUser } from "@/types/User";
 import axios, { AxiosError } from "axios";
@@ -20,13 +20,9 @@ export const useErrorHandler = () => {
   }, []);
 
   const refreshAccessToken = useCallback(async (signal?: AbortSignal) => {
-    if (!env.serverApiEndpoint) {
-      throw new Error("Missing VITE_SERVER_API_ENDPOINT env variable");
-    }
-
     try {
       const { data } = await axios.post(
-        `${env.serverApiEndpoint}/users/refresh`,
+        `${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/users/refresh`,
         {},
         {
           withCredentials: true,

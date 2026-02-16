@@ -15,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { env } from "@/config/env"
 import FileInput from "@/components/FileInput"
 import { branch } from "@/constants/branch"
 import { FaGoogle } from "react-icons/fa"
@@ -23,9 +22,10 @@ import { handleGoogleOAuthRedirect } from "@/utils/googleOAuthRedirect"
 import { Separator } from "@/components/ui/separator"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { authApi } from "@/services/api/auth"
 
 const signInSchema = z.object({
-  email: z.string().email("Email is invalid"),
+  email: z.email("Email is invalid"),
   branch: branch,
   password: z.string()
     .min(8, "Password must be at least 8 characters")
@@ -70,13 +70,13 @@ function SignUpPage() {
         return
       }
 
-      const response = await axios.post(
-        `${env.serverApiEndpoint}/users/initialize`,
-        { email: data.email, password: data.password, branch: branch.parse(data.branch) },
-        { withCredentials: true }
+      const response = await authApi.register.initialize(
+        data.email,
+        data.password,
+        branch.parse(data.branch)
       )
 
-      if (response.status !== 201) {
+      if (!response.success) {
         toast.error("Failed to initialize user")
         return
       }
@@ -209,9 +209,9 @@ function SignUpPage() {
       </form>
       {errors.root && <p className="text-red-500 text-sm mt-1!">{errors.root?.message}</p>}
       <p className="flex justify-center items-center my-4">
-        <Separator className="shrink"/>
+        <Separator className="shrink" />
         <span className="px-4 text-zinc-500 dark:text-zinc-500 text-sm">Or</span>
-        <Separator className="shrink"/>
+        <Separator className="shrink" />
       </p>
       <form onSubmit={handleGoogleOAuthRedirect}>
         <Button className="w-full">

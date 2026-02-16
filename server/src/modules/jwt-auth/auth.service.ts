@@ -4,9 +4,9 @@ import { env } from "@/config/env";
 import { HttpError } from "@/core/http";
 import cache from "@/infra/services/cache/index";
 import AuthRepo from "@/modules/auth/auth.repo";
-import { hashPassword, verifyPassword } from "@/lib/crypto";
+import { hashPassword, verifyPassword } from "@/lib/crypto-tools";
 import oauthService from "@/modules/auth/oauth/oauth.service";
-import tokenService from "@/modules/auth/tokens/token.service";
+import tokenService from "@/modules/auth/cookie/cookie.service";
 import otpService from "@/modules/auth/otp/otp.service";
 import { runTransaction } from "@/infra/db/transactions";
 import recordAudit from "@/lib/record-audit";
@@ -70,8 +70,8 @@ class AuthService {
     }
 
     const usernameTaken = await AuthRepo.CachedRead.findByUsername(username);
-    if (usernameTaken){
-       logger.error("Username is already taken", {
+    if (usernameTaken) {
+      logger.error("Username is already taken", {
         source: "initialize_auth_service"
       })
       throw HttpError.badRequest("Username is already taken", {

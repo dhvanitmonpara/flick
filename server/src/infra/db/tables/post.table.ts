@@ -1,5 +1,5 @@
 import { boolean, index, integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { users } from "./user.table";
+import { users } from "./auth.table";
 
 export const topicEnum = pgEnum("topic_enum", [
   "Ask Flick", // AMA-style Q&A
@@ -15,7 +15,7 @@ export const topicEnum = pgEnum("topic_enum", [
   "Guide / Resource", // Tutorials, resources, link dumps
 ]);
 
-export const posts = pgTable("post", {
+export const posts = pgTable("posts", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
   content: text("content").notNull(),

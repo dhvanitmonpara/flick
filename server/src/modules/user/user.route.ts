@@ -1,15 +1,10 @@
 import { Router } from "express";
 import UserController from "@/modules/user/user.controller";
-import { authenticate } from "@/core/middlewares";
+import { authenticate, ensureRatelimit } from "@/core/middlewares";
 
 const router = Router();
 
-router.post("/register", UserController.registerUser);
-router.post("/initialize", UserController.initializeUser);
-router.post("/auth/finalize", UserController.handleTempToken);
-router.get("/google/callback", UserController.googleCallback);
-
-// Protected routes
+router.use(ensureRatelimit.api);
 router.use(authenticate);
 
 router.get("/me", UserController.getUserData);

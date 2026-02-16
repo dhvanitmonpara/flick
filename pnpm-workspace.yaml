@@ -1,7 +1,14 @@
 packages:
   - web
   - server
+  - admin
+  - landing
+  - ocr
   - shared
 
 ignoredBuiltDependencies:
   - sharp
+
+onlyBuiltDependencies:
+  - core-js
+  - tesseract.js

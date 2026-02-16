@@ -10,7 +10,7 @@ class UserController {
   static async getUserById(req: Request) {
     const { userId } = authSchemas.userIdSchema.parse(req.params);
 
-    const user = await userService.getUserByIdService(userId);
+    const user = await userService.getUserById(userId);
 
     return HttpResponse.ok("User fetched successfully", toInternalUser(user));
   }
@@ -18,7 +18,7 @@ class UserController {
   static async searchUsers(req: Request) {
     const { query } = authSchemas.searchQuerySchema.parse(req.params);
 
-    const users = await userService.searchUsersService(query);
+    const users = await userService.searchUsers(query);
 
     return HttpResponse.ok("Users fetched successfully", users);
   }
@@ -46,13 +46,13 @@ class UserController {
     return HttpResponse.ok()
   }
 
-  static async initializeUser(req: Request) {
-    const { email, username, password } = authSchemas.initializeUserSchema.parse(req.body);
+  static async initializeUser(req: Request, res: Response) {
+    const { email, branch } = authSchemas.initializeUserSchema.parse(req.body);
 
-    const savedEmail = await authService.initializeAuthService(
+    const savedEmail = await authService.initializeRegistration(
       email,
-      username,
-      password
+      branch,
+      res
     );
 
     return HttpResponse.created(
@@ -65,7 +65,7 @@ class UserController {
     const { email } = authSchemas.registrationSchema.parse(req.body);
 
     const { createdUser, session } =
-      await authService.registerAuth(email, res);
+      await authService.finishRegistration(req, email, res);
 
     // authService.setAuthCookies(res, accessToken, refreshToken);
     return HttpResponse.created(

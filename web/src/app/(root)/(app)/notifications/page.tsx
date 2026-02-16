@@ -1,5 +1,5 @@
 import NotificationCard from "@/components/general/NotificationCard"
-import { env } from "@/config/env"
+import { env } from "@/config/env/server-env"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
 import { INotification } from "@/types/Notification"
 import axios, { AxiosError } from "axios"

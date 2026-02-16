@@ -28,6 +28,7 @@
     "better-auth": "^1.4.17",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "disposable-email-domains-js": "^1.21.0",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.8",
     "drizzle-orm": "^0.45.1",
@@ -38,6 +39,7 @@
     "mailtrap": "^4.4.0",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
+    "nanoid": "^5.1.6",
     "node-cache": "^5.1.2",
     "nodemailer": "^7.0.12",
     "pg": "^8.16.3",
@@ -45,7 +47,6 @@
     "socket.io": "^4.8.1",
     "typescript": "^5.9.3",
     "ua-parser-js": "^2.0.7",
-    "uuid": "^13.0.0",
     "winston": "^3.19.0",
     "zod": "^4.1.13"
   },

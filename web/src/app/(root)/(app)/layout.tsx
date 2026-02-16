@@ -1,3 +1,5 @@
+"use client"
+
 import { ReactNode, useState } from "react"
 import { PiCardsThreeFill, PiCardsThreeLight } from "react-icons/pi";
 import { RiGraduationCapFill, RiGraduationCapLine } from "react-icons/ri";

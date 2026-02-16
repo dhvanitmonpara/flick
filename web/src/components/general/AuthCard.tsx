@@ -17,8 +17,8 @@ function AuthCard({ className }: { className?: string }) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        
-        const user = await axios.get(`${env.serverApiEndpoint}/users/me`, {
+
+        const user = await axios.get(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/users/me`, {
           withCredentials: true,
         })
 

@@ -1,6 +1,6 @@
 import cache from "@/infra/services/cache/index";
 import mailService from "@/infra/services/mail/core/index";
-import { hashOTP } from "@/lib/crypto";
+import { hashOTP } from "@/lib/crypto-tools";
 import { HttpError } from "@/core/http";
 import recordAudit from "@/lib/record-audit";
 import { auditIdentity } from "@/lib/audit-identity";
@@ -9,7 +9,7 @@ import logger from "@/core/logger";
 class OtpService {
   async sendOtp(email: string) {
     logger.info("Sending OTP", { email });
-    
+
     const data = await mailService.send(
       email,
       "OTP",
@@ -45,7 +45,7 @@ class OtpService {
 
   async verifyOtp(email: string, otp: string) {
     logger.info("Verifying OTP", { email });
-    
+
     const cached = await cache.get<string>(`otp:${email}`);
 
     let failureReason: string | null = null

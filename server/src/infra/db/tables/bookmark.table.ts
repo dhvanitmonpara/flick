@@ -1,8 +1,8 @@
 import { pgTable, uuid, index, timestamp } from "drizzle-orm/pg-core";
 import { posts } from "./post.table";
-import { users } from "./user.table";
+import { users } from "./auth.table";
 
-export const bookmarks = pgTable("bookmark", {
+export const bookmarks = pgTable("bookmarks", {
   id: uuid("id").primaryKey().defaultRandom(),
   postId: uuid("postId").references(() => posts.id),
   userId: uuid("userId").references(() => users.id).notNull(),

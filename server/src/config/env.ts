@@ -6,6 +6,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]),
   HTTP_SECURE_OPTION: z.string(),
   ACCESS_CONTROL_ORIGINS: z.string().transform((value) => value.split(",")),
+  COOKIE_DOMAIN: z.string(),
   DATABASE_URL: z.string(),
   REDIS_URL: z.string(),
   CACHE_DRIVER: z.enum(["memory", "multi", "redis"]),
@@ -21,10 +22,11 @@ const envSchema = z.object({
   MAILTRAP_TOKEN: z.string(),
   MAIL_PROVIDER: z.enum(["gmail", "resend", "mailtrap"]),
   SERVER_BASE_URI: z.string(),
-  PEPPER: z.string(),
-  ENCRYPTION_KEY: z.string(),
   PERSPECTIVE_API_KEY: z.string(),
-  USERCHECK_DISPOSABLE_MAIL_API_KEY: z.string()
+  MAIL_FROM: z.string(),
+  EMAIL_ENCRYPTION_KEY: z.string().min(32),
+  EMAIL_SECRET: z.string().min(32),
+  HMAC_SECRET: z.string().min(32),
 });
 
 export const env = envSchema.parse(process.env);

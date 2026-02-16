@@ -1,6 +1,6 @@
 "use client"
 
-import { env } from "@/config/env";
+import { authApi } from "@/services/api/auth";
 import axios from "axios";
 import { Loader2 } from "lucide-react"
 import { useParams, useRouter } from "next/navigation";
@@ -20,22 +20,13 @@ function SetupUserPage() {
         navigate("/auth/signup")
         return
       }
-      const response = await axios(`${env.serverApiEndpoint}/users/register`, {
-        method: "POST",
-        data: {
-          email
-        },
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.status === 201) {
+      const { success, error } = await authApi.register.initialize(email as string)
+      if (success) {
         toast.success("User setup successfully")
         setIsLoading(false)
         navigate("/")
       } else {
-        console.error("Error setting up user:", response.data);
+        console.error("Error setting up user:", error);
         toast.error("Error setting up user")
         return
       }

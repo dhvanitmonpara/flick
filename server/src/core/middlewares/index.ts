@@ -7,7 +7,6 @@ export { default as errorHandlers } from "./error/error.middleware";
 export { default as ensureRatelimit } from "./rate-limit.middleware";
 export { default as observeRequest } from "./context.middleware";
 export { multipartUpload } from "./multipart-upload.middleware";
-export { registerRequestLogging } from "./logger/request-logging.middleware"
-export { injectRequestContext } from "./logger/request-context.middleware"
+export { registerRequestLogging } from "./request-logging.middleware"
 
 export * as pipelines from "./pipelines";

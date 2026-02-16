@@ -44,18 +44,32 @@ class AuthController {
     return HttpResponse.ok("Access token refreshed successfully");
   }
 
-   static async sendOtp(req: Request) {
+  static async sendOtp(req: Request) {
     const { email } = authSchemas.otpSchema.parse(req.body);
 
-    const { messageId } = await authService.sendOtpService(email);
+    const signupId = req.cookies.signupId || req.body.signupId;
+
+    if (!signupId)
+      throw HttpError.badRequest("Signup ID is required", {
+        meta: { source: "send_otp" },
+      });
+
+    const { messageId } = await authService.sendOtp(signupId, email);
 
     return HttpResponse.ok("OTP sent successfully", { messageId });
   }
 
   static async verifyOtp(req: Request) {
-    const { email, otp } = authSchemas.verifyOtpSchema.parse(req.body);
+    const { otp } = authSchemas.verifyOtpSchema.parse(req.body);
 
-    const isVerified = await authService.verifyOtpService(email, otp);
+    const signupId = req.cookies.signupId || req.body.signupId;
+
+    if (!signupId)
+      throw HttpError.badRequest("Signup ID is required", {
+        meta: { source: "verify_otp" },
+      });
+
+    const isVerified = await authService.verifyUserOtp(signupId, otp);
 
     return HttpResponse.ok(
       isVerified ? "OTP verified successfully" : "Invalid OTP",

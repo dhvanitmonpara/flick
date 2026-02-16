@@ -1,12 +1,19 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  index,
+} from "drizzle-orm/pg-core";
+import { colleges } from "./college.table";
 
-export const user = pgTable("user", {
+export const auth = pgTable("auth_user", {
   id: text("id").primaryKey(),
-  name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  lookupEmail: text("lookup_email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
-  image: text("image"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -19,7 +26,22 @@ export const user = pgTable("user", {
   banExpires: timestamp("ban_expires"),
 });
 
-export const session = pgTable(
+export const users = pgTable("platform_user", {
+  id: text("id").primaryKey(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+  authId: text("auth_id").notNull().unique().references(() => auth.id, { onDelete: "cascade" }),
+  username: text("username").notNull().unique(),
+  collegeId: text("college_id").notNull().references(() => colleges.id, { onDelete: "cascade" }),
+  branch: text("branch").notNull(),
+  karma: integer("karma").default(0),
+  isAcceptedTerms: boolean("is_accepted_terms").default(false).notNull(),
+});
+
+export const sessions = pgTable(
   "session",
   {
     id: text("id").primaryKey(),
@@ -33,13 +55,13 @@ export const session = pgTable(
     userAgent: text("user_agent"),
     userId: text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
     impersonatedBy: text("impersonated_by"),
   },
   (table) => [index("session_userId_idx").on(table.userId)],
 );
 
-export const account = pgTable(
+export const accounts = pgTable(
   "account",
   {
     id: text("id").primaryKey(),
@@ -47,7 +69,7 @@ export const account = pgTable(
     providerId: text("provider_id").notNull(),
     userId: text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
     accessToken: text("access_token"),
     refreshToken: text("refresh_token"),
     idToken: text("id_token"),
@@ -87,7 +109,7 @@ export const twoFactor = pgTable(
     backupCodes: text("backup_codes").notNull(),
     userId: text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
   },
   (table) => [
     index("twoFactor_secret_idx").on(table.secret),
@@ -95,29 +117,44 @@ export const twoFactor = pgTable(
   ],
 );
 
-export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
-  accounts: many(account),
+export const userRelations = relations(users, ({ many, one }) => ({
+  sessions: many(sessions),
+  accounts: many(accounts),
   twoFactors: many(twoFactor),
-}));
-
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, {
-    fields: [session.userId],
-    references: [user.id],
+  auth: one(auth, {
+    fields: [users.authId],
+    references: [auth.id],
+  }),
+  college: one(colleges, {
+    fields: [users.collegeId],
+    references: [colleges.id],
   }),
 }));
 
-export const accountRelations = relations(account, ({ one }) => ({
-  user: one(user, {
-    fields: [account.userId],
-    references: [user.id],
+export const sessionRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const accountRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
   }),
 }));
 
 export const twoFactorRelations = relations(twoFactor, ({ one }) => ({
-  user: one(user, {
+  user: one(users, {
     fields: [twoFactor.userId],
-    references: [user.id],
+    references: [users.id],
+  }),
+}));
+
+export const authRelations = relations(auth, ({ one }) => ({
+  user: one(users, {
+    fields: [auth.id],
+    references: [users.authId],
   }),
 }));

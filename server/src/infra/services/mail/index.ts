@@ -5,8 +5,10 @@ const provider = new ProviderManager(await createEmailProvider());
 const templateEngine = new TemplateEngine();
 const from = env.MAIL_FROM;
 
-export default new MailService(
+const mailService = new MailService(
   provider,
   templateEngine,
   from
 );
+
+export default mailService

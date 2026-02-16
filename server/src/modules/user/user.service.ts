@@ -1,13 +1,14 @@
-import { HttpError, HttpResponse } from "@/core/http";
-import AuthRepo from "@/modules/auth/auth.repo";
+import { HttpError } from "@/core/http";
+import UserRepo from "@/modules/user/user.repo";
 import logger from "@/core/logger";
 import recordAudit from "@/lib/record-audit";
+import AuthRepo from "../auth/auth.repo";
 
 class UserService {
-  getUserByIdService = async (userId: string) => {
+  getUserById = async (userId: string) => {
     logger.info("Fetching user by ID", { userId });
 
-    const user = await AuthRepo.CachedRead.findById(userId);
+    const user = await UserRepo.CachedRead.findById(userId, {});
 
     if (!user) {
       logger.warn("User not found", { userId });
@@ -23,19 +24,24 @@ class UserService {
     return user;
   };
 
-  searchUsersService = async (query: string) => {
+  searchUsers = async (query: string) => {
     logger.info("Searching users", { query });
 
-    const users = await AuthRepo.CachedRead.searchUsers(query);
+    const users = await AuthRepo.CachedRead.searchUsers({
+      query,
+      limit: 10,
+      collegeId: null,
+      offset: 0,
+    });
 
     logger.info("User search completed", { query, resultCount: users.length });
     return users;
   };
 
   acceptTerms = async (userId: string) => {
-    await AuthRepo.Write.update(userId, { isAcceptedTerms: true });
+    await UserRepo.Write.updateById(userId, { isAcceptedTerms: true });
 
-    recordAudit({ 
+    recordAudit({
       action: "user:accepted:terms",
       entityId: userId.toString(),
       entityType: "user",

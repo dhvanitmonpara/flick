@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import db from "../src/infra/db/index";
 import { UserTable } from "../src/infra/db/tables/user.table";
-import { hashPassword } from "../src/lib/crypto";
+import { hashPassword } from "../src/lib/crypto-tools";
 
 async function run() {
   const globalPassword = "ChangeMeNow!123";

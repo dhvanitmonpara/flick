@@ -1,4 +1,4 @@
-import { v4 as uuid } from "uuid";
+import { randomUUID as uuid } from "node:crypto";
 import { userIdToSocketMap } from "./socket.service.js";
 import NotificationRepo from "./notification.repo.js";
 import socketService from "@/infra/services/socket/index.js";
@@ -29,27 +29,27 @@ export default class NotificationService {
   private static async emitNotificationIfOnline(
     notification: RawNotification
   ): Promise<boolean> {
-    logger.debug("Attempting to emit notification", { 
-      receiverId: notification.receiverId, 
-      type: notification.type 
+    logger.debug("Attempting to emit notification", {
+      receiverId: notification.receiverId,
+      type: notification.type
     });
-    
+
     const socketId = userIdToSocketMap.get(notification.receiverId.toString());
     if (socketId) {
       io.to(socketId).emit("notification", {
         ...notification,
         id: uuid(),
       });
-      logger.info("Notification emitted to online user", { 
-        receiverId: notification.receiverId, 
+      logger.info("Notification emitted to online user", {
+        receiverId: notification.receiverId,
         type: notification.type,
-        socketId 
+        socketId
       });
       return true;
     }
-    
-    logger.debug("User not online, notification not emitted", { 
-      receiverId: notification.receiverId 
+
+    logger.debug("User not online, notification not emitted", {
+      receiverId: notification.receiverId
     });
     return false;
   }
@@ -124,18 +124,18 @@ export default class NotificationService {
   public static async handleNotification(
     notification: RawNotification
   ): Promise<void> {
-    logger.info("Handling notification", { 
-      receiverId: notification.receiverId, 
+    logger.info("Handling notification", {
+      receiverId: notification.receiverId,
       type: notification.type,
-      postId: notification.postId 
+      postId: notification.postId
     });
-    
+
     await NotificationService.emitNotificationIfOnline(notification);
     await NotificationService.insertNotificationToDB(notification);
-    
-    logger.info("Notification handled successfully", { 
-      receiverId: notification.receiverId, 
-      type: notification.type 
+
+    logger.info("Notification handled successfully", {
+      receiverId: notification.receiverId,
+      type: notification.type
     });
   }
 

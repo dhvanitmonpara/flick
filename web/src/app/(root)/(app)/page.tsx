@@ -1,3 +1,5 @@
+"use client"
+
 import Post from "@/components/general/Post"
 import SkeletonCard from "@/components/skeletons/PostSkeleton"
 import { env } from "@/config/env"
@@ -22,12 +24,11 @@ function FeedPage() {
   const fetchPosts = useCallback(async () => {
     try {
       setLoading(true)
-
-      let url = `${env.serverApiEndpoint}/posts/feed`
+      let url = `${env.NEXT_PUBLIC_BASE_URL}/api/posts/feed`
       if (params.branch) {
-        url = `${env.serverApiEndpoint}/posts/get/filter?branch=${params.branch}`
+        url = `${env.NEXT_PUBLIC_BASE_URL}/api/posts/get/filter?branch=${params.branch}`
       } else if (params.topic) {
-        url = `${env.serverApiEndpoint}/posts/get/filter?topic=${params.topic}`
+        url = `${env.NEXT_PUBLIC_BASE_URL}/api/posts/get/filter?topic=${params.topic}`
       }
 
       const res = await axios.get(url, { withCredentials: true })

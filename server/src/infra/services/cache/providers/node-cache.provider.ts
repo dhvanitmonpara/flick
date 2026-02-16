@@ -16,6 +16,7 @@ export class NodeCacheProvider implements CacheProvider {
   }
 
   async set<T>(key: string, value: T, ttl?: number) {
+    if (ttl <= 0) throw new Error("TTL must be positive");
     return this.cache.set(key, value, ttl);
   }
 
@@ -25,10 +26,6 @@ export class NodeCacheProvider implements CacheProvider {
 
   async flush() {
     this.cache.flushAll();
-  }
-
-  async keys() {
-    return this.cache.keys();
   }
 
   async has(key: string) {

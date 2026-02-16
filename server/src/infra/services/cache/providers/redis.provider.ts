@@ -1,20 +1,8 @@
-import Redis, { RedisOptions } from "ioredis";
+import Redis from "ioredis";
 import { CacheProvider } from "../cache.interface";
 
 export class RedisCacheProvider implements CacheProvider {
-  private client: Redis;
-
-  constructor(url: string, options?: RedisOptions) {
-    this.client = new Redis(url, {
-      enableReadyCheck: true,
-      maxRetriesPerRequest: null,
-      ...options,
-    });
-
-    this.client.on("error", (err) => {
-      console.error("[Redis] Error:", err);
-    });
-  }
+  constructor(private client: Redis) { }
 
   async get<_T>(key: string) {
     const val = await this.client.get(key);
@@ -24,7 +12,9 @@ export class RedisCacheProvider implements CacheProvider {
   async set<T>(key: string, value: T, ttl?: number) {
     const str = JSON.stringify(value);
 
-    if (ttl) {
+    if (ttl <= 0) throw new Error("TTL must be positive");
+
+    if (ttl !== undefined) {
       return (await this.client.set(key, str, "EX", ttl)) === "OK";
     } else {
       return (await this.client.set(key, str)) === "OK";
@@ -37,10 +27,6 @@ export class RedisCacheProvider implements CacheProvider {
 
   async flush() {
     await this.client.flushall();
-  }
-
-  async keys() {
-    return this.client.keys("*");
   }
 
   async has(key: string) {

@@ -1,32 +1,28 @@
-export const env = {
-  serverUri: import.meta.env.VITE_SERVER_URI,
-  serverApiEndpoint: import.meta.env.VITE_SERVER_API_ENDPOINT,
-  baseUrl: import.meta.env.VITE_BASE_URL,
-  ocrServerApiEndpoint: import.meta.env.VITE_OCR_SERVER_API_ENDPOINT,
-  googleOauthId: import.meta.env.VITE_GOOGLE_OAUTH_ID,
-  environment: import.meta.env.VITE_ENVIRONMENT || "development",
-};
+import { createEnv } from "@t3-oss/env-nextjs";
+import { z } from "zod";
 
-if (!env.serverApiEndpoint) {
-  throw new Error("Missing VITE_SERVER_API_ENDPOINT env variable");
-}
+export const env = createEnv({
+  server: {
+    NODE_ENV: z.enum(["development", "production", "test"]),
+    SERVER_URI: z.url(),
+  },
 
-if (!env.ocrServerApiEndpoint) {
-  throw new Error("Missing VITE_OCR_SERVER_API_ENDPOINT env variable");
-}
+  client: {
+    NEXT_PUBLIC_SERVER_API_ENDPOINT: z.url(),
+    NEXT_PUBLIC_OCR_SERVER_API_ENDPOINT: z.url(),
+    NEXT_PUBLIC_BASE_URL: z.url(),
+    NEXT_PUBLIC_GOOGLE_OAUTH_ID: z.string().min(10),
+  },
 
-if (!env.environment) {
-  throw new Error("Missing VITE_ENVIRONMENT env variable");
-}
+  runtimeEnv: {
+    NODE_ENV: process.env.NODE_ENV,
+    SERVER_URI: process.env.SERVER_URI,
 
-if (!env.serverUri) {
-  throw new Error("Missing VITE_SERVER_URI env variable");
-}
-
-if (!env.baseUrl) {
-  throw new Error("Missing VITE_BASE_URL env variable");
-}
-
-if (!env.googleOauthId) {
-  throw new Error("Missing VITE_GOOGLE_OAUTH_ID env variable");
-}
+    NEXT_PUBLIC_SERVER_API_ENDPOINT:
+      process.env.NEXT_PUBLIC_SERVER_API_ENDPOINT,
+    NEXT_PUBLIC_OCR_SERVER_API_ENDPOINT:
+      process.env.NEXT_PUBLIC_OCR_SERVER_API_ENDPOINT,
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
+    NEXT_PUBLIC_GOOGLE_OAUTH_ID: process.env.NEXT_PUBLIC_GOOGLE_OAUTH_ID,
+  },
+});

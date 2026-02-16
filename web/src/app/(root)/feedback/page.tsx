@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { env } from "@/config/env"
 import { zodResolver } from "@hookform/resolvers/zod"
 import axios, { isAxiosError } from "axios"
 import { Loader2 } from "lucide-react"
@@ -37,9 +36,7 @@ function FeedbackPage() {
 
   const onSubmit = async (data: FeedbackFormData) => {
     try {
-      const res = await axios.post(`${env.serverApiEndpoint}/feedback`, data, {
-        withCredentials: true
-      })
+      const res = await axios.post(`${env.serverApiEndpoint}/feedback`, data)
 
       if (res.status !== 201) {
         toast.error("Error sending feedback")

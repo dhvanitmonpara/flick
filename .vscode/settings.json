@@ -7,5 +7,10 @@
 	},
 	"files.associations": {
 		"*.hbs": "handlebars"
-	}
+	},
+	"cSpell.words": [
+		"Downvoted",
+		"downvotes",
+		"upvotes"
+	]
 }

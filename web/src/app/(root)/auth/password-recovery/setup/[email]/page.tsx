@@ -1,6 +1,6 @@
 "use client"
 
-import { env } from "@/config/env";
+import { authApi } from "@/services/api/auth";
 import axios from "axios";
 import { Loader2 } from "lucide-react"
 import { useParams, useRouter } from "next/navigation";
@@ -20,22 +20,13 @@ function PasswordRecoverySetup() {
         navigate("/auth/password-recovery/enter-email")
         return
       }
-      const response = await axios(`${env.serverApiEndpoint}/users/reset-password`, {
-        method: "POST",
-        data: {
-          email
-        },
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.status === 200) {
+      const isResetSuccess = await authApi.resetPassword.initialize(email as string)
+      if (isResetSuccess) {
         toast.success("Password reset successfully")
         setIsLoading(false)
         navigate("/?reset=true")
       } else {
-        console.error("Error resetting password:", response.data);
+        console.error("Error resetting password");
         toast.error("Error resetting password")
         return
       }
