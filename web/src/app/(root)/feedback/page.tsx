@@ -3,12 +3,13 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
-import axios, { isAxiosError } from "axios"
+import { isAxiosError } from "axios"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
+import { feedbackApi } from "@/services/api/feedback"
 
 const feedbackSchema = z.object({
   type: z.enum(["bug", "feedback"], { required_error: "Type is required" }),
@@ -36,7 +37,7 @@ function FeedbackPage() {
 
   const onSubmit = async (data: FeedbackFormData) => {
     try {
-      const res = await axios.post(`${env.serverApiEndpoint}/feedback`, data)
+      const res = await feedbackApi.create(data)
 
       if (res.status !== 201) {
         toast.error("Error sending feedback")

@@ -1,87 +1,37 @@
 import userService from "./user.service";
-import authService from "@/modules/auth/auth.service";
-import type { Request, Response } from "express";
-import { toInternalUser } from "./user.dto";
-import { HttpResponse, HttpError, Controller } from "@/core/http";
-import * as authSchemas from "@/modules/user/user.schema";
+import type { Request } from "express";
+import { toPublicUser } from "./user.dto";
+import { HttpResponse, Controller } from "@/core/http";
+import * as userSchemas from "@/modules/user/user.schema";
 
 @Controller()
 class UserController {
-  static async getUserById(req: Request) {
-    const { userId } = authSchemas.userIdSchema.parse(req.params);
+  static async getUserProfileById(req: Request) {
+    const { userId } = userSchemas.userIdSchema.parse(req.params);
 
-    const user = await userService.getUserById(userId);
+    const user = await userService.getUserProfileById(userId);
 
-    return HttpResponse.ok("User fetched successfully", toInternalUser(user));
+    return HttpResponse.ok("User fetched successfully", toPublicUser(user));
   }
 
   static async searchUsers(req: Request) {
-    const { query } = authSchemas.searchQuerySchema.parse(req.params);
+    const { query } = userSchemas.searchQuerySchema.parse(req.params);
 
     const users = await userService.searchUsers(query);
 
     return HttpResponse.ok("Users fetched successfully", users);
   }
 
-  static async googleCallback(req: Request) {
-    const { code } = authSchemas.googleCallbackSchema.parse(req.query);
-    await authService.handleGoogleOAuth(code, req);
-    return HttpResponse.redirect("/")
-  }
-
-  static async handleTempToken(req: Request, res: Response) {
-    const { tempToken } = authSchemas.tempTokenSchema.parse(req.body);
-
-    const tokens = await authService.redeemTempToken(tempToken);
-
-    if (!tokens)
-      throw HttpError.badRequest("Invalid or expired token", {
-        code: "INVALID_TEMP_TOKEN",
-        meta: { source: "authService.handleTempToken" },
-      });
-
-    const { accessToken, refreshToken } = tokens;
-
-    // authService.setAuthCookies(res, accessToken, refreshToken);
-    return HttpResponse.ok()
-  }
-
-  static async initializeUser(req: Request, res: Response) {
-    const { email, branch } = authSchemas.initializeUserSchema.parse(req.body);
-
-    const savedEmail = await authService.initializeRegistration(
-      email,
-      branch,
-      res
-    );
-
-    return HttpResponse.created(
-      "User initialized successfully and OTP sent",
-      { email: savedEmail },
-    );
-  }
-
-  static async registerUser(req: Request, res: Response) {
-    const { email } = authSchemas.registrationSchema.parse(req.body);
-
-    const { createdUser, session } =
-      await authService.finishRegistration(req, email, res);
-
-    // authService.setAuthCookies(res, accessToken, refreshToken);
-    return HttpResponse.created(
-      "Form submitted successfully!",
-      toInternalUser(createdUser),
-    );
-  }
-
-  static async getUserData(req: Request) {
-    return HttpResponse.ok("User fetched successfully!", req.user);
+  static async getUserProfile(req: Request) {
+    const user = await userService.getUserProfile(req.auth.id)
+    return HttpResponse.ok("User fetched successfully!", user);
   }
 
   static async acceptTerms(req: Request) {
-    const userId = req.user.id;
+    const authId = req.auth.id;
+    const user = await userService.getUserProfile(authId);
 
-    await userService.acceptTerms(userId);
+    await userService.acceptTerms(user.id);
 
     return HttpResponse.ok("Terms accepted successfully");
   }

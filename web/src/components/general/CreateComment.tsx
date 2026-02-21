@@ -3,12 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { env } from "@/config/env";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import useCommentStore from "@/store/commentStore";
 import { highlightBannedWords, validatePost } from "@/utils/moderator";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -19,6 +18,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { FaX } from "react-icons/fa6";
 import { useParams } from "next/navigation";
+import { userApi } from "@/services/api/user";
+import { commentApi } from "@/services/api/comment";
 
 const commentSchema = z.object({
   content: z.string().min(3, "Content must be at least 3 characters.").max(2000, "Content must be at most 2000 characters."),
@@ -37,7 +38,8 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
 
   const addComment = useCommentStore(state => state.addComment)
   const updateComment = useCommentStore(state => state.updateComment)
-  const { id } = useParams()
+  const params = useParams()
+  const postId = Array.isArray(params.id) ? params.id[0] : params.id
   const isUpdating = !!defaultData && !!commentId;
 
   const form = useForm<CommentFormValues>({
@@ -55,7 +57,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
 
   const onSubmitTerms = async () => {
     try {
-      await axios.post(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/users/accept-terms`, {}, { withCredentials: true });
+      await userApi.acceptTerms();
       toast.success("Terms accepted!");
       setShowTerms(false);
       form.handleSubmit(onSubmit)();
@@ -67,30 +69,14 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
   const onSubmit = async (data: CommentFormValues) => {
     try {
       setLoading(true);
-      if (!id) throw new Error("Post id not found")
+      if (!postId) throw new Error("Post id not found")
 
       let res = null
 
       if (isUpdating) {
-        res = await axios.patch(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/comments/update/${commentId}`,
-          data,
-          {
-            withCredentials: true,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        )
+        res = await commentApi.update(commentId as string, data)
       } else {
-        res = await axios.post(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/comments/create/${id}`,
-          { ...data, parentCommentId: parentCommentId ?? null },
-          {
-            withCredentials: true,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        )
+        res = await commentApi.create(postId, { ...data, parentCommentId: parentCommentId ?? null })
       }
 
       if (res.status !== (isUpdating ? 200 : 201)) throw new Error("Failed to create/update comment");

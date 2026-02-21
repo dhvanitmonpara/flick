@@ -3,14 +3,13 @@ import { formatDate, getAvatarUrl, getCollegeName, isCollege, isUser } from "@/u
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BsDot } from "react-icons/bs"
 import { useEffect, useState } from "react"
-import axios from "axios"
-import { env } from "@/config/env"
 import { IUser } from "@/types/User"
 import { ICollege } from "@/types/College"
 import { IPost } from "@/types/Post"
 import Post from "@/components/general/Post"
 import { Skeleton } from "@/components/ui/skeleton"
 import SkeletonCard from "@/components/skeletons/PostSkeleton"
+import { userApi } from "@/services/api/user"
 
 interface IProfile extends IUser {
   college: ICollege,
@@ -27,9 +26,7 @@ function ProfilePage() {
   useEffect(() => {
     if (!user._id) {
       (async () => {
-        const response = await axios.get(`${env.serverApiEndpoint}/users/profile`, {
-          withCredentials: true,
-        })
+        const response = await userApi.getProfile()
 
         if (response.status === 200) {
           setProfile(response.data.data)

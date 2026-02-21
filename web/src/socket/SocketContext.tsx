@@ -18,7 +18,7 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   useEffect(() => {
     if (!profile._id) return;
 
-    const newSocket = io(env.SERVER_URI, {
+    const newSocket = io(new URL(env.NEXT_PUBLIC_SERVER_API_ENDPOINT).origin, {
       transports: ["websocket"],
       auth: {
         userId: profile._id,

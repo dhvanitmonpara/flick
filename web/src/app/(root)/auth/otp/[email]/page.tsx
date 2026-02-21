@@ -5,7 +5,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import axios, { AxiosError, AxiosResponse } from "axios";
+import { AxiosError } from "axios";
 import { toast } from 'sonner'
 import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from "next/navigation";

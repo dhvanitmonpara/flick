@@ -5,7 +5,7 @@ import recordAudit from "@/lib/record-audit";
 import AuthRepo from "../auth/auth.repo";
 
 class UserService {
-  getUserById = async (userId: string) => {
+  getUserProfileById = async (userId: string) => {
     logger.info("Fetching user by ID", { userId });
 
     const user = await UserRepo.CachedRead.findById(userId, {});
@@ -13,7 +13,7 @@ class UserService {
     if (!user) {
       logger.warn("User not found", { userId });
       throw HttpError.notFound("User doesn't exists", {
-        meta: { source: "authService.getUserByIdService" },
+        meta: { source: "authService.getUserProfileById" },
       });
     }
 
@@ -37,6 +37,10 @@ class UserService {
     logger.info("User search completed", { query, resultCount: users.length });
     return users;
   };
+
+  getUserProfile = async (authId: string) => {
+    return await UserRepo.CachedRead.findByAuthId(authId, {});
+  }
 
   acceptTerms = async (userId: string) => {
     await UserRepo.Write.updateById(userId, { isAcceptedTerms: true });

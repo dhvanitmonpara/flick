@@ -4,50 +4,68 @@ import { http } from "../http";
 export const authApi = {
   otp: {
     send: async (email: string) => {
-      const mailResponse: AxiosResponse = await http.post('/users/otp/send', { email: email });
+      const mailResponse: AxiosResponse = await http.post("/auth/otp/send", { email });
       return mailResponse.status === 200;
     },
     verify: async (email: string, otp: string) => {
-      const verifyResponse: AxiosResponse = await http.post('/users/otp/verify', { email: email, otp });
+      const verifyResponse: AxiosResponse = await http.post("/auth/otp/verify", { email, otp });
       return verifyResponse.status === 200;
-    }
+    },
   },
   resetPassword: {
-    finalize: async (email: string, password: string) => {
-      const resetResponse: AxiosResponse = await http.post('/users/reset-password/init', { email: email, password: password });
+    finalize: async (newPassword: string, token?: string) => {
+      const resetResponse: AxiosResponse = await http.post("/auth/password/reset", { newPassword, token });
       return resetResponse.status === 200;
     },
-    initialize: async (email: string) => {
-      const resetResponse: AxiosResponse = await http.post('/users/reset-password/establish', { email: email }, { headers: { "Content-Type": "application/json" } });
+    initialize: async (email: string, redirectTo?: string) => {
+      const resetResponse: AxiosResponse = await http.post(
+        "/auth/password/forgot",
+        { email, redirectTo },
+        { headers: { "Content-Type": "application/json" } },
+      );
       return resetResponse.status === 200;
     },
   },
   oauth: {
     setup: async (email: string, branch: string) => {
-      const oauthResponse: AxiosResponse = await http.post('/users/oauth', { email: email, branch: branch });
+      const oauthResponse: AxiosResponse = await http.post("/auth/initialize", {
+        email,
+        branch,
+        password: "oauth-flow-placeholder",
+      });
       return oauthResponse.status === 201;
-    }
+    },
   },
   register: {
-    register: async (email: string) => {
+    register: async (password: string) => {
       const response = await http.post(
-        '/users/register',
-        { email },
-        { headers: { "Content-Type": "application/json" } });
+        "/auth/register",
+        { password },
+        { headers: { "Content-Type": "application/json" } },
+      );
       return { success: response.status === 201, error: response.data?.error };
     },
     initialize: async (email: string, password: string, branch: string) => {
       const response = await http.post(
-        '/users/initialize',
+        "/auth/initialize",
         { email, password, branch },
-        { headers: { "Content-Type": "application/json" } });
+        { headers: { "Content-Type": "application/json" } },
+      );
       return { success: response.status === 201, error: response.data?.error };
-    }
+    },
   },
   session: {
     login: async (email: string, password: string) => {
-      const loginResponse: AxiosResponse = await http.post('/users/login', { email: email, password: password });
+      const loginResponse: AxiosResponse = await http.post("/auth/login", { email, password });
       return loginResponse.status === 200;
     },
+    refresh: async () => {
+      const refreshResponse: AxiosResponse = await http.post("/auth/refresh");
+      return refreshResponse.status === 200;
+    },
+    logoutAll: async () => {
+      const logoutResponse: AxiosResponse = await http.post("/auth/logout-all");
+      return logoutResponse.status === 200;
+    },
   }
-}
+};

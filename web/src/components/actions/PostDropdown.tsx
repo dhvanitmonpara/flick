@@ -20,8 +20,7 @@ import { Button } from "../ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
-import axios, { AxiosError } from "axios";
-import { env } from "@/config/env";
+import { AxiosError } from "axios";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,6 +32,10 @@ import usePostStore from "@/store/postStore";
 import useCommentStore from "@/store/commentStore";
 import { Textarea } from "../ui/textarea";
 import { FaBookmark } from "react-icons/fa";
+import { postApi } from "@/services/api/post";
+import { commentApi } from "@/services/api/comment";
+import { bookmarkApi } from "@/services/api/bookmark";
+import { reportApi } from "@/services/api/report";
 
 type DialogType = "DELETE" | "REPORT" | "EDIT" | "SAVE" | null;
 
@@ -82,10 +85,9 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
     try {
       setLoading(true);
 
-      const res = await axios.delete(
-        `${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/${type}s/delete/${id}`,
-        { withCredentials: true }
-      )
+      const res = type === "post"
+        ? await postApi.remove(id)
+        : await commentApi.remove(id);
 
       if (res.status !== 200) throw new Error(`Failed to delete ${type}`)
       toast.success(`Successfully deleted ${type}`)
@@ -106,16 +108,9 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
       setLoading(true);
       let res = null
       if (marked) {
-        res = await axios.delete(
-          `${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/bookmarks/delete/${id}`,
-          { withCredentials: true }
-        )
+        res = await bookmarkApi.remove(id)
       } else {
-        res = await axios.post(
-          `${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/bookmarks`,
-          { postId: id },
-          { withCredentials: true }
-        )
+        res = await bookmarkApi.create(id)
       }
 
       if (res.status !== 201) throw new Error(`Failed to ${marked ? "unsave" : "save"} post`)
@@ -137,16 +132,12 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
     try {
       setLoading(true)
 
-      const res = await axios.post(
-        `${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/reports`,
-        {
-          targetId: id,
-          type: type.charAt(0).toUpperCase() + type.slice(1),
-          reason: data.reason,
-          message: data.message
-        },
-        { withCredentials: true }
-      )
+      const res = await reportApi.create({
+        targetId: id,
+        type: type.charAt(0).toUpperCase() + type.slice(1),
+        reason: data.reason,
+        message: data.message,
+      })
 
       if (res.status !== 201) throw new Error(`Failed to report ${type}`)
       toast.success(`Successfully reported ${type}`)

@@ -1,38 +1,41 @@
-import { index, pgEnum, pgTable, text, uuid } from "drizzle-orm/pg-core";
-import { posts } from "./post.table";
-import { comments } from "./comment.table";
+import {
+  pgTable,
+  uuid,
+  text,
+  uniqueIndex,
+  index,
+} from "drizzle-orm/pg-core";
+
 import { users } from "./auth.table";
-import { eq } from "drizzle-orm";
+import { voteEntityEnum, voteTypeEnum } from "./enums";
 
-export const voteTypeEnum = pgEnum("vote_type_enum", [
-  "upvote",
-  "downvote",
-]);
+export const votes = pgTable(
+  "votes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
 
-export const VoteEntityEnum = pgEnum("vote_entity_enum", [
-  "post",
-  "comment",
-]);
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
 
-export const votes = pgTable("votes", {
-  id: uuid("id").defaultRandom().primaryKey(),
+    targetType: voteEntityEnum("target_type").notNull(),
 
-  postId: uuid("postId")
-    .references(() => posts.id, { onDelete: "cascade" }).unique("votes_user_post_unique"),
+    targetId: uuid("target_id").notNull(),
 
-  commentId: uuid("commentId")
-    .references(() => comments.id, { onDelete: "cascade" }),
-
-  userId: uuid("user_id")
-    .references(() => users.id, { onDelete: "cascade" }).unique("votes_user_post_unique"),
-
-  voteType: voteTypeEnum("voteType").notNull(),
-
-  targetType: VoteEntityEnum("targetType").notNull(),
-}, (table) => [
-  index("votes_user_post_unique").on(table.userId, table.postId).where(eq(table.targetType, "post")),
-  index("votes_post_type_idx").on(table.postId, table.targetType),
-]);
+    voteType: voteTypeEnum("vote_type").notNull(),
+  },
+  (table) => [
+    uniqueIndex("votes_user_target_unique").on(
+      table.userId,
+      table.targetType,
+      table.targetId
+    ),
+    index("votes_target_lookup_idx").on(
+      table.targetType,
+      table.targetId
+    ),
+  ]
+);
 
 export type VoteSelect = typeof votes.$inferSelect;
 export type VoteInsert = typeof votes.$inferInsert;

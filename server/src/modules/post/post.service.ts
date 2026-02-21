@@ -1,7 +1,6 @@
 import { HttpError } from "@/core/http";
 import PostRepo from "./post.repo";
 import recordAudit from "@/lib/record-audit";
-import { AuditAction } from "@/shared/constants/audit/actions";
 import { observabilityContext } from "../audit/audit-context";
 import logger from "@/core/logger";
 
@@ -12,12 +11,12 @@ class PostService {
     topic: string;
     postedBy: string;
   }) {
-    logger.info("Creating post", { 
-      topic: postData.topic, 
+    logger.info("Creating post", {
+      topic: postData.topic,
       postedBy: postData.postedBy,
-      title: postData.title 
+      title: postData.title
     });
-    
+
     const newPost = await PostRepo.Write.create({
       title: postData.title.trim(),
       content: postData.content.trim(),
@@ -25,10 +24,10 @@ class PostService {
       postedBy: postData.postedBy,
     });
 
-    logger.info("Post created successfully", { 
-      postId: newPost.id, 
+    logger.info("Post created successfully", {
+      postId: newPost.id,
       topic: newPost.topic,
-      postedBy: newPost.postedBy 
+      postedBy: newPost.postedBy
     });
 
     await recordAudit({
@@ -43,7 +42,7 @@ class PostService {
 
   async getPostById(id: string, userId?: string) {
     logger.info("Fetching post by ID", { postId: id, userId });
-    
+
     const post = await PostRepo.CachedRead.findByIdWithDetails(id, userId);
     if (!post) {
       logger.warn("Post not found", { postId: id });
@@ -53,7 +52,7 @@ class PostService {
         errors: [{ field: "id", message: "Post not found" }],
       });
     }
-    
+
     logger.info("Post retrieved successfully", { postId: id, title: post.title });
     return post;
   }
@@ -69,8 +68,19 @@ class PostService {
     userId?: string;
   }) {
     logger.info("Fetching posts", { options });
-    
-    const posts = await PostRepo.CachedRead.findMany(options);
+
+    let postsResult;
+    try {
+      // const postsResult = await PostRepo.CachedRead.findMany(options);
+      postsResult = await PostRepo.CachedRead.findMany(options);
+    } catch (error) {
+      console.log(error)
+      console.log("🔥 PG MESSAGE:", error.message);
+      console.log("🔥 PG DETAIL:", error.detail);
+      console.log("🔥 PG HINT:", error.hint);
+      console.log("🔥 PG CODE:", error.code);
+    }
+    const posts = Array.isArray(postsResult) ? postsResult : [];
     const totalCount = await PostRepo.CachedRead.countAll({
       topic: options?.topic,
       collegeId: options?.collegeId,
@@ -91,13 +101,13 @@ class PostService {
       },
     };
 
-    logger.info("Retrieved posts", { 
-      count: posts.length, 
-      totalCount, 
-      page, 
+    logger.info("Retrieved posts", {
+      count: posts.length,
+      totalCount,
+      page,
       limit,
       topic: options?.topic,
-      collegeId: options?.collegeId 
+      collegeId: options?.collegeId
     });
 
     return result;
@@ -113,7 +123,7 @@ class PostService {
     }
   ) {
     logger.info("Updating post", { postId: id, userId, updates: Object.keys(updates) });
-    
+
     // First check if post exists and get author info
     const existingPost = await PostRepo.CachedRead.findById(id);
     if (!existingPost) {

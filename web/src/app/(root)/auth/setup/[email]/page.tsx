@@ -1,7 +1,6 @@
 "use client"
 
 import { authApi } from "@/services/api/auth";
-import axios from "axios";
 import { Loader2 } from "lucide-react"
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react"
@@ -20,8 +19,17 @@ function SetupUserPage() {
         navigate("/auth/signup")
         return
       }
-      const { success, error } = await authApi.register.initialize(email as string)
+      const password = sessionStorage.getItem("pending_signup_password")
+
+      if (!password) {
+        toast.error("Signup session expired, please sign up again")
+        navigate("/auth/signup")
+        return
+      }
+
+      const { success, error } = await authApi.register.register(password)
       if (success) {
+        sessionStorage.removeItem("pending_signup_password")
         toast.success("User setup successfully")
         setIsLoading(false)
         navigate("/")

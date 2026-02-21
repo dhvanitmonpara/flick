@@ -1,5 +1,6 @@
 import { env } from "@/config/env";
 import axios from "axios";
+import type { ApiResponse, BackendEnvelope } from "@/types/api";
 
 export const http = axios.create({
   baseURL: env.NEXT_PUBLIC_SERVER_API_ENDPOINT,
@@ -105,4 +106,27 @@ http.interceptors.response.use(
 
     return Promise.reject(error);
   }
+);
+
+http.interceptors.response.use(
+  (response) => {
+    const body = response.data as BackendEnvelope<unknown>;
+
+    const normalized: ApiResponse<unknown> = {
+      success: body.success,
+      message: body.message,
+      errors: body.errors,
+      meta: body.meta,
+      data: body.data,
+
+      status: response.status,
+      statusText: response.statusText,
+      config: response.config,
+      headers: response.headers,
+      request: response.request,
+    };
+
+    return normalized;
+  },
+  (error) => Promise.reject(error)
 );

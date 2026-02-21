@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { and, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import db from "@/infra/db";
 import type { DB } from "@/infra/db/types";
-import { auth } from "@/infra/db/tables/auth.table";
+import { auth, users } from "@/infra/db/tables/auth.table";
 
 export const findById = async (authId: string, dbTx?: DB) => {
   const client = dbTx ?? db;
@@ -16,14 +16,6 @@ export const findByEmail = async (email: string, dbTx?: DB) => {
 
   return client.query.auth.findFirst({
     where: eq(auth.email, email.toLowerCase()),
-  });
-};
-
-export const findByLookupEmail = async (lookupEmail: string, dbTx?: DB) => {
-  const client = dbTx ?? db;
-
-  return client.query.auth.findFirst({
-    where: eq(auth.lookupEmail, lookupEmail),
   });
 };
 
@@ -42,6 +34,13 @@ export type SearchUsersOptions = {
   limit?: number;
   offset?: number;
   collegeId?: string;
+};
+
+export type AdminUsersQueryOptions = {
+  query?: string;
+  limit?: number;
+  offset?: number;
+  roles?: string[];
 };
 
 export const searchUsers = async (
@@ -83,4 +82,83 @@ export const searchUsers = async (
     limit,
     offset,
   });
+};
+
+export const listUsersForAdmin = async (
+  options: AdminUsersQueryOptions,
+  dbTx?: DB,
+) => {
+  const client = dbTx ?? db;
+  const {
+    query,
+    limit = 20,
+    offset = 0,
+    roles,
+  } = options;
+
+  const conditions = [];
+
+  if (query?.trim()) {
+    const normalizedQuery = query.trim().toLowerCase();
+    conditions.push(
+      or(
+        ilike(auth.email, `%${normalizedQuery}%`),
+        ilike(users.username, `%${normalizedQuery}%`),
+      ),
+    );
+  }
+
+  if (roles && roles.length > 0) {
+    conditions.push(inArray(auth.role, roles));
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const rows = await client
+    .select({
+      authId: auth.id,
+      role: auth.role,
+      email: auth.email,
+      emailVerified: auth.emailVerified,
+      banned: auth.banned,
+      banReason: auth.banReason,
+      banExpires: auth.banExpires,
+      createdAt: auth.createdAt,
+      updatedAt: auth.updatedAt,
+      userId: users.id,
+      username: users.username,
+      collegeId: users.collegeId,
+      branch: users.branch,
+      karma: users.karma,
+      isAcceptedTerms: users.isAcceptedTerms,
+    })
+    .from(auth)
+    .leftJoin(users, eq(users.authId, auth.id))
+    .where(whereClause)
+    .orderBy(desc(auth.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  const totalResult = await client
+    .select({ total: count() })
+    .from(auth)
+    .leftJoin(users, eq(users.authId, auth.id))
+    .where(whereClause);
+
+  return {
+    users: rows,
+    total: totalResult[0]?.total ?? 0,
+    limit,
+    offset,
+  };
+};
+
+export const listAdmins = async (
+  options: Omit<AdminUsersQueryOptions, "roles">,
+  dbTx?: DB,
+) => {
+  return listUsersForAdmin(
+    { ...options, roles: ["admin", "superadmin"] },
+    dbTx,
+  );
 };

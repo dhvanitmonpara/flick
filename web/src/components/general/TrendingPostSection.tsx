@@ -1,12 +1,12 @@
 import TrendingPostCard from "./TrendingPostCard"
 import { useCallback, useEffect, useState } from "react"
-import axios, { AxiosError } from "axios"
-import { env } from "@/config/env"
+import { AxiosError } from "axios"
 import { ITrendingPost } from "@/types/TrendingPost"
 import { toast } from "sonner"
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useErrorHandler } from "@/hooks/useErrorHandler"
+import { postApi } from "@/services/api/post";
 
 function TrendingPostSection() {
 
@@ -20,15 +20,13 @@ function TrendingPostSection() {
 
       setLoading(true)
 
-      // TODO: make an API for this
-      const res = await axios.get(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/`)
+      const res = await postApi.getTrending()
 
-      if (res.status !== 200) {
+      if (!res.success) {
         toast.error("Error fetching trending posts")
       }
 
       setPosts(res.data.posts)
-
     } catch (error) {
       handleError(error as AxiosError, "Error fetching trending posts", undefined, fetchPosts, "Failed to fetch trending posts")
     } finally {

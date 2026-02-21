@@ -43,7 +43,7 @@ export const findByPostId = async (
   const voteAgg = client.$with("vote_agg").as(
     client
       .select({
-        commentId: votes.commentId,
+        commentId: votes.targetId,
         upvoteCount: sql<number>`
           COUNT(*) FILTER (WHERE ${votes.voteType} = 'upvote')
         `.as("upvoteCount"),
@@ -61,7 +61,7 @@ export const findByPostId = async (
       })
       .from(votes)
       .where(eq(votes.targetType, "comment"))
-      .groupBy(votes.commentId)
+      .groupBy(votes.targetId)
   );
 
   const orderBy = sortOrder === "asc"
@@ -97,8 +97,8 @@ export const findByPostId = async (
     })
     .from(comments)
     .leftJoin(voteAgg, eq(voteAgg.commentId, comments.id))
-    .leftJoin(users, eq(comments.commentedBy, users.id))
-    .leftJoin(colleges, eq(users.collegeId, colleges.id))
+    .leftJoin(users, sql`${comments.commentedBy}::text = ${users.id}::text`)
+    .leftJoin(colleges, sql`${users.collegeId}::text = ${colleges.id}::text`)
     .where(
       and(
         eq(comments.postId, postId),
@@ -211,7 +211,7 @@ export const findByIdWithAuthor = async (id: string, dbTx?: DB) => {
       authorBranch: users.branch,
     })
     .from(comments)
-    .leftJoin(users, eq(comments.commentedBy, users.id))
+    .leftJoin(users, sql`${comments.commentedBy}::text = ${users.id}::text`)
     .where(eq(comments.id, id))
     .limit(1);
 

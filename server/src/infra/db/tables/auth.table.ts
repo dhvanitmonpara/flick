@@ -6,13 +6,13 @@ import {
   boolean,
   integer,
   index,
+  uuid,
 } from "drizzle-orm/pg-core";
 import { colleges } from "./college.table";
 
 export const auth = pgTable("auth_user", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),
-  lookupEmail: text("lookup_email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
@@ -27,7 +27,7 @@ export const auth = pgTable("auth_user", {
 });
 
 export const users = pgTable("platform_user", {
-  id: text("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -35,7 +35,7 @@ export const users = pgTable("platform_user", {
     .notNull(),
   authId: text("auth_id").notNull().unique().references(() => auth.id, { onDelete: "cascade" }),
   username: text("username").notNull().unique(),
-  collegeId: text("college_id").notNull().references(() => colleges.id, { onDelete: "cascade" }),
+  collegeId: uuid("college_id").notNull().references(() => colleges.id, { onDelete: "cascade" }),
   branch: text("branch").notNull(),
   karma: integer("karma").default(0),
   isAcceptedTerms: boolean("is_accepted_terms").default(false).notNull(),
@@ -55,7 +55,7 @@ export const sessions = pgTable(
     userAgent: text("user_agent"),
     userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => auth.id, { onDelete: "cascade" }),
     impersonatedBy: text("impersonated_by"),
   },
   (table) => [index("session_userId_idx").on(table.userId)],
@@ -69,7 +69,7 @@ export const accounts = pgTable(
     providerId: text("provider_id").notNull(),
     userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => auth.id, { onDelete: "cascade" }),
     accessToken: text("access_token"),
     refreshToken: text("refresh_token"),
     idToken: text("id_token"),
@@ -109,7 +109,7 @@ export const twoFactor = pgTable(
     backupCodes: text("backup_codes").notNull(),
     userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => auth.id, { onDelete: "cascade" }),
   },
   (table) => [
     index("twoFactor_secret_idx").on(table.secret),
@@ -132,23 +132,23 @@ export const userRelations = relations(users, ({ many, one }) => ({
 }));
 
 export const sessionRelations = relations(sessions, ({ one }) => ({
-  user: one(users, {
+  user: one(auth, {
     fields: [sessions.userId],
-    references: [users.id],
+    references: [auth.id],
   }),
 }));
 
 export const accountRelations = relations(accounts, ({ one }) => ({
-  user: one(users, {
+  user: one(auth, {
     fields: [accounts.userId],
-    references: [users.id],
+    references: [auth.id],
   }),
 }));
 
 export const twoFactorRelations = relations(twoFactor, ({ one }) => ({
-  user: one(users, {
+  user: one(auth, {
     fields: [twoFactor.userId],
-    references: [users.id],
+    references: [auth.id],
   }),
 }));
 

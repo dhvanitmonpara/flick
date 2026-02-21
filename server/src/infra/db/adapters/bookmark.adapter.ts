@@ -56,7 +56,7 @@ export const findBookmarkedPostsByUserId = async (userId: string, dbTx?: DB) => 
   const voteAgg = client.$with("vote_agg").as(
     client
       .select({
-        postId: votes.postId,
+        postId: votes.targetId,
         upvoteCount: sql<number>`
           COUNT(*) FILTER (WHERE ${votes.voteType} = 'upvote')
         `.as("upvoteCount"),
@@ -73,8 +73,8 @@ export const findBookmarkedPostsByUserId = async (userId: string, dbTx?: DB) => 
         `.as("userVote"),
       })
       .from(votes)
-      .where(eq(votes.type, "post"))
-      .groupBy(votes.postId)
+      .where(eq(votes.targetType, "post"))
+      .groupBy(votes.targetId)
   );
 
   const rows = await client
@@ -107,8 +107,8 @@ export const findBookmarkedPostsByUserId = async (userId: string, dbTx?: DB) => 
     .from(bookmarks)
     .innerJoin(posts, eq(bookmarks.postId, posts.id))
     .leftJoin(voteAgg, eq(voteAgg.postId, posts.id))
-    .leftJoin(users, eq(posts.postedBy, users.id))
-    .leftJoin(colleges, eq(users.collegeId, colleges.id))
+    .leftJoin(users, sql`${posts.postedBy}::text = ${users.id}::text`)
+    .leftJoin(colleges, sql`${users.collegeId}::text = ${colleges.id}::text`)
     .where(
       and(
         eq(bookmarks.userId, userId),
@@ -132,18 +132,18 @@ export const findBookmarkedPostsByUserId = async (userId: string, dbTx?: DB) => 
 
     postedBy: r.authorId
       ? {
-          _id: r.authorId,
-          username: r.authorUsername,
-          branch: r.authorBranch,
-          college: r.collegeId
-            ? {
-                _id: r.collegeId,
-                name: r.collegeName,
-                profile: r.collegeProfile,
-                email: r.collegeEmail,
-              }
-            : null,
-        }
+        _id: r.authorId,
+        username: r.authorUsername,
+        branch: r.authorBranch,
+        college: r.collegeId
+          ? {
+            _id: r.collegeId,
+            name: r.collegeName,
+            profile: r.collegeProfile,
+            email: r.collegeEmail,
+          }
+          : null,
+      }
       : null,
   }));
 

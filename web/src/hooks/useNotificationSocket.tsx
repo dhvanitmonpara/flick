@@ -2,14 +2,14 @@ import { useEffect, useState } from "react"
 import useSocket from "@/socket/useSocket"
 import useProfileStore from "@/store/profileStore"
 import { toast } from "sonner"
-import { useNavigate } from "react-router-dom"
+import { useRouter } from "next/navigation"
 import getNotificationAction from "@/utils/getNotificationAction"
 import { INotification } from "@/types/Notification"
 
 export function useNotificationSocket() {
   const [notificationCount, setNotificationCount] = useState(0)
   const socket = useSocket()
-  const navigate = useNavigate()
+  const navigate = useRouter().push
 
   useEffect(() => {
     if (!socket) return;

@@ -3,22 +3,11 @@ import {
   text,
   timestamp,
   jsonb,
-  pgEnum,
   index,
   uuid,
   inet,
 } from "drizzle-orm/pg-core";
-import { auditActions } from "@/shared/constants/audit/actions";
-import { auditPlatforms } from "@/shared/constants/audit/platform";
-import { auditStatus } from "@/shared/constants/audit/status";
-import { roleKeys } from "@/config/roles";
-import { auditEntityTypes } from "@/shared/constants/audit/entity";
-
-export const roleEnum = pgEnum("log_role", roleKeys);
-export const platformEnum = pgEnum("log_platform", auditPlatforms);
-export const statusEnum = pgEnum("log_status", auditStatus);
-export const actionEnum = pgEnum("log_action", auditActions);
-export const entityEnum = pgEnum("log_action", auditEntityTypes);
+import { entityEnum, roleEnum } from "./enums";
 
 /**
  * id: uuid PRIMARY KEY DEFAULT get_random_uuid()

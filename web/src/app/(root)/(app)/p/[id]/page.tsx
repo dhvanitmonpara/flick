@@ -2,7 +2,6 @@ import Comment from "@/components/general/Comment";
 import CreateComment from "@/components/general/CreateComment";
 import Post from "@/components/general/Post"
 import SkeletonCard from "@/components/skeletons/PostSkeleton";
-import { env } from "@/config/env/server-env";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import useCommentStore from "@/store/commentStore";
 import usePostStore from "@/store/postStore";
@@ -10,9 +9,11 @@ import { IComment } from "@/types/Comment";
 import { IPost } from "@/types/Post";
 import { IUser } from "@/types/User";
 import { formatDate, isCollege, isUser } from "@/utils/helpers";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { postApi } from "@/services/api/post";
+import { commentApi } from "@/services/api/comment";
 
 const getAvatarUrl = (user: IUser | string) => isUser(user) && isCollege(user.college) ? user.college.profile : "";
 const getCollegeName = (user: IUser | string) => isUser(user) && isCollege(user.college) ? user.college.name : "Unknown College";
@@ -36,7 +37,7 @@ function PostPage() {
 
   const incrementView = useCallback(async () => {
     try {
-      const res = await axios.post(`${env.serverApiEndpoint}/posts/view/${id}`, {}, { withCredentials: true })
+      const res = await postApi.incrementView(id as string)
       if (res.status !== 200) {
         throw new Error("Failed to increment view")
       }
@@ -48,7 +49,7 @@ function PostPage() {
   const fetchComments = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await axios.get(`${env.serverApiEndpoint}/comments/p/${id}`, { withCredentials: true })
+      const res = await commentApi.getByPostId(id as string)
       if (res.status !== 200) {
         throw new Error("Failed to fetch comments")
       }
@@ -64,7 +65,7 @@ function PostPage() {
   const fetchPostById = useCallback(async () => {
     try {
       setLoadingPosts(true)
-      const res = await axios.get(`${env.serverApiEndpoint}/posts/get/single/${id}`, { withCredentials: true })
+      const res = await postApi.getById(id as string)
       if (res.status !== 200) {
         throw new Error("Failed to fetch post")
       }

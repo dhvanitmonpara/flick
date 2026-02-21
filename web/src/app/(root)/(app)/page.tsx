@@ -2,14 +2,14 @@
 
 import Post from "@/components/general/Post"
 import SkeletonCard from "@/components/skeletons/PostSkeleton"
-import { env } from "@/config/env"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
 import usePostStore from "@/store/postStore"
 import { IPost } from "@/types/Post"
 import { formatDate, getAvatarUrl, getCollegeName, isUser } from "@/utils/helpers"
-import axios, { AxiosError } from "axios"
+import { AxiosError } from "axios"
 import { useParams } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
+import { postApi } from "@/services/api/post"
 
 function FeedPage() {
 
@@ -24,18 +24,17 @@ function FeedPage() {
   const fetchPosts = useCallback(async () => {
     try {
       setLoading(true)
-      let url = `${env.NEXT_PUBLIC_BASE_URL}/api/posts/feed`
-      if (params.branch) {
-        url = `${env.NEXT_PUBLIC_BASE_URL}/api/posts/get/filter?branch=${params.branch}`
-      } else if (params.topic) {
-        url = `${env.NEXT_PUBLIC_BASE_URL}/api/posts/get/filter?topic=${params.topic}`
-      }
+      const branch = Array.isArray(params.branch) ? params.branch[0] : params.branch
+      const topic = Array.isArray(params.topic) ? params.topic[0] : params.topic
+      const res = await postApi.getPosts({
+        ...(branch ? { branch } : {}),
+        ...(topic ? { topic } : {}),
+      })
 
-      const res = await axios.get(url, { withCredentials: true })
-
-      if (res.status !== 200) {
+      if (!res.success) {
         throw new Error("Failed to fetch posts")
       }
+
       setPosts(res.data.posts)
     } catch (error) {
       await handleError(error as AxiosError | Error, "Error fetching posts", undefined, () => fetchPosts(), "Failed to fetch posts")

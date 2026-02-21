@@ -1,8 +1,8 @@
-import { env } from "@/config/env"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
-import axios, { AxiosError } from "axios"
+import { AxiosError } from "axios"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { authApi } from "@/services/api/auth"
 
 function TerminateSessions() {
   const navigate = useRouter().push
@@ -14,13 +14,9 @@ function TerminateSessions() {
     try {
       toastId = toast.loading("Terminating sessions...")
 
-      const response = await axios.post(
-        `${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/users/devices/terminate`,
-        {},
-        { withCredentials: true }
-      )
+      const isSuccess = await authApi.session.logoutAll()
 
-      if (response.status !== 200) {
+      if (!isSuccess) {
         throw new Error("Failed to terminate sessions")
       }
 

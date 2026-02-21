@@ -1,6 +1,6 @@
 // api.ts
 import axios from "axios";
-import { env } from "@/config/env/server-env";
+import { env } from "@/config/env";
 import useProfileStore from "@/store/profileStore";
 import { toast } from "sonner";
 
@@ -12,7 +12,7 @@ interface RetryAxiosRequestConfig extends InternalAxiosRequestConfig {
 }
 
 const api = axios.create({
-  baseURL: env.serverApiEndpoint,
+  baseURL: env.NEXT_PUBLIC_SERVER_API_ENDPOINT,
   withCredentials: true,
 });
 
@@ -31,7 +31,7 @@ api.interceptors.response.use(
       // only one refresh at a time
       if (!refreshing) {
         refreshing = axios
-          .post("/users/refresh", {}, { withCredentials: true })
+          .post("/auth/refresh", {}, { withCredentials: true })
           .then((r) => {
             setProfile(r.data.data);
             return r;

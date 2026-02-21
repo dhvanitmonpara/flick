@@ -14,8 +14,11 @@
     "db:up": "docker compose -f infra/docker-compose.yml up -d",
     "db:down": "docker compose -f infra/docker-compose.yml down",
     "db:migrate": "bun x drizzle-kit migrate",
+    "db:generate": "bun x drizzle-kit generate",
+    "db:check": "bun x drizzle-kit check",
     "lint": "bun x biome check",
-    "lint-format": "bun x biome check --write"
+    "lint-format": "bun x biome check --write",
+    "typecheck": "tsc --noEmit"
   },
   "lint-staged": {
     "*.{js,ts,jsx,tsx,json,md}": "biome check --write"

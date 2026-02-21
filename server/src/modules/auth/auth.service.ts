@@ -16,20 +16,9 @@ import CryptoTools from "@/lib/crypto-tools";
 import crypto from "node:crypto";
 import { PendingUser } from "./auth.types";
 import { env } from "@/config/env";
+import UserRepo from "../user/user.repo";
 
 class AuthService {
-
-  redeemTempToken = async (tempToken: string) => {
-    const stored: { accessToken: string; refreshToken: string } | undefined =
-      await cache.get(tempToken);
-
-    if (!stored) return null;
-
-    await cache.del(tempToken);
-
-    return stored;
-  };
-
   getPendingUser = async (signupId: string) => {
     const stored = (await cache.get(`pending:${signupId}`)) as PendingUser;
 
@@ -68,14 +57,14 @@ class AuthService {
         code: "COLLEGE_NOT_FOUND",
         meta: { source: "initialize_registration" },
       });
-    }
+    };
 
     this.checkDisposableMail(email)
 
     const encryptedEmail = CryptoTools.email.encrypt(email.toLowerCase());
     const signupId = crypto.randomBytes(32).toString("hex");
 
-    const otpData = await this.sendOtp(signupId, email);
+    await this.sendOtp(signupId, email);
 
     const cacheSuccess = await cache.set(
       `pending:${signupId}`,
@@ -171,25 +160,29 @@ class AuthService {
 
     const username = nanoid(12);
     const decryptedEmail = CryptoTools.email.decrypt(email)
-    const lookupEmail = CryptoTools.email.hash(decryptedEmail)
 
     const response = await auth.api.signUpEmail({
       body: {
         email: decryptedEmail,
-        lookupEmail,
         password,
         name: username,
-        collegeId,
-        branch,
       },
       asResponse: true,
       returnHeaders: true,
     });
 
-    if (res && response.headers) forwardSetCookieHeaders(response.headers, res);
+    const rawText = await response.text();
+    const parsed = JSON.parse(rawText);
+    const createdUser = parsed.user;
 
-    const data = await response.json();
-    const createdUser = data.user;
+    const createdProfile = await UserRepo.Write.create({
+      username,
+      collegeId,
+      branch,
+      authId: createdUser.id,
+    });
+
+    if (res && response.headers) forwardSetCookieHeaders(response.headers, res);
 
     await cache.del(`pending:${signupId}`);
 
@@ -201,7 +194,7 @@ class AuthService {
       metadata: { registrationMethod: "better-auth" },
     });
 
-    return { createdUser, session: data.session };
+    return { user: createdUser, profile: createdProfile, session: parsed.session };
   };
 
   loginAuth = async (email: string, password: string, res: Response) => {
@@ -224,7 +217,7 @@ class AuthService {
     return data
   };
 
-  logoutAuth = async (req: Request, res: Response, userId: string) => {
+  logoutAuth = async (req: Request, res: Response) => {
     const headers = parseHeaders(req.headers)
     const response = await auth.api.signOut({ headers, asResponse: true, returnHeaders: true });
     forwardSetCookieHeaders(response.headers, res);
@@ -232,8 +225,88 @@ class AuthService {
     await recordAudit({
       action: "user:logged:out:self",
       entityType: "auth",
-      entityId: userId,
+      entityId: req.auth?.id,
     });
+  };
+
+  deleteAccount = async (
+    req: Request,
+    res: Response,
+    payload: { password?: string; token?: string; callbackURL?: string },
+  ) => {
+    const headers = parseHeaders(req.headers);
+
+    const response = await auth.api.deleteUser({
+      headers,
+      body: payload,
+      asResponse: true,
+      returnHeaders: true,
+    });
+
+    forwardSetCookieHeaders(response.headers, res);
+
+    await recordAudit({
+      action: "other:action",
+      entityType: "auth",
+      entityId: req.auth?.id ?? "unknown",
+      metadata: { source: "authService.deleteAccount" },
+    });
+
+    return true;
+  };
+
+  requestPasswordReset = async (email: string, redirectTo?: string) => {
+    const result = await auth.api.requestPasswordReset({
+      body: { email, redirectTo },
+    });
+
+    await recordAudit({
+      action: "user:forgot:password",
+      entityType: "auth",
+      entityId: email,
+    });
+
+    return result;
+  };
+
+  resetPassword = async (newPassword: string, token?: string) => {
+    const result = await auth.api.resetPassword({
+      body: {
+        newPassword,
+        token,
+      },
+      query: token ? { token } : undefined,
+    });
+
+    await recordAudit({
+      action: "user:initialized:forgot-password",
+      entityType: "auth",
+      entityId: token ?? "tokenless",
+    });
+
+    return result;
+  };
+
+  logoutAllDevices = async (req: Request) => {
+    const headers = parseHeaders(req.headers);
+    const result = await auth.api.revokeOtherSessions({ headers });
+
+    await recordAudit({
+      action: "other:action",
+      entityType: "auth",
+      entityId: req.auth?.id ?? "unknown",
+      metadata: { source: "authService.logoutAllDevices" },
+    });
+
+    return result;
+  };
+
+  getAllAdmins = async (options: { query?: string; limit?: number; offset?: number }) => {
+    return AuthRepo.Read.listAdmins(options);
+  };
+
+  getAllUsersForAdmin = async (options: { query?: string; limit?: number; offset?: number }) => {
+    return AuthRepo.Read.listUsersForAdmin(options);
   };
 
   validateStudentEmail(email: string) {

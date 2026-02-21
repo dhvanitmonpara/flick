@@ -13,35 +13,6 @@ export const auth = betterAuth({
       name: undefined,
       image: undefined,
     },
-    additionalFields: {
-      lookupEmail: {
-        type: "string",
-        required: true,
-        fieldName: "lookup_email",
-      },
-      collegeId: {
-        type: "string",
-        required: true,
-        fieldName: "college_id",
-      },
-      branch: {
-        type: "string",
-        required: true,
-        fieldName: "branch",
-      },
-      karma: {
-        type: "number",
-        required: false,
-        fieldName: "karma",
-        defaultValue: 0
-      },
-      isAcceptedTerms: {
-        type: "boolean",
-        required: true,
-        fieldName: "is_accepted_terms",
-        defaultValue: false
-      },
-    }
   },
   emailAndPassword: {
     enabled: true,

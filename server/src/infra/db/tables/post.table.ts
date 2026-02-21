@@ -1,19 +1,6 @@
-import { boolean, index, integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { users } from "./auth.table";
-
-export const topicEnum = pgEnum("topic_enum", [
-  "Ask Flick", // AMA-style Q&A
-  "Serious Discussion", // Longform thought, critical debate
-  "Career Advice", // Jobs, interviews, tech growth
-  "Showcase", // Demos, projects, portfolios
-  "Off-topic", // Memes, casual chatter
-  "Community Event", // Fests, announcements, contests
-  "Rant / Vent", // Emotional unloads, safe zone
-  "Help / Support", // “Stuck on X”, troubleshooting
-  "Feedback / Suggestion", // Feature requests, bug reports
-  "News / Update", // Industry news, changelogs, announcements
-  "Guide / Resource", // Tutorials, resources, link dumps
-]);
+import { topicEnum } from "./enums";
 
 export const posts = pgTable("posts", {
   id: uuid("id").primaryKey().defaultRandom(),

@@ -7,8 +7,9 @@ const router = Router();
 router.use(ensureRatelimit.api);
 router.use(authenticate);
 
-router.get("/me", UserController.getUserData);
-router.get("/id/:userId", UserController.getUserById);
+router.get("/me", UserController.getUserProfile);
+router.post("/accept-terms", UserController.acceptTerms);
+router.get("/id/:userId", UserController.getUserProfileById);
 router.get("/search/:query", UserController.searchUsers);
 
 export default router;

@@ -1,10 +1,10 @@
 import NotificationCard from "@/components/general/NotificationCard"
-import { env } from "@/config/env/server-env"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
 import { INotification } from "@/types/Notification"
-import axios, { AxiosError } from "axios"
+import { AxiosError } from "axios"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { notificationApi } from "@/services/api/notification"
 
 function NotificationsPage() {
 
@@ -17,9 +17,7 @@ function NotificationsPage() {
     const load = async () => {
       try {
         setLoading(true)
-        const res = await axios.get(`${env.serverApiEndpoint}/notifications/list`, {
-          withCredentials: true,
-        })
+        const res = await notificationApi.list()
 
         if (res.status !== 200) {
           toast.error("Failed to fetch notifications")
@@ -34,10 +32,8 @@ function NotificationsPage() {
 
         const unseen: INotification[] = res.data.notifications.filter((n: INotification) => !n.seen)
         if (unseen.length) {
-          await axios.patch(
-            `${env.serverApiEndpoint}/notifications/mark-seen`,
-            { ids: unseen.map((n) => n._id) },
-            { withCredentials: true }
+          await notificationApi.markSeen(
+            unseen.map((n) => n._id).filter((id): id is string => Boolean(id)),
           )
           setNotifications((prev) =>
             prev.map((n) => (unseen.some((u) => u._id === n._id) ? { ...n, seen: true } : n))

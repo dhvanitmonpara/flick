@@ -2,9 +2,8 @@
 
 import { Toaster } from "sonner"
 import { useEffect } from "react"
-import axios from "axios"
-import { env } from "@/config/env"
 import { useRouter } from "next/navigation"
+import { appApi } from "@/services/api/app"
 
 function RootLayout({ children }: { children: React.ReactElement }) {
 
@@ -12,8 +11,8 @@ function RootLayout({ children }: { children: React.ReactElement }) {
 
   useEffect(() => {
     (async () => {
-      if (!env.SERVER_URI || env.NODE_ENV === "development") return
-      const res = await axios.get(`${env.SERVER_URI}/health-check`)
+      if (process.env.NODE_ENV === "development") return
+      const res = await appApi.health()
       if (res.status !== 200) {
         navigate("/server-booting")
       }

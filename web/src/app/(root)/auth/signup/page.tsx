@@ -7,7 +7,6 @@ import { Loader2 } from "lucide-react"
 import { IoMdEye, IoMdEyeOff } from "react-icons/io"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import axios from "axios"
 import {
   Select,
   SelectContent,
@@ -23,6 +22,7 @@ import { Separator } from "@/components/ui/separator"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { authApi } from "@/services/api/auth"
+import { ocrApi } from "@/services/api/ocr"
 
 const signInSchema = z.object({
   email: z.email("Email is invalid"),
@@ -81,6 +81,7 @@ function SignUpPage() {
         return
       }
 
+      sessionStorage.setItem("pending_signup_password", data.password)
       navigate(`/auth/otp/${data.email}`)
     } catch (err) {
       toast.error("Error signing in")
@@ -98,16 +99,7 @@ function SignUpPage() {
           onFileInput={async (file) => {
             const formData = new FormData();
             formData.append('studentId', file);
-
-            const response = await axios.post(
-              `${env.ocrServerApiEndpoint}/extract`,
-              formData,
-              {
-                headers: {
-                  'Content-Type': 'multipart/form-data',
-                },
-              }
-            );
+            const response = await ocrApi.extractStudentDetails(formData);
 
             return response.data;
           }}

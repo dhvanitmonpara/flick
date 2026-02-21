@@ -9,12 +9,17 @@ const UserRepo = {
 
     findByEmail: (email: string, include: userAdapter.UserInclude, dbTx?: DB) => userAdapter.findByAuthId(email, include, dbTx),
 
+    findByAuthId: (authId: string, include: userAdapter.UserInclude, dbTx?: DB) => userAdapter.findByAuthId(authId, include, dbTx),
+
     findByLookupEmail: (username: string, include: userAdapter.UserInclude, dbTx?: DB) => userAdapter.findByUsername(username, include, dbTx),
   },
 
   CachedRead: {
     findById: (userId: string, include: userAdapter.UserInclude, dbTx?: DB) =>
       cached(userCacheKeys.id(userId), () => userAdapter.findById(userId, include, dbTx)),
+
+    findByAuthId: (authId: string, include: userAdapter.UserInclude, dbTx?: DB) =>
+      cached(userCacheKeys.authId(authId), () => userAdapter.findByAuthId(authId, include, dbTx)),
 
     findByEmail: (email: string, include: userAdapter.UserInclude, dbTx?: DB) =>
       cached(userCacheKeys.email(email), () => userAdapter.findByAuthId(email, include, dbTx)),

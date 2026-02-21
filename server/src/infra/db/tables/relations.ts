@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { users } from "./user.table";
+import { users } from "./auth.table";
 import { posts } from "./post.table";
 import { bookmarks } from "./bookmark.table";
 import { votes } from "./vote.table";
@@ -42,7 +42,7 @@ export const votesRelations = relations(votes, ({ one }) => ({
     references: [users.id],
   }),
   post: one(posts, {
-    fields: [votes.postId],
+    fields: [votes.targetId],
     references: [posts.id],
   }),
 }));

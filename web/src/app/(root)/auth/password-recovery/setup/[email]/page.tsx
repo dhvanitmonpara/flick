@@ -1,7 +1,6 @@
 "use client"
 
 import { authApi } from "@/services/api/auth";
-import axios from "axios";
 import { Loader2 } from "lucide-react"
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react"
@@ -20,8 +19,17 @@ function PasswordRecoverySetup() {
         navigate("/auth/password-recovery/enter-email")
         return
       }
-      const isResetSuccess = await authApi.resetPassword.initialize(email as string)
+      const newPassword = sessionStorage.getItem("pending_reset_password")
+
+      if (!newPassword) {
+        toast.error("Reset session expired, please retry")
+        navigate("/auth/password-recovery/enter-email")
+        return
+      }
+
+      const isResetSuccess = await authApi.resetPassword.finalize(newPassword)
       if (isResetSuccess) {
+        sessionStorage.removeItem("pending_reset_password")
         toast.success("Password reset successfully")
         setIsLoading(false)
         navigate("/?reset=true")

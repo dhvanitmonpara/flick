@@ -1,13 +1,13 @@
 import Post from "@/components/general/Post"
 import SkeletonCard from "@/components/skeletons/PostSkeleton"
-import { env } from "@/config/env/server-env"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
 import usePostStore from "@/store/postStore"
 import useProfileStore from "@/store/profileStore"
 import { IPost } from "@/types/Post"
 import { formatDate, getAvatarUrl, getCollegeName, isUser } from "@/utils/helpers"
-import axios, { AxiosError } from "axios"
+import { AxiosError } from "axios"
 import { useCallback, useEffect, useState } from "react"
+import { postApi } from "@/services/api/post"
 
 function CollegePage() {
 
@@ -21,8 +21,9 @@ function CollegePage() {
     try {
       setLoading(true)
       if (!profile.college) return
+      const collegeId = typeof profile.college === "string" ? profile.college : profile.college._id;
 
-      const res = await axios.get(`${env.serverApiEndpoint}/posts/college/${profile.college}`, { withCredentials: true })
+      const res = await postApi.getByCollege(collegeId)
 
       if (res.status !== 200) {
         throw new Error("Failed to fetch posts")

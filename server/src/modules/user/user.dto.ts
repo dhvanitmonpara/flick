@@ -1,12 +1,13 @@
-import { User } from "@/shared/types/User";
+import { UserSelect } from "@/shared/types/User";
 
-export const toInternalUser = (user: User) => ({
+export const toPublicUser = (user: UserSelect) => ({
   id: user.id,
   username: user.username,
-  email: user.email,
-  roles: user.roles,
+  karma: user.karma,
+  collegeId: user.collegeId,
+  branch: user.branch,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 });
 
-export type InternalUser = ReturnType<typeof toInternalUser>;
+export type PublicUser = ReturnType<typeof toPublicUser>;

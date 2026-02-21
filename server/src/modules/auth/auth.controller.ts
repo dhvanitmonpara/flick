@@ -22,7 +22,7 @@ class AuthController {
   }
 
   static async logoutUser(req: Request, res: Response) {
-    await authService.logoutAuth(req, res, req.user?.id);
+    await authService.logoutAuth(req, res);
 
     return HttpResponse.ok("User logged out successfully");
   }
@@ -59,7 +59,7 @@ class AuthController {
     return HttpResponse.ok("OTP sent successfully", { messageId });
   }
 
-  static async verifyOtp(req: Request) {
+  static async verifyUserOtp(req: Request) {
     const { otp } = authSchemas.verifyOtpSchema.parse(req.body);
 
     const signupId = req.cookies.signupId || req.body.signupId;
@@ -77,13 +77,94 @@ class AuthController {
     );
   }
 
-  // TODO: missing APIs
-  // delete account functionality is missing
-  // forget password functionality is missing
-  // reset password functionality is missing
-  // logout all devices (also called terminate all sessions in the old user controller) functionality is missing (removeAuthorizedDevices in old controller)
-  // get all admins
-  // get all users for admin
+  static async verifyOtp(req: Request) {
+    const { otp } = authSchemas.verifyOtpSchema.parse(req.body);
+
+    const signupId = req.cookies.signupId || req.body.signupId;
+
+    if (!signupId)
+      throw HttpError.badRequest("Signup ID is required", {
+        meta: { source: "verify_otp" },
+      });
+
+    const isVerified = await authService.verifyOtp(signupId, otp);
+
+    return HttpResponse.ok(
+      isVerified ? "OTP verified successfully" : "Invalid OTP",
+      { isVerified },
+    );
+  }
+
+  static async googleCallback(req: Request) {
+    const { code } = authSchemas.googleCallbackSchema.parse(req.query);
+    await authService.handleGoogleOAuth(code, req);
+    return HttpResponse.redirect("/");
+  }
+
+  static async initializeUser(req: Request, res: Response) {
+    const { email, branch } = authSchemas.initializeUserSchema.parse(req.body);
+
+    const result = await authService.initializeRegistration(email, branch, res);
+
+    return HttpResponse.created(
+      "User initialized successfully and OTP sent",
+      result,
+    );
+  }
+
+  static async registerUser(req: Request, res: Response) {
+    const { password } = authSchemas.registrationSchema.parse(req.body);
+
+    const data = await authService.finishRegistration(req, password, res);
+
+    return HttpResponse.created("Form submitted successfully!", data);
+  }
+
+  static async deleteAccount(req: Request, res: Response) {
+    const payload = authSchemas.deleteAccountSchema.parse(req.body ?? {});
+    await authService.deleteAccount(req, res, payload);
+    return HttpResponse.ok("Account deleted successfully");
+  }
+
+  static async forgotPassword(req: Request) {
+    const { email, redirectTo } = authSchemas.forgotPasswordSchema.parse(req.body);
+
+    await authService.requestPasswordReset(email, redirectTo);
+
+    return HttpResponse.ok("Password reset request sent successfully");
+  }
+
+  static async resetPassword(req: Request) {
+    const { token: queryToken } = authSchemas.resetPasswordQuerySchema.parse(req.query);
+    const { newPassword, token: bodyToken } = authSchemas.resetPasswordSchema.parse(req.body);
+
+    const token = bodyToken ?? queryToken;
+
+    await authService.resetPassword(newPassword, token);
+
+    return HttpResponse.ok("Password reset successfully");
+  }
+
+  static async logoutAllDevices(req: Request) {
+    await authService.logoutAllDevices(req);
+    return HttpResponse.ok("Logged out from all other devices successfully");
+  }
+
+  static async getAllAdmins(req: Request) {
+    const { query, limit, offset } = authSchemas.adminListQuerySchema.parse(req.query);
+
+    const result = await authService.getAllAdmins({ query, limit, offset });
+
+    return HttpResponse.ok("Admin users fetched successfully", result);
+  }
+
+  static async getAllUsersForAdmin(req: Request) {
+    const { query, limit, offset } = authSchemas.adminListQuerySchema.parse(req.query);
+
+    const result = await authService.getAllUsersForAdmin({ query, limit, offset });
+
+    return HttpResponse.ok("Users fetched successfully", result);
+  }
 }
 
 export default AuthController;

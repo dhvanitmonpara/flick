@@ -1,11 +1,11 @@
 import Post from "@/components/general/Post"
-import { env } from "@/config/env"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
 import { IPost } from "@/types/Post"
 import { useCallback, useEffect, useState } from "react"
-import axios, { AxiosError } from "axios"
+import { AxiosError } from "axios"
 import { isCollege, isUser } from "@/utils/helpers"
 import SkeletonCard from "@/components/skeletons/PostSkeleton"
+import { bookmarkApi } from "@/services/api/bookmark"
 
 function BookmarksPage() {
 
@@ -16,7 +16,7 @@ function BookmarksPage() {
   const getBookmarks = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await axios.get(`${env.serverApiEndpoint}/bookmarks/user`, { withCredentials: true })
+      const res = await bookmarkApi.listMine()
       if (res.status !== 200) throw new Error("Failed to get bookmarks");
       setPosts(res.data.posts)
     } catch (error) {

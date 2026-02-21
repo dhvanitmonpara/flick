@@ -1,6 +1,5 @@
 import { PiArrowFatUpFill, PiArrowFatDownFill } from "react-icons/pi";
-import axios, { AxiosError } from "axios";
-import { env } from "@/config/env";
+import { AxiosError } from "axios";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { useEffect, useState } from "react";
 import { FaEye } from 'react-icons/fa';
@@ -8,6 +7,7 @@ import ShareButton from "../actions/ShareButton";
 import CommentButton from "../actions/CommentButton";
 import { toast } from "sonner";
 import { Separator } from "../ui/separator";
+import { voteApi } from "@/services/api/vote";
 
 type EngagementType = 'upvotes' | 'downvotes' | 'comments' | 'views' | "share";
 
@@ -93,26 +93,21 @@ const EngagementComponent = ({
     setIsVoting(true);
     try {
       if (action === 'post') {
-        await axios.post(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/votes`, {
-          voteType: type,
-          targetId: _id,
-          targetType
-        }, { withCredentials: true });
-      } else if (action === 'delete') {
-        await axios.delete(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/votes`, {
-          data: { targetId: _id, targetType },
-          withCredentials: true,
-        });
-      } else if (action === 'patch') {
-        await axios.patch(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/votes`, {
+        await voteApi.create({
           voteType: type,
           targetId: _id,
           targetType,
-        }, {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-          }
+        });
+      } else if (action === 'delete') {
+        await voteApi.remove({
+          targetId: _id,
+          targetType,
+        });
+      } else if (action === 'patch') {
+        await voteApi.update({
+          voteType: type,
+          targetId: _id,
+          targetType,
         });
       }
     } catch (error) {

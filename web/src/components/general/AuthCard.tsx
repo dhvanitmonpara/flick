@@ -1,12 +1,12 @@
 import ThemeToggler from "./ThemeToggler"
 import UserProfile from "./UserProfile";
 import { useEffect, useState } from "react";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import useProfileStore from "@/store/profileStore";
 import { toast } from "sonner";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
-import { env } from "@/config/env";
 import NotificationButton from "./NotificationButton";
+import { userApi } from "@/services/api/user";
 
 function AuthCard({ className }: { className?: string }) {
 
@@ -18,9 +18,7 @@ function AuthCard({ className }: { className?: string }) {
     const fetchUser = async () => {
       try {
 
-        const user = await axios.get(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/users/me`, {
-          withCredentials: true,
-        })
+        const user = await userApi.getMe()
 
         if (user.status !== 200) {
           toast.error(user.data.message || "Something went wrong while fetching user")

@@ -1,4 +1,4 @@
-import { and, desc, eq, sql, asc, count } from "drizzle-orm";
+import { and, desc, eq, sql, asc } from "drizzle-orm";
 import db from "@/infra/db/index";
 import type { DB } from "@/infra/db/types";
 import { posts, users, colleges, votes, bookmarks, comments } from "../tables";
@@ -9,18 +9,19 @@ export const findById = async (id: string, dbTx?: DB) => {
     where: eq(posts.id, id),
   });
 
-  return post;
+  return post || null;
 };
 
 export const findAuthorId = async (id: string, dbTx?: DB) => {
   const client = dbTx ?? db;
-  const result = await client.select({ postedBy: posts.postedBy })
+  const result = await client
+    .select({ postedBy: posts.postedBy })
     .from(posts)
     .where(eq(posts.id, id))
     .limit(1);
 
-  return result[0].postedBy;
-}
+  return result[0]?.postedBy || null;
+};
 
 export const findByIdWithDetails = async (
   id: string,
@@ -32,52 +33,53 @@ export const findByIdWithDetails = async (
   const voteAgg = client.$with("vote_agg").as(
     client
       .select({
-        postId: votes.postId,
+        targetId: votes.targetId, // Let Drizzle handle the column reference
         upvoteCount: sql<number>`
-          COUNT(*) FILTER (WHERE ${votes.voteType} = 'upvote')
+          (COUNT(*) FILTER (WHERE ${votes.voteType}::text = 'upvote'))::int
         `.as("upvoteCount"),
         downvoteCount: sql<number>`
-          COUNT(*) FILTER (WHERE ${votes.voteType} = 'downvote')
+          (COUNT(*) FILTER (WHERE ${votes.voteType}::text = 'downvote'))::int
         `.as("downvoteCount"),
-        userVote: userId ? sql<"upvote" | "downvote" | null>`
-          MAX(
-            CASE
-              WHEN ${votes.userId} = ${userId}
-              THEN ${votes.voteType}
-            END
-          )
-        `.as("userVote") : sql<null>`NULL`.as("userVote"),
+        userVote: userId
+          ? sql<string | null>`
+              MAX(
+                CASE
+                  WHEN ${votes.userId} = ${userId}
+                  THEN ${votes.voteType}::text
+                END
+              )
+            `.as("userVote")
+          : sql<null>`NULL::text`.as("userVote"),
       })
       .from(votes)
-      .where(eq(votes.type, "post"))
-      .groupBy(votes.postId)
+      .where(sql`${votes.targetType}::text = 'post'`)
+      .groupBy(votes.targetId)
   );
 
   const commentCount = client.$with("comment_count").as(
     client
       .select({
-        postId: comments.postId,
-        count: sql<number>`COUNT(*)`.as("count"),
+        postId: comments.postId, // Let Drizzle handle the column reference
+        count: sql<number>`COUNT(*)::int`.as("count"),
       })
       .from(comments)
       .where(eq(comments.isBanned, false))
       .groupBy(comments.postId)
   );
 
-  const bookmarkCheck = userId ? client.$with("bookmark_check").as(
+  const bookmarkCheck = client.$with("bookmark_check").as(
     client
       .select({
-        postId: bookmarks.postId,
-        bookmarked: sql<boolean>`TRUE`.as("bookmarked"),
+        postId: bookmarks.postId, // Let Drizzle handle the column reference
+        bookmarked: sql<boolean>`TRUE::boolean`.as("bookmarked"),
       })
       .from(bookmarks)
-      .where(eq(bookmarks.userId, userId))
-  ) : null;
+      .where(userId ? eq(bookmarks.userId, userId) : sql`FALSE`)
+  );
 
-  const query = client
-    .with(voteAgg, commentCount, ...(bookmarkCheck ? [bookmarkCheck] : []))
+  const result = await client
+    .with(voteAgg, commentCount, bookmarkCheck)
     .select({
-      // Post
       postId: posts.id,
       title: posts.title,
       content: posts.content,
@@ -87,32 +89,24 @@ export const findByIdWithDetails = async (
       isShadowBanned: posts.isShadowBanned,
       createdAt: posts.createdAt,
       updatedAt: posts.updatedAt,
-
-      // Votes
-      upvoteCount: sql<number>`COALESCE(${voteAgg.upvoteCount}, 0)`,
-      downvoteCount: sql<number>`COALESCE(${voteAgg.downvoteCount}, 0)`,
+      upvoteCount: sql<number>`COALESCE(${voteAgg.upvoteCount}, 0)`.as("upvoteCount"),
+      downvoteCount: sql<number>`COALESCE(${voteAgg.downvoteCount}, 0)`.as("downvoteCount"),
       userVote: voteAgg.userVote,
-
-      // Comments
-      commentsCount: sql<number>`COALESCE(${commentCount.count}, 0)`,
-
-      // Bookmark
-      bookmarked: bookmarkCheck ? sql<boolean>`COALESCE(${bookmarkCheck.bookmarked}, FALSE)` : sql<boolean>`FALSE`,
-
-      // Author
+      commentsCount: sql<number>`COALESCE(${commentCount.count}, 0)`.as("commentsCount"),
+      bookmarked: sql<boolean>`COALESCE(${bookmarkCheck.bookmarked}, false)`.as("bookmarked"),
       authorId: users.id,
       authorUsername: users.username,
       authorBranch: users.branch,
-
-      // College
       collegeId: colleges.id,
       collegeName: colleges.name,
       collegeProfile: colleges.profile,
       collegeEmail: colleges.emailDomain,
     })
     .from(posts)
-    .leftJoin(voteAgg, eq(voteAgg.postId, posts.id))
+    // Use the explicit properties defined in the CTEs above
+    .leftJoin(voteAgg, eq(voteAgg.targetId, posts.id))
     .leftJoin(commentCount, eq(commentCount.postId, posts.id))
+    .leftJoin(bookmarkCheck, eq(bookmarkCheck.postId, posts.id))
     .leftJoin(users, eq(posts.postedBy, users.id))
     .leftJoin(colleges, eq(users.collegeId, colleges.id))
     .where(
@@ -121,19 +115,14 @@ export const findByIdWithDetails = async (
         eq(posts.isBanned, false),
         eq(posts.isShadowBanned, false)
       )
-    );
+    )
+    .limit(1);
 
-  if (bookmarkCheck) {
-    query.leftJoin(bookmarkCheck, eq(bookmarkCheck.postId, posts.id));
-  }
-
-  const result = await query.limit(1);
   const row = result[0];
-
   if (!row) return null;
 
   return {
-    _id: row.postId,
+    id: row.postId,
     title: row.title,
     content: row.content,
     topic: row.topic,
@@ -148,7 +137,7 @@ export const findByIdWithDetails = async (
 
     postedBy: row.authorId
       ? {
-        _id: row.authorId,
+        id: row.authorId,
         username: row.authorUsername,
         branch: row.authorBranch,
         college: row.collegeId
@@ -187,49 +176,51 @@ export const findMany = async (
   const voteAgg = client.$with("vote_agg").as(
     client
       .select({
-        postId: votes.postId,
+        targetId: votes.targetId, // Let Drizzle handle the column reference
         upvoteCount: sql<number>`
-          COUNT(*) FILTER (WHERE ${votes.voteType} = 'upvote')
+          (COUNT(*) FILTER (WHERE ${votes.voteType}::text = 'upvote'))::int
         `.as("upvoteCount"),
         downvoteCount: sql<number>`
-          COUNT(*) FILTER (WHERE ${votes.voteType} = 'downvote')
+          (COUNT(*) FILTER (WHERE ${votes.voteType}::text = 'downvote'))::int
         `.as("downvoteCount"),
-        userVote: userId ? sql<"upvote" | "downvote" | null>`
-          MAX(
-            CASE
-              WHEN ${votes.userId} = ${userId}
-              THEN ${votes.voteType}
-            END
-          )
-        `.as("userVote") : sql<null>`NULL`.as("userVote"),
+        userVote: userId
+          ? sql<string | null>`
+              MAX(
+                CASE
+                  WHEN ${votes.userId} = ${userId}
+                  THEN ${votes.voteType}::text
+                END
+              )
+            `.as("userVote")
+          : sql<null>`NULL::text`.as("userVote"),
       })
       .from(votes)
-      .where(eq(votes.type, "post"))
-      .groupBy(votes.postId)
+      .where(sql`${votes.targetType}::text = 'post'`)
+      .groupBy(votes.targetId)
   );
 
   const commentCount = client.$with("comment_count").as(
     client
       .select({
-        postId: comments.postId,
-        count: sql<number>`COUNT(*)`.as("count"),
+        postId: comments.postId, // Let Drizzle handle the column reference
+        count: sql<number>`COUNT(*)::int`.as("count"),
       })
       .from(comments)
       .where(eq(comments.isBanned, false))
       .groupBy(comments.postId)
   );
 
-  const bookmarkCheck = userId ? client.$with("bookmark_check").as(
+  const bookmarkCheck = client.$with("bookmark_check").as(
     client
       .select({
-        postId: bookmarks.postId,
-        bookmarked: sql<boolean>`TRUE`.as("bookmarked"),
+        postId: bookmarks.postId, // Let Drizzle handle the column reference
+        bookmarked: sql<boolean>`TRUE::boolean`.as("bookmarked"),
       })
       .from(bookmarks)
-      .where(eq(bookmarks.userId, userId))
-  ) : null;
+      .where(userId ? eq(bookmarks.userId, userId) : sql`FALSE`)
+  );
 
-  let whereConditions = [
+  const whereConditions = [
     eq(posts.isBanned, false),
     eq(posts.isShadowBanned, false),
   ];
@@ -246,14 +237,11 @@ export const findMany = async (
     whereConditions.push(eq(users.branch, options.branch));
   }
 
-  const orderBy = sortOrder === "asc"
-    ? asc(posts[sortBy])
-    : desc(posts[sortBy]);
+  const orderBy = sortOrder === "asc" ? asc(posts[sortBy]) : desc(posts[sortBy]);
 
-  const query = client
-    .with(voteAgg, commentCount, ...(bookmarkCheck ? [bookmarkCheck] : []))
+  const results = await client
+    .with(voteAgg, commentCount, bookmarkCheck)
     .select({
-      // Post
       postId: posts.id,
       title: posts.title,
       content: posts.content,
@@ -261,44 +249,30 @@ export const findMany = async (
       views: posts.views,
       createdAt: posts.createdAt,
       updatedAt: posts.updatedAt,
-
-      // Votes
-      upvoteCount: sql<number>`COALESCE(${voteAgg.upvoteCount}, 0)`,
-      downvoteCount: sql<number>`COALESCE(${voteAgg.downvoteCount}, 0)`,
+      upvoteCount: sql<number>`COALESCE(${voteAgg.upvoteCount}, 0)`.as("upvoteCount"),
+      downvoteCount: sql<number>`COALESCE(${voteAgg.downvoteCount}, 0)`.as("downvoteCount"),
       userVote: voteAgg.userVote,
-
-      // Comments
-      commentsCount: sql<number>`COALESCE(${commentCount.count}, 0)`,
-
-      // Bookmark
-      bookmarked: bookmarkCheck ? sql<boolean>`COALESCE(${bookmarkCheck.bookmarked}, FALSE)` : sql<boolean>`FALSE`,
-
-      // Author
+      commentsCount: sql<number>`COALESCE(${commentCount.count}, 0)`.as("commentsCount"),
+      bookmarked: sql<boolean>`COALESCE(${bookmarkCheck.bookmarked}, false)`.as("bookmarked"),
       authorId: users.id,
       authorUsername: users.username,
       authorBranch: users.branch,
-
-      // College
       collegeId: colleges.id,
       collegeName: colleges.name,
       collegeProfile: colleges.profile,
       collegeEmail: colleges.emailDomain,
     })
     .from(posts)
-    .leftJoin(voteAgg, eq(voteAgg.postId, posts.id))
+    // Use the explicit properties defined in the CTEs above
+    .leftJoin(voteAgg, eq(voteAgg.targetId, posts.id))
     .leftJoin(commentCount, eq(commentCount.postId, posts.id))
+    .leftJoin(bookmarkCheck, eq(bookmarkCheck.postId, posts.id))
     .leftJoin(users, eq(posts.postedBy, users.id))
     .leftJoin(colleges, eq(users.collegeId, colleges.id))
     .where(and(...whereConditions))
     .orderBy(orderBy)
     .limit(limit)
     .offset((page - 1) * limit);
-
-  if (bookmarkCheck) {
-    query.leftJoin(bookmarkCheck, eq(bookmarkCheck.postId, posts.id));
-  }
-
-  const results = await query;
 
   return results.map((row) => ({
     _id: row.postId,
@@ -342,7 +316,7 @@ export const countAll = async (
 ) => {
   const client = dbTx ?? db;
 
-  let whereConditions = [
+  const whereConditions = [
     eq(posts.isBanned, false),
     eq(posts.isShadowBanned, false),
   ];
@@ -360,7 +334,7 @@ export const countAll = async (
   }
 
   const result = await client
-    .select({ count: sql<number>`count(*)` })
+    .select({ count: sql<number>`count(*)::int` })
     .from(posts)
     .leftJoin(users, eq(posts.postedBy, users.id))
     .leftJoin(colleges, eq(users.collegeId, colleges.id))
@@ -371,13 +345,11 @@ export const countAll = async (
 
 export const create = async (post: typeof posts.$inferInsert, dbTx?: DB) => {
   const client = dbTx ?? db;
-  const createdPost = await client
+  return await client
     .insert(posts)
     .values(post)
     .returning()
     .then((r) => r?.[0] || null);
-
-  return createdPost;
 };
 
 export const updateById = async (
@@ -386,35 +358,29 @@ export const updateById = async (
   dbTx?: DB
 ) => {
   const client = dbTx ?? db;
-  const updatedPost = await client
+  return await client
     .update(posts)
     .set({ ...updates, updatedAt: new Date() })
     .where(eq(posts.id, id))
     .returning()
     .then((r) => r?.[0] || null);
-
-  return updatedPost;
 };
 
 export const deleteById = async (id: string, dbTx?: DB) => {
   const client = dbTx ?? db;
-  const deletedPost = await client
+  return await client
     .delete(posts)
     .where(eq(posts.id, id))
     .returning()
     .then((r) => r?.[0] || null);
-
-  return deletedPost;
 };
 
 export const incrementViews = async (id: string, dbTx?: DB) => {
   const client = dbTx ?? db;
-  const updatedPost = await client
+  return await client
     .update(posts)
     .set({ views: sql`${posts.views} + 1` })
     .where(eq(posts.id, id))
     .returning()
     .then((r) => r?.[0] || null);
-
-  return updatedPost;
 };

@@ -7,18 +7,18 @@ import { runTransaction } from "@/infra/db/transactions";
 import recordAudit from "@/lib/record-audit";
 import { AuditAction } from "@/shared/constants/audit/actions";
 import logger from "@/core/logger";
+import UserRepo from "../user/user.repo";
 
 class VoteService {
   static async createVote(userId: string, targetType: "post" | "comment", targetId: string, voteType: "upvote" | "downvote") {
     logger.info("Creating vote", { userId, targetType, targetId, voteType });
-    
+
     const doesTargetedPost = targetType === "post"
     const isUpvoted = voteType === "upvote"
 
     return await runTransaction(async tx => {
       const createdVote = await VoteRepo.Write.create({
-        postId: doesTargetedPost ? targetId : null,
-        commentId: !doesTargetedPost ? targetId : null,
+        targetId,
         userId,
         voteType,
         targetType,
@@ -40,15 +40,15 @@ class VoteService {
       const ownerId = target.postedBy;
       const karmaChange = isUpvoted ? 1 : -1;
 
-      await AuthRepo.Write.updateKarma(karmaChange, ownerId, tx);
+      await UserRepo.Write.updateKarma(karmaChange, ownerId, tx);
 
-      logger.info("Vote created successfully", { 
-        voteId: createdVote.id, 
-        userId, 
-        targetType, 
-        targetId, 
+      logger.info("Vote created successfully", {
+        voteId: createdVote.id,
+        userId,
+        targetType,
+        targetId,
         voteType,
-        karmaChange 
+        karmaChange
       });
 
       const action: AuditAction = `user:${voteType}d:${targetType}`;
@@ -70,7 +70,7 @@ class VoteService {
 
   static async patchVote(userId: string, targetType: "post" | "comment", targetId: string, voteType: "upvote" | "downvote") {
     logger.info("Patching vote", { userId, targetType, targetId, voteType });
-    
+
     const doesTargetedPost = targetType === "post"
 
     const txResponse = await runTransaction(async tx => {
@@ -99,16 +99,16 @@ class VoteService {
       const ownerId = target.postedBy;
       const karmaChange = (voteType === "upvote" ? 1 : -1) * 2;
 
-      await AuthRepo.Write.updateKarma(karmaChange, ownerId, tx)
+      await UserRepo.Write.updateKarma(karmaChange, ownerId, tx)
 
-      logger.info("Vote patched successfully", { 
-        voteId: updatedVote.id, 
-        userId, 
-        targetType, 
-        targetId, 
+      logger.info("Vote patched successfully", {
+        voteId: updatedVote.id,
+        userId,
+        targetType,
+        targetId,
         oldVoteType: existingVote.voteType,
         newVoteType: voteType,
-        karmaChange 
+        karmaChange
       });
 
       return { message: "Vote patched successfully to the requested type", vote: updatedVote, before: existingVote.voteType }
@@ -133,7 +133,7 @@ class VoteService {
 
   static async delete(userId: string, targetId: string, targetType: "post" | "comment") {
     logger.info("Deleting vote", { userId, targetType, targetId });
-    
+
     const doesTargetedPost = targetType === "post"
 
     const deletedVoteId = await runTransaction(async tx => {
@@ -155,15 +155,15 @@ class VoteService {
       const ownerId = target.postedBy;
       const karmaChange = deletedVote.voteType === "upvote" ? -1 : 1;
 
-      await AuthRepo.Write.updateKarma(karmaChange, ownerId, tx)
+      await UserRepo.Write.updateKarma(karmaChange, ownerId, tx)
 
-      logger.info("Vote deleted successfully", { 
-        voteId: deletedVote.id, 
-        userId, 
-        targetType, 
+      logger.info("Vote deleted successfully", {
+        voteId: deletedVote.id,
+        userId,
+        targetType,
         targetId,
         voteType: deletedVote.voteType,
-        karmaChange 
+        karmaChange
       });
 
       return deletedVote.id

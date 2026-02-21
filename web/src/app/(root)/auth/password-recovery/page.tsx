@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authApi } from "@/services/api/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios, { isAxiosError } from "axios";
+import { isAxiosError } from "axios";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -58,7 +58,8 @@ function ResetPassword() {
         return
       }
 
-      const isResetSuccess = await authApi.resetPassword.finalize(email, data.password)
+      sessionStorage.setItem("pending_reset_password", data.password)
+      const isResetSuccess = await authApi.resetPassword.initialize(email)
 
       if (!isResetSuccess) {
         toast.error("Error resetting password, Try again")

@@ -22,7 +22,7 @@ export const useErrorHandler = () => {
   const refreshAccessToken = useCallback(async (signal?: AbortSignal) => {
     try {
       const { data } = await axios.post(
-        `${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/users/refresh`,
+        `${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/auth/refresh`,
         {},
         {
           withCredentials: true,

@@ -14,9 +14,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
-import { env } from "@/config/env";
 import useProfileStore from "@/store/profileStore";
 import { highlightBannedWords, validatePost } from "@/utils/moderator";
 import { Textarea } from "../ui/textarea";
@@ -25,6 +24,8 @@ import usePostStore from "@/store/postStore";
 import { TermsForm } from "./TermsForm";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { PostTopic } from "@/types/postTopics";
+import { postApi } from "@/services/api/post";
+import { userApi } from "@/services/api/user";
 
 const postSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters.").max(100, "Title must be at most 100 characters."),
@@ -88,19 +89,9 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
       let res = null
 
       if (isUpdating) {
-        res = await axios.patch(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/posts/update/${id}`, data, {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        })
+        res = await postApi.update(id as string, data)
       } else {
-        res = await axios.post(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/posts`, data, {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        res = await postApi.create(data);
       }
 
       if (res.status !== (isUpdating ? 200 : 201)) throw new Error(`Failed to ${isUpdating ? "update" : "create"} post`);
@@ -140,7 +131,7 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
 
   const onSubmitTerms = async () => {
     try {
-      await axios.post(`${env.NEXT_PUBLIC_SERVER_API_ENDPOINT}/users/accept-terms`, {}, { withCredentials: true });
+      await userApi.acceptTerms();
       toast.success("Terms accepted!");
       setShowTerms(false);
       form.handleSubmit(onSubmit)();

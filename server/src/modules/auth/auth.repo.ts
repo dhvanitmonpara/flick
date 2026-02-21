@@ -9,9 +9,9 @@ const AuthRepo = {
 
     findByEmail: (email: string, dbTx?: DB) => authAdapter.findByEmail(email, dbTx),
 
-    findByLookupEmail: (lookupEmail: string, dbTx?: DB) => authAdapter.findByLookupEmail(lookupEmail, dbTx),
-
     searchUsers: (options: authAdapter.SearchUsersOptions, dbTx?: DB) => authAdapter.searchUsers(options, dbTx),
+    listUsersForAdmin: (options: authAdapter.AdminUsersQueryOptions, dbTx?: DB) => authAdapter.listUsersForAdmin(options, dbTx),
+    listAdmins: (options: Omit<authAdapter.AdminUsersQueryOptions, "roles">, dbTx?: DB) => authAdapter.listAdmins(options, dbTx),
   },
 
   CachedRead: {
@@ -20,9 +20,6 @@ const AuthRepo = {
 
     findByEmail: (email: string, dbTx?: DB) =>
       cached(authCacheKeys.email(email), () => authAdapter.findByEmail(email, dbTx)),
-
-    findByLookupEmail: (lookupEmail: string, dbTx?: DB) =>
-      cached(authCacheKeys.email(lookupEmail), () => authAdapter.findByLookupEmail(lookupEmail, dbTx)),
 
     searchUsers: (options: authAdapter.SearchUsersOptions, dbTx?: DB) =>
       cached(authCacheKeys.search(options.query), () => authAdapter.searchUsers(options, dbTx)),
