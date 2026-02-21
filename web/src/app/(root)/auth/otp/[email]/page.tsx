@@ -14,7 +14,9 @@ import { authApi } from "@/services/api/auth";
 const OTP_EXPIRE_TIME = 60;
 const MAX_ATTEMPTS = 5;
 
-const OtpVerificationPage = ({ onVerifiedRedirect, onFailedRedirect }: { onVerifiedRedirect: string, onFailedRedirect: string }) => {
+const OtpVerificationPage = () => {
+  const onVerifiedRedirect = "/auth/setup";
+  const onFailedRedirect = "/auth/signup";
   const [timeLeft, setTimeLeft] = useState(OTP_EXPIRE_TIME);
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);

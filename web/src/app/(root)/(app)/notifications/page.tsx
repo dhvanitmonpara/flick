@@ -1,3 +1,5 @@
+"use client"
+
 import NotificationCard from "@/components/general/NotificationCard"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
 import { INotification } from "@/types/Notification"

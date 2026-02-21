@@ -1,6 +1,8 @@
+"use client"
+
 import { useForm, Controller } from "react-hook-form"
 import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { zodResolver } from "@/lib/zod-resolver"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
@@ -24,7 +26,7 @@ import Link from "next/link"
 import { authApi } from "@/services/api/auth"
 import { ocrApi } from "@/services/api/ocr"
 
-const signInSchema = z.object({
+const signUpSchema = z.object({
   email: z.email("Email is invalid"),
   branch: branch,
   password: z.string()
@@ -39,7 +41,7 @@ const signInSchema = z.object({
   path: ["confirmPassword"],
 });
 
-type SignInFormData = z.infer<typeof signInSchema>
+type SignUpFormData = z.infer<typeof signUpSchema>
 
 function SignUpPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -54,14 +56,14 @@ function SignUpPage() {
     control,
     setValue,
     formState: { errors },
-  } = useForm<SignInFormData>({
-    resolver: zodResolver(signInSchema),
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
       branch: "CSE"
     }
   })
 
-  const onSubmit = async (data: SignInFormData) => {
+  const onSubmit = async (data: SignUpFormData) => {
     setIsSubmitting(true)
     try {
 
@@ -126,7 +128,7 @@ function SignUpPage() {
           required
           autoFocus
         />
-        {errors.email && <p className="text-red-500 text-sm mt-1!">{errors.email.message}</p>}
+        {errors.email && <p className="text-red-500 text-sm mt-1!">{String(errors.email?.message)}</p>}
         <div className="w-full flex relative">
           <Input
             id="password"
@@ -148,7 +150,7 @@ function SignUpPage() {
             {isPasswordShowing ? <IoMdEyeOff /> : <IoMdEye />}
           </div>
         </div>
-        {errors.password && <p className="text-red-500 text-sm mt-1!">{errors.password.message}</p>}
+        {errors.password && <p className="text-red-500 text-sm mt-1!">{String(errors.password?.message)}</p>}
         <div className="w-full flex relative">
           <Input
             id="confirm-password"
@@ -167,7 +169,7 @@ function SignUpPage() {
             {isConfirmPasswordShowing ? <IoMdEyeOff /> : <IoMdEye />}
           </div>
         </div>
-        {errors.confirmPassword && <p className="text-red-500 text-sm mt-1!">{errors.confirmPassword?.message}</p>}
+        {errors.confirmPassword && <p className="text-red-500 text-sm mt-1!">{String(errors.confirmPassword?.message)}</p>}
 
         <Controller
           control={control}
@@ -190,7 +192,7 @@ function SignUpPage() {
             </Select>
           )}
         />
-        {errors.branch && <p className="text-red-500 text-sm mt-1!">{errors.branch.message}</p>}
+        {errors.branch && <p className="text-red-500 text-sm mt-1!">{String(errors.branch?.message)}</p>}
         <Button
           type="submit"
           disabled={isSubmitting || (errors?.email && errors.email !== undefined) || (errors?.password && errors.password !== undefined) || (errors?.confirmPassword && errors.confirmPassword !== undefined) || (errors?.branch && errors.branch !== undefined)}
@@ -199,7 +201,7 @@ function SignUpPage() {
           {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait</> : "Create an Account"}
         </Button>
       </form>
-      {errors.root && <p className="text-red-500 text-sm mt-1!">{errors.root?.message}</p>}
+      {errors.root && <p className="text-red-500 text-sm mt-1!">{String(errors.root?.message)}</p>}
       <p className="flex justify-center items-center my-4">
         <Separator className="shrink" />
         <span className="px-4 text-zinc-500 dark:text-zinc-500 text-sm">Or</span>

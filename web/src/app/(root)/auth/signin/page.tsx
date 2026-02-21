@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { zodResolver } from "@/lib/zod-resolver"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
@@ -16,10 +16,9 @@ import { Separator } from "@/components/ui/separator"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { authApi } from "@/services/api/auth"
-import { SignUpForm } from "@daveyplate/better-auth-ui"
 
 const signInSchema = z.object({
-  email: z.string().email("Email is invalid"),
+  email: z.email("Email is invalid"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 })
 
@@ -78,7 +77,7 @@ function SignInPage() {
             {...register("email")}
           />
           {errors.email && (
-            <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+            <p className="text-sm text-red-500 mt-1">{String(errors.email?.message)}</p>
           )}
         </div>
 
@@ -101,7 +100,7 @@ function SignInPage() {
           </div>
         </div>
         {errors.password && (
-          <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+          <p className="text-sm text-red-500 mt-1">{String(errors.password?.message)}</p>
         )}
 
         <Button

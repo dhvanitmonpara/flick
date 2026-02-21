@@ -5,6 +5,6 @@ export const authClient = createAuthClient({
   baseURL: "http://localhost:3000",
   plugins: [
     adminClient(),
-    inferAdditionalFields<typeof auth>()
+    inferAdditionalFields()
   ]
 })

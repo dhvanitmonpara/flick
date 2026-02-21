@@ -8,7 +8,7 @@ export const authApi = {
       return mailResponse.status === 200;
     },
     verify: async (email: string, otp: string) => {
-      const verifyResponse: AxiosResponse = await http.post("/auth/otp/verify", { email, otp });
+      const verifyResponse: AxiosResponse = await http.post("/auth/registration/verify-otp", { email, otp }, { headers: { "Content-Type": "application/json" } });
       return verifyResponse.status === 200;
     },
   },
@@ -28,7 +28,7 @@ export const authApi = {
   },
   oauth: {
     setup: async (email: string, branch: string) => {
-      const oauthResponse: AxiosResponse = await http.post("/auth/initialize", {
+      const oauthResponse: AxiosResponse = await http.post("/auth/registration/initialize", {
         email,
         branch,
         password: "oauth-flow-placeholder",
@@ -39,7 +39,7 @@ export const authApi = {
   register: {
     register: async (password: string) => {
       const response = await http.post(
-        "/auth/register",
+        "/auth/registration/finalize",
         { password },
         { headers: { "Content-Type": "application/json" } },
       );
@@ -47,7 +47,7 @@ export const authApi = {
     },
     initialize: async (email: string, password: string, branch: string) => {
       const response = await http.post(
-        "/auth/initialize",
+        "/auth/registration/initialize",
         { email, password, branch },
         { headers: { "Content-Type": "application/json" } },
       );

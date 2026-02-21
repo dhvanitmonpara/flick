@@ -1,3 +1,5 @@
+"use client"
+
 import Post from "@/components/general/Post"
 import SkeletonCard from "@/components/skeletons/PostSkeleton"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
