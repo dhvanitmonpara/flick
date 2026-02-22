@@ -6,11 +6,10 @@ import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import axios, { isAxiosError } from "axios"
 import { toast } from "sonner"
 import { IoMdEye, IoMdEyeOff } from "react-icons/io"
 import useProfileStore from "@/store/profileStore"
-import { env } from "@/config/env"
+import { authClient } from "@/lib/auth-client"
 
 const signInSchema = z.object({
   email: z.string().email("Email is invalid"),
@@ -38,45 +37,35 @@ function SignInPage() {
   const onSubmit = async (data: SignInFormData) => {
     setIsSubmitting(true)
     try {
-
-      const res = await axios.post(`${env.apiUrl}/auth/login/init`,
-        {
-          ...data,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          screenResolution: window.screen.width + "x" + window.screen.height,
-          hardwareConcurrency: navigator.hardwareConcurrency || '',
-        },
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            "Accept-Language": navigator.language,
+      await authClient.signIn.email({
+        email: data.email,
+        password: data.password,
+        fetchOptions: {
+          onSuccess: (ctx) => {
+            if (ctx.data.user.role === 'admin') {
+              setProfile({ ...ctx.data.user, _id: ctx.data.user.id } as any)
+              navigate('/')
+            } else {
+              toast.error("Unauthorized. Admin access only.")
+              authClient.signOut()
+            }
           },
-        },
-      )
-
-      if (res.status !== 200) {
-        toast.error("Error signing in, Try again")
-        return
-      }
-
-      if (res.data.statusText === "OTP_REQUIRED") {
-        navigate(`/auth/verify/${data.email}`)
-        return
-      }
-
-      if (res.data.statusText === "SESSION_READY") {
-        setProfile(res.data.admin)
-        navigate('/')
-      }
-
-    } catch (err) {
+          onError: (ctx) => {
+            if (ctx.error.status === 403 || ctx.error.status === 401) {
+              // Better auth returns 403 or specific error for 2FA depending on configuration
+              // Just navigate to 2FA if error says something about 2FA or let the user try again
+              if (ctx.error.message?.toLowerCase().includes("two factor") || ctx.error.message?.includes("2fa") || ctx.error.status === 403) {
+                navigate(`/auth/verify/${data.email}`)
+                return
+              }
+            }
+            toast.error(ctx.error.message || "Error signing in, Try again")
+          }
+        }
+      })
+    } catch (err: any) {
       console.error("Sign in error", err)
-      if (isAxiosError(err)) {
-        toast.error(err.response?.data.error || "Error signing in, Try again")
-      } else {
-        toast.error("Error signing in, Try again")
-      }
+      toast.error(err.message || "Error signing in, Try again")
     } finally {
       setIsSubmitting(false)
     }

@@ -1,7 +1,8 @@
 import { and, desc, eq, ilike, or } from "drizzle-orm";
 import db from "@/infra/db/index";
 import type { DB } from "@/infra/db/types";
-import { feedbacks, users } from "../tables";
+import { feedbacks } from "@/infra/db/tables/feedback.table";
+import { platformUser as users } from "@/infra/db/tables/auth.table";
 
 export const findById = async (id: string, dbTx?: DB) => {
   const client = dbTx ?? db;
@@ -24,10 +25,9 @@ export const findByIdWithUser = async (id: string, dbTx?: DB) => {
       status: feedbacks.status,
       createdAt: feedbacks.createdAt,
       updatedAt: feedbacks.updatedAt,
-      
+
       authorId: users.id,
       authorUsername: users.username,
-      authorEmail: users.email,
     })
     .from(feedbacks)
     .leftJoin(users, eq(feedbacks.userId, users.id))
@@ -38,7 +38,7 @@ export const findByIdWithUser = async (id: string, dbTx?: DB) => {
   if (!row) return null;
 
   return {
-    _id: row.feedbackId,
+    id: row.feedbackId,
     userId: row.userId,
     type: row.type,
     title: row.title,
@@ -46,13 +46,12 @@ export const findByIdWithUser = async (id: string, dbTx?: DB) => {
     status: row.status,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    
+
     user: row.authorId
       ? {
-          _id: row.authorId,
-          username: row.authorUsername,
-          email: row.authorEmail,
-        }
+        id: row.authorId,
+        username: row.authorUsername,
+      }
       : null,
   };
 };
@@ -71,11 +70,11 @@ export const findAll = async (
   const skip = options?.skip || 0;
 
   let whereConditions = [];
-  
+
   if (options?.type) {
     whereConditions.push(eq(feedbacks.type, options.type));
   }
-  
+
   if (options?.status) {
     whereConditions.push(eq(feedbacks.status, options.status));
   }
@@ -90,10 +89,9 @@ export const findAll = async (
       status: feedbacks.status,
       createdAt: feedbacks.createdAt,
       updatedAt: feedbacks.updatedAt,
-      
+
       authorId: users.id,
       authorUsername: users.username,
-      authorEmail: users.email,
     })
     .from(feedbacks)
     .leftJoin(users, eq(feedbacks.userId, users.id))
@@ -111,13 +109,13 @@ export const findAll = async (
     status: row.status,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    
+
     user: row.authorId
       ? {
-          _id: row.authorId,
-          username: row.authorUsername,
-          email: row.authorEmail,
-        }
+        _id: row.authorId,
+        username: row.authorUsername,
+        email: row.authorEmail,
+      }
       : null,
   }));
 };
@@ -130,13 +128,13 @@ export const countAll = async (
   dbTx?: DB
 ) => {
   const client = dbTx ?? db;
-  
+
   let whereConditions = [];
-  
+
   if (filters?.type) {
     whereConditions.push(eq(feedbacks.type, filters.type));
   }
-  
+
   if (filters?.status) {
     whereConditions.push(eq(feedbacks.status, filters.status));
   }

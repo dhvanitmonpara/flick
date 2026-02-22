@@ -21,6 +21,7 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   }),
   votes: many(votes),
   bookmarks: many(bookmarks),
+  comments: many(comments),
 }));
 
 // Bookmark — belongs to user and post

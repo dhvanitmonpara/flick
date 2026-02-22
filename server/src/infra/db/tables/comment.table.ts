@@ -1,6 +1,6 @@
 import { pgTable, uuid, text, boolean, timestamp } from "drizzle-orm/pg-core";
 import { posts } from "./post.table";
-import { users } from "./auth.table";
+import { platformUser } from "./auth.table";
 
 export const comments = pgTable("comments", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -10,7 +10,7 @@ export const comments = pgTable("comments", {
     .references(() => posts.id, { onDelete: "cascade" }),
   commentedBy: uuid("commentedBy")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => platformUser.id, { onDelete: "cascade" }),
   isBanned: boolean("isBanned").notNull().default(false),
   parentCommentId: uuid("parentCommentId").references(() => comments.id, {
     onDelete: "set null",

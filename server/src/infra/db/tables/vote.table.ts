@@ -6,7 +6,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 
-import { users } from "./auth.table";
+import { platformUser } from "./auth.table";
 import { voteEntityEnum, voteTypeEnum } from "./enums";
 
 export const votes = pgTable(
@@ -16,7 +16,7 @@ export const votes = pgTable(
 
     userId: uuid("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => platformUser.id, { onDelete: "cascade" }),
 
     targetType: voteEntityEnum("target_type").notNull(),
 

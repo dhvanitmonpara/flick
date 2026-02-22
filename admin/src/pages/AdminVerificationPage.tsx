@@ -5,11 +5,11 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import axios, { AxiosError, AxiosResponse } from "axios";
 import { toast } from 'sonner'
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import useProfileStore from "@/store/profileStore";
+import { authClient } from "@/lib/auth-client";
 
 const OTP_EXPIRE_TIME = 60;
 const MAX_ATTEMPTS = 3;
@@ -48,13 +48,8 @@ const AdminVerificationPage = () => {
   const sendOtp = useCallback(async () => {
     if (!email) navigate("/auth/signup")
     try {
-      const mailResponse: AxiosResponse = await axios.post(
-        `${import.meta.env.VITE_SERVER_API_URL}/auth/login/resend`,
-        { email: email },
-        { withCredentials: true }
-      );
-
-      if (mailResponse.status === 200) {
+      const res = await authClient.twoFactor.sendOtp();
+      if (!res.error) {
         setTimeLeft(OTP_EXPIRE_TIME);
       }
     } catch (error) {
@@ -80,34 +75,27 @@ const AdminVerificationPage = () => {
         return
       }
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_SERVER_API_URL}/auth/login/verify`,
-        { email: email, otp },
-        { withCredentials: true }
-      );
-
-      if (response.status !== 200 && response.status !== 400) {
-        toast.error(response.data.message || "failed to verify otp")
-        return
-      }
-
-      if (response.data.statusText === "SESSION_READY") {
-        toast.success("OTP verified successfully!");
-        setProfile(response.data.admin)
-        navigate(`/`);
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === 400) {
-          toast.warning("wrong otp try again");
-          setIsOtpInvalid(true)
-          setAttempts((prev) => prev + 1);
-        } else {
-          toast.error(error.response?.data.message || "failed to verify otp")
+      await authClient.twoFactor.verifyOtp({
+        code: otp,
+        fetchOptions: {
+          onSuccess: async () => {
+            toast.success("OTP verified successfully!");
+            // Check session to get updated user data since verifyOtp doesn't return user directly
+            const session = await authClient.getSession();
+            if (session?.data?.user) {
+              setProfile({ ...session.data.user, _id: session.data.user.id } as any);
+            }
+            navigate(`/`);
+          },
+          onError: () => {
+            toast.warning("wrong otp try again");
+            setIsOtpInvalid(true)
+            setAttempts((prev) => prev + 1);
+          }
         }
-      } else {
-        console.error("Error verifying OTP:", error);
-      }
+      });
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
     } finally {
       setIsLoading(false)
     }

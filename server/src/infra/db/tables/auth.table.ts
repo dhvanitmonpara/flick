@@ -10,8 +10,9 @@ import {
 } from "drizzle-orm/pg-core";
 import { colleges } from "./college.table";
 
-export const auth = pgTable("auth_user", {
+export const auth = pgTable("auth", {
   id: text("id").primaryKey(),
+  name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -21,12 +22,13 @@ export const auth = pgTable("auth_user", {
     .notNull(),
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
   role: text("role"),
+  image: text("image"),
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
 });
 
-export const users = pgTable("platform_user", {
+export const platformUser = pgTable("platform_user", {
   id: uuid("id").primaryKey().defaultRandom(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
@@ -41,7 +43,7 @@ export const users = pgTable("platform_user", {
   isAcceptedTerms: boolean("is_accepted_terms").default(false).notNull(),
 });
 
-export const sessions = pgTable(
+export const session = pgTable(
   "session",
   {
     id: text("id").primaryKey(),
@@ -61,7 +63,7 @@ export const sessions = pgTable(
   (table) => [index("session_userId_idx").on(table.userId)],
 );
 
-export const accounts = pgTable(
+export const account = pgTable(
   "account",
   {
     id: text("id").primaryKey(),
@@ -117,30 +119,30 @@ export const twoFactor = pgTable(
   ],
 );
 
-export const userRelations = relations(users, ({ many, one }) => ({
-  sessions: many(sessions),
-  accounts: many(accounts),
+export const userRelations = relations(platformUser, ({ many, one }) => ({
+  session: many(session),
+  account: many(account),
   twoFactors: many(twoFactor),
   auth: one(auth, {
-    fields: [users.authId],
+    fields: [platformUser.authId],
     references: [auth.id],
   }),
   college: one(colleges, {
-    fields: [users.collegeId],
+    fields: [platformUser.collegeId],
     references: [colleges.id],
   }),
 }));
 
-export const sessionRelations = relations(sessions, ({ one }) => ({
+export const sessionRelations = relations(session, ({ one }) => ({
   user: one(auth, {
-    fields: [sessions.userId],
+    fields: [session.userId],
     references: [auth.id],
   }),
 }));
 
-export const accountRelations = relations(accounts, ({ one }) => ({
+export const accountRelations = relations(account, ({ one }) => ({
   user: one(auth, {
-    fields: [accounts.userId],
+    fields: [account.userId],
     references: [auth.id],
   }),
 }));
@@ -153,8 +155,8 @@ export const twoFactorRelations = relations(twoFactor, ({ one }) => ({
 }));
 
 export const authRelations = relations(auth, ({ one }) => ({
-  user: one(users, {
+  user: one(platformUser, {
     fields: [auth.id],
-    references: [users.authId],
+    references: [platformUser.authId],
   }),
 }));

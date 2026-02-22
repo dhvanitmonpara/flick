@@ -1,11 +1,11 @@
 import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
-import { users } from "./auth.table";
+import { platformUser } from "./auth.table";
 
 export const feedbacks = pgTable("feedbacks", {
   id: uuid("id").defaultRandom().primaryKey(),
 
   userId: uuid("user_id")
-    .references(() => users.id, { onDelete: "set null" }),
+    .references(() => platformUser.id, { onDelete: "set null" }),
 
   type: text("type")
     .notNull(),

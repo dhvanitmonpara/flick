@@ -2,26 +2,26 @@ import db from "@/infra/db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth"
 import { twoFactor, admin } from "better-auth/plugins"
+import { env } from "@/config/env";
+import * as schema from "@/infra/db/tables";
 
 export const auth = betterAuth({
+  trustedOrigins: env.ACCESS_CONTROL_ORIGINS,
   database: drizzleAdapter(db, {
     provider: "pg",
+    schema: schema,
   }),
   user: {
-    modelName: "auth_user",
-    fields: {
-      name: undefined,
-      image: undefined,
-    },
+    modelName: "auth",
   },
   emailAndPassword: {
     enabled: true,
   },
   socialProviders: {
-    github: {
-      clientId: process.env.GITHUB_CLIENT_ID as string,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-    },
+    google: {
+      clientId: env.GOOGLE_OAUTH_CLIENT_ID,
+      clientSecret: env.GOOGLE_OAUTH_CLIENT_SECRET,
+    }
   },
   session: {
     cookieCache: {

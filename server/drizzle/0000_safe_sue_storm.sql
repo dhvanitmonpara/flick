@@ -42,20 +42,34 @@ CREATE TABLE "account" (
 	"updated_at" timestamp NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "auth_user" (
+CREATE TABLE "auth" (
 	"id" text PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
 	"email" text NOT NULL,
-	"lookup_email" text NOT NULL,
 	"email_verified" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"two_factor_enabled" boolean DEFAULT false,
 	"role" text,
+	"image" text,
 	"banned" boolean DEFAULT false,
 	"ban_reason" text,
 	"ban_expires" timestamp,
-	CONSTRAINT "auth_user_email_unique" UNIQUE("email"),
-	CONSTRAINT "auth_user_lookup_email_unique" UNIQUE("lookup_email")
+	CONSTRAINT "auth_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
+CREATE TABLE "platform_user" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"auth_id" text NOT NULL,
+	"username" text NOT NULL,
+	"college_id" uuid NOT NULL,
+	"branch" text NOT NULL,
+	"karma" integer DEFAULT 0,
+	"is_accepted_terms" boolean DEFAULT false NOT NULL,
+	CONSTRAINT "platform_user_auth_id_unique" UNIQUE("auth_id"),
+	CONSTRAINT "platform_user_username_unique" UNIQUE("username")
 );
 --> statement-breakpoint
 CREATE TABLE "session" (
@@ -78,20 +92,6 @@ CREATE TABLE "two_factor" (
 	"user_id" text NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "platform_user" (
-	"id" text PRIMARY KEY NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
-	"auth_id" text NOT NULL,
-	"username" text NOT NULL,
-	"college_id" uuid NOT NULL,
-	"branch" text NOT NULL,
-	"karma" integer DEFAULT 0,
-	"is_accepted_terms" boolean DEFAULT false NOT NULL,
-	CONSTRAINT "platform_user_auth_id_unique" UNIQUE("auth_id"),
-	CONSTRAINT "platform_user_username_unique" UNIQUE("username")
-);
---> statement-breakpoint
 CREATE TABLE "verification" (
 	"id" text PRIMARY KEY NOT NULL,
 	"identifier" text NOT NULL,
@@ -104,7 +104,7 @@ CREATE TABLE "verification" (
 CREATE TABLE "bookmarks" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"postId" uuid,
-	"userId" text NOT NULL,
+	"userId" uuid NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL,
 	"updatedAt" timestamp DEFAULT now() NOT NULL
 );
@@ -124,7 +124,7 @@ CREATE TABLE "comments" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"content" text NOT NULL,
 	"postId" uuid NOT NULL,
-	"commentedBy" text NOT NULL,
+	"commentedBy" uuid NOT NULL,
 	"isBanned" boolean DEFAULT false NOT NULL,
 	"parentCommentId" uuid,
 	"createdAt" timestamp DEFAULT now() NOT NULL,
@@ -146,7 +146,7 @@ CREATE TABLE "content_reports" (
 --> statement-breakpoint
 CREATE TABLE "feedbacks" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"user_id" text,
+	"user_id" uuid,
 	"type" text NOT NULL,
 	"title" text NOT NULL,
 	"content" text NOT NULL,
@@ -171,7 +171,7 @@ CREATE TABLE "posts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"title" text NOT NULL,
 	"content" text NOT NULL,
-	"postedBy" text,
+	"postedBy" uuid,
 	"topic" "topic_enum" NOT NULL,
 	"isBanned" boolean DEFAULT false,
 	"isShadowBanned" boolean DEFAULT false,
@@ -182,22 +182,23 @@ CREATE TABLE "posts" (
 --> statement-breakpoint
 CREATE TABLE "votes" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"user_id" text NOT NULL,
+	"user_id" uuid NOT NULL,
 	"target_type" "vote_entity_enum" NOT NULL,
 	"target_id" uuid NOT NULL,
 	"vote_type" "vote_type_enum" NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "account" ADD CONSTRAINT "account_user_id_platform_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."platform_user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "session" ADD CONSTRAINT "session_user_id_platform_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."platform_user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "two_factor" ADD CONSTRAINT "two_factor_user_id_platform_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."platform_user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "platform_user" ADD CONSTRAINT "platform_user_auth_id_auth_user_id_fk" FOREIGN KEY ("auth_id") REFERENCES "public"."auth_user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "account" ADD CONSTRAINT "account_user_id_auth_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."auth"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "platform_user" ADD CONSTRAINT "platform_user_auth_id_auth_id_fk" FOREIGN KEY ("auth_id") REFERENCES "public"."auth"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "platform_user" ADD CONSTRAINT "platform_user_college_id_colleges_id_fk" FOREIGN KEY ("college_id") REFERENCES "public"."colleges"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "session" ADD CONSTRAINT "session_user_id_auth_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."auth"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "two_factor" ADD CONSTRAINT "two_factor_user_id_auth_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."auth"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "bookmarks" ADD CONSTRAINT "bookmarks_postId_posts_id_fk" FOREIGN KEY ("postId") REFERENCES "public"."posts"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "bookmarks" ADD CONSTRAINT "bookmarks_userId_platform_user_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."platform_user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comments" ADD CONSTRAINT "comments_postId_posts_id_fk" FOREIGN KEY ("postId") REFERENCES "public"."posts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comments" ADD CONSTRAINT "comments_commentedBy_platform_user_id_fk" FOREIGN KEY ("commentedBy") REFERENCES "public"."platform_user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comments" ADD CONSTRAINT "comments_parentCommentId_comments_id_fk" FOREIGN KEY ("parentCommentId") REFERENCES "public"."comments"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "content_reports" ADD CONSTRAINT "content_reports_reported_by_platform_user_id_fk" FOREIGN KEY ("reported_by") REFERENCES "public"."platform_user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "feedbacks" ADD CONSTRAINT "feedbacks_user_id_platform_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."platform_user"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_postId_posts_id_fk" FOREIGN KEY ("postId") REFERENCES "public"."posts"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "posts" ADD CONSTRAINT "posts_postedBy_platform_user_id_fk" FOREIGN KEY ("postedBy") REFERENCES "public"."platform_user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

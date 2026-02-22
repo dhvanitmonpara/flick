@@ -24,7 +24,6 @@ export const registerRoutes = (app: Application) => {
   app.use("/api/v1/content-reports", contentReportRouter);
   // app.use("/api/v1/notifications", notificationRouter);
   app.use("/api/v1/votes", voteRouter);
-  // app.use("/api/v1/admin", adminRouter);
   app.all('/api/auth/{*any}', toNodeHandler(auth));
 
   registerHealthRoutes(app)

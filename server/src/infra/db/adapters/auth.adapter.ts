@@ -1,7 +1,7 @@
 import { and, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import db from "@/infra/db";
 import type { DB } from "@/infra/db/types";
-import { auth, users } from "@/infra/db/tables/auth.table";
+import { auth, platformUser } from "@/infra/db/tables/auth.table";
 
 export const findById = async (authId: string, dbTx?: DB) => {
   const client = dbTx ?? db;
@@ -27,6 +27,21 @@ export const create = async (
 
   const [created] = await client.insert(auth).values(data).returning();
   return created;
+};
+
+export const update = async (
+  authId: string,
+  data: Partial<typeof auth.$inferInsert>,
+  dbTx?: DB
+) => {
+  const client = dbTx ?? db;
+
+  const [updated] = await client
+    .update(auth)
+    .set(data)
+    .where(eq(auth.id, authId))
+    .returning();
+  return updated;
 };
 
 export type SearchUsersOptions = {
@@ -103,7 +118,7 @@ export const listUsersForAdmin = async (
     conditions.push(
       or(
         ilike(auth.email, `%${normalizedQuery}%`),
-        ilike(users.username, `%${normalizedQuery}%`),
+        ilike(platformUser.username, `%${normalizedQuery}%`),
       ),
     );
   }
@@ -125,15 +140,15 @@ export const listUsersForAdmin = async (
       banExpires: auth.banExpires,
       createdAt: auth.createdAt,
       updatedAt: auth.updatedAt,
-      userId: users.id,
-      username: users.username,
-      collegeId: users.collegeId,
-      branch: users.branch,
-      karma: users.karma,
-      isAcceptedTerms: users.isAcceptedTerms,
+      userId: platformUser.id,
+      username: platformUser.username,
+      collegeId: platformUser.collegeId,
+      branch: platformUser.branch,
+      karma: platformUser.karma,
+      isAcceptedTerms: platformUser.isAcceptedTerms,
     })
     .from(auth)
-    .leftJoin(users, eq(users.authId, auth.id))
+    .leftJoin(platformUser, eq(platformUser.authId, auth.id))
     .where(whereClause)
     .orderBy(desc(auth.createdAt))
     .limit(limit)
@@ -142,7 +157,7 @@ export const listUsersForAdmin = async (
   const totalResult = await client
     .select({ total: count() })
     .from(auth)
-    .leftJoin(users, eq(users.authId, auth.id))
+    .leftJoin(platformUser, eq(platformUser.authId, auth.id))
     .where(whereClause);
 
   return {

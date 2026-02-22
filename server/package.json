@@ -9,6 +9,7 @@
     "start": "bun dist/server.js",
     "dev": "bun --watch src/server.ts",
     "seed": "bun scripts/seed.ts",
+    "create-admin": "bun scripts/create-admin.ts",
     "prepare": "bun x husky",
     "prebuild": "bun run lint-format && bun run db:migrate",
     "db:up": "docker compose -f infra/docker-compose.yml up -d",

@@ -1,5 +1,5 @@
 {
-  "id": "2228fb97-9554-4d02-879f-99ed966c356c",
+  "id": "0050493c-8dbf-40e8-8fe6-c3329e4833da",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -259,10 +259,10 @@
         }
       },
       "foreignKeys": {
-        "account_user_id_platform_user_id_fk": {
-          "name": "account_user_id_platform_user_id_fk",
+        "account_user_id_auth_id_fk": {
+          "name": "account_user_id_auth_id_fk",
           "tableFrom": "account",
-          "tableTo": "platform_user",
+          "tableTo": "auth",
           "columnsFrom": [
             "user_id"
           ],
@@ -279,8 +279,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.auth_user": {
-      "name": "auth_user",
+    "public.auth": {
+      "name": "auth",
       "schema": "",
       "columns": {
         "id": {
@@ -289,14 +289,14 @@
           "primaryKey": true,
           "notNull": true
         },
-        "email": {
-          "name": "email",
+        "name": {
+          "name": "name",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "lookup_email": {
-          "name": "lookup_email",
+        "email": {
+          "name": "email",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -335,6 +335,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "banned": {
           "name": "banned",
           "type": "boolean",
@@ -359,18 +365,125 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "auth_user_email_unique": {
-          "name": "auth_user_email_unique",
+        "auth_email_unique": {
+          "name": "auth_email_unique",
           "nullsNotDistinct": false,
           "columns": [
             "email"
           ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.platform_user": {
+      "name": "platform_user",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
-        "auth_user_lookup_email_unique": {
-          "name": "auth_user_lookup_email_unique",
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "auth_id": {
+          "name": "auth_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "college_id": {
+          "name": "college_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "branch": {
+          "name": "branch",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "karma": {
+          "name": "karma",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "is_accepted_terms": {
+          "name": "is_accepted_terms",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "platform_user_auth_id_auth_id_fk": {
+          "name": "platform_user_auth_id_auth_id_fk",
+          "tableFrom": "platform_user",
+          "tableTo": "auth",
+          "columnsFrom": [
+            "auth_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "platform_user_college_id_colleges_id_fk": {
+          "name": "platform_user_college_id_colleges_id_fk",
+          "tableFrom": "platform_user",
+          "tableTo": "colleges",
+          "columnsFrom": [
+            "college_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "platform_user_auth_id_unique": {
+          "name": "platform_user_auth_id_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "lookup_email"
+            "auth_id"
+          ]
+        },
+        "platform_user_username_unique": {
+          "name": "platform_user_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
           ]
         }
       },
@@ -456,10 +569,10 @@
         }
       },
       "foreignKeys": {
-        "session_user_id_platform_user_id_fk": {
-          "name": "session_user_id_platform_user_id_fk",
+        "session_user_id_auth_id_fk": {
+          "name": "session_user_id_auth_id_fk",
           "tableFrom": "session",
-          "tableTo": "platform_user",
+          "tableTo": "auth",
           "columnsFrom": [
             "user_id"
           ],
@@ -546,10 +659,10 @@
         }
       },
       "foreignKeys": {
-        "two_factor_user_id_platform_user_id_fk": {
-          "name": "two_factor_user_id_platform_user_id_fk",
+        "two_factor_user_id_auth_id_fk": {
+          "name": "two_factor_user_id_auth_id_fk",
           "tableFrom": "two_factor",
-          "tableTo": "platform_user",
+          "tableTo": "auth",
           "columnsFrom": [
             "user_id"
           ],
@@ -562,119 +675,6 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.platform_user": {
-      "name": "platform_user",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "auth_id": {
-          "name": "auth_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "username": {
-          "name": "username",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "college_id": {
-          "name": "college_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "branch": {
-          "name": "branch",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "karma": {
-          "name": "karma",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
-        "is_accepted_terms": {
-          "name": "is_accepted_terms",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "platform_user_auth_id_auth_user_id_fk": {
-          "name": "platform_user_auth_id_auth_user_id_fk",
-          "tableFrom": "platform_user",
-          "tableTo": "auth_user",
-          "columnsFrom": [
-            "auth_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "platform_user_college_id_colleges_id_fk": {
-          "name": "platform_user_college_id_colleges_id_fk",
-          "tableFrom": "platform_user",
-          "tableTo": "colleges",
-          "columnsFrom": [
-            "college_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "platform_user_auth_id_unique": {
-          "name": "platform_user_auth_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "auth_id"
-          ]
-        },
-        "platform_user_username_unique": {
-          "name": "platform_user_username_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
-        }
-      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -765,7 +765,7 @@
         },
         "userId": {
           "name": "userId",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -968,7 +968,7 @@
         },
         "commentedBy": {
           "name": "commentedBy",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -1119,7 +1119,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "content_reports_reported_by_platform_user_id_fk": {
+          "name": "content_reports_reported_by_platform_user_id_fk",
+          "tableFrom": "content_reports",
+          "tableTo": "platform_user",
+          "columnsFrom": [
+            "reported_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -1139,7 +1153,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -1318,7 +1332,7 @@
         },
         "postedBy": {
           "name": "postedBy",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -1428,7 +1442,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
