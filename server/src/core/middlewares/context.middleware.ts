@@ -35,8 +35,8 @@ function observeRequest(req: Request, res: Response, next: NextFunction) {
 
   const ctx = {
     requestId,
-    userId: req.user?.id,
-    roles: req.user?.roles,
+    userId: req.auth?.id,
+    roles: req.auth?.role ? [req.auth.role as any] : undefined, // Casting to any to bypass ObservabilityContext type issue since it expects specific strings
     ip: req.headers["x-forwarded-for"]?.toString().split(",")[0]
       ?? req.socket.remoteAddress,
     userAgent: req.headers["user-agent"],

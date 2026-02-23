@@ -6,7 +6,7 @@ import logger from "@/core/logger";
 export const requireRole =
   (...allowed: Role[]) =>
     (req: Request, _: Response, next: NextFunction) => {
-      if (!req.user) {
+      if (!req.auth) {
         logger.warn("auth.middleware.permission_auth_required", {
           source: "requirePermission",
         });
@@ -17,18 +17,16 @@ export const requireRole =
         });
       }
 
-      const userRoles = req.user.roles ?? [];
+      const userRole = req.auth.role as Role;
 
-      const hasRole = userRoles.some(role =>
-        allowed.includes(role)
-      );
+      const hasRole = allowed.includes(userRole);
 
       if (!hasRole) {
         logger.warn("auth.middleware.role_denied", {
           source: "requireRole",
-          userId: req.user.id,
+          userId: req.auth.id,
           required: allowed,
-          actual: userRoles,
+          actual: userRole,
         });
 
         throw HttpError.forbidden("Insufficient role", {
@@ -36,7 +34,7 @@ export const requireRole =
           meta: {
             source: "authMiddleware.requireRole",
             required: allowed,
-            actual: userRoles
+            actual: userRole
           }
         });
       }

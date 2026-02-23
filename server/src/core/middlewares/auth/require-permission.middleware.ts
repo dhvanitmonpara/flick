@@ -1,13 +1,13 @@
 import type { Request, Response, NextFunction } from "express";
 import { getUserPermissions } from "@/core/security/rbac";
-import { Permission } from "@/config/roles";
+import { Permission, Role } from "@/config/roles";
 import { HttpError } from "@/core/http";
 import logger from "@/core/logger";
 
 export const requirePermission =
   (...required: Permission[]) =>
     (req: Request, _: Response, next: NextFunction) => {
-      if (!req.user) {
+      if (!req.auth) {
         logger.warn("auth.middleware.permission_auth_required", {
           source: "requirePermission",
         });
@@ -18,7 +18,8 @@ export const requirePermission =
         });
       }
 
-      const userRoles = req.user.roles ?? [];
+      const userRole = req.auth.role as Role;
+      const userRoles = userRole ? [userRole] : [];
       const permissions = getUserPermissions(userRoles);
 
       // superuser / wildcard permission
@@ -33,7 +34,7 @@ export const requirePermission =
       if (!hasAll) {
         logger.warn("auth.middleware.permission_denied", {
           source: "requirePermission",
-          userId: req.user.id,
+          userId: req.auth.id,
           required,
           actual: permissions,
         });

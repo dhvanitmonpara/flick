@@ -7,7 +7,7 @@ export function requireAuth(
   _: Response,
   next: NextFunction
 ) {
-  if (!req.user) {
+  if (!req.auth) {
     const hasRefreshToken =
       Boolean(req.cookies?.refreshToken);
 

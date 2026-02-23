@@ -1,7 +1,6 @@
 import { RateLimiterRedis } from "rate-limiter-flexible";
-import cache from "@/infra/services/cache";
+import { redisClient } from "@/infra/services/cache/clients/redis.client";
 import { RateLimiter } from "./rate-limiter.interface";
-
 export class RedisLimiter implements RateLimiter {
   constructor(private rl: RateLimiterRedis) { }
 
@@ -32,7 +31,7 @@ export const createLimiter = (
 ) =>
   new RedisLimiter(
     new RateLimiterRedis({
-      storeClient: cache,
+      storeClient: redisClient,
       keyPrefix,
       points,
       duration,

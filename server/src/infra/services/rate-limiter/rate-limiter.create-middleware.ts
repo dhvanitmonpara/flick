@@ -19,6 +19,14 @@ export const createRateLimiterMiddleware = (limiter: RateLimiter) => {
 
       next();
     } catch (err: unknown) {
+      // Check if this is a RateLimiterRes by checking for msBeforeNext
+      const isRateLimitExceeded = err && typeof err === 'object' && 'msBeforeNext' in err;
+
+      if (!isRateLimitExceeded) {
+        // This is an internal error (e.g. Redis connection issue)
+        return next(err);
+      }
+
       const rejRes = err as RateLimiterRes;
 
       logger.warn("rate_limit.exceeded", {

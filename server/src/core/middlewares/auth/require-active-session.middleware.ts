@@ -4,7 +4,7 @@ import logger from "@/core/logger";
 
 export function requireActiveSession() {
   return (req: Request, _: Response, next: NextFunction) => {
-    if (!req.user) {
+    if (!req.auth) {
       logger.warn("auth.middleware.session_missing", {
         source: "requireActiveSession",
       });
@@ -21,7 +21,7 @@ export function requireActiveSession() {
     if (!hasRefreshToken) {
       logger.warn("auth.middleware.session_expired", {
         source: "requireActiveSession",
-        userId: req.user?.id,
+        userId: req.auth?.id,
       });
 
       throw HttpError.unauthorized("Session expired", {

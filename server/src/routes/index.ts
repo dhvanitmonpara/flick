@@ -12,6 +12,7 @@ import voteRouter from "@/modules/vote/vote.route";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "@/infra/auth/auth";
 import { registerHealthRoutes } from "./health.routes";
+import adminRouter from "@/modules/admin/routes/admin.route";
 
 export const registerRoutes = (app: Application) => {
   app.use("/api/v1/posts", postRouter);
@@ -24,6 +25,7 @@ export const registerRoutes = (app: Application) => {
   app.use("/api/v1/content-reports", contentReportRouter);
   // app.use("/api/v1/notifications", notificationRouter);
   app.use("/api/v1/votes", voteRouter);
+  app.use("/api/v1/admin", adminRouter);
   app.all('/api/auth/{*any}', toNodeHandler(auth));
 
   registerHealthRoutes(app)
