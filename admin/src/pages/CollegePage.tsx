@@ -16,7 +16,7 @@ function CollegePage() {
         toast.error("Failed to fetch colleges.");
         return;
       }
-      setColleges(res.data.colleges);
+      setColleges(res.data.data.colleges);
     } catch (error) {
       console.error("Error fetching colleges:", error);
       toast.error("Failed to fetch colleges.");

@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { IoRefresh } from "react-icons/io5";
 import { Loader2 } from "lucide-react";
-import { APIResponse } from "@/types/APIResponse";
 import useReportStore from "@/store/ReportStore";
 
 const fields = [
@@ -15,7 +14,7 @@ const fields = [
   "title",         // post.title
   "content",       // post.content
   "postedBy",      // post.postedBy
-  "isBanned",      // post.isBanned
+  "isBanned",      // post.isBanned 
   "isShadowBanned" // post.isShadowBanned
 ];
 
@@ -40,19 +39,18 @@ const ReportsPage = () => {
       };
 
       const queryParams = new URLSearchParams(queryParamsObj).toString();
-      console.log(queryParams, queryParamsObj)
 
       // API call
-      const res = await axios.get<APIResponse>(
+      const res = await axios.get(
         `${env.apiUrl}/manage/reports?${queryParams}`,
         { withCredentials: true }
       );
 
-      if (res.status !== 200 || !res.data?.data || !res.data?.pagination) {
+      if (res.status !== 200 || !res.data?.data.data || !res.data?.data.pagination) {
         throw new Error("Invalid response from server");
       }
 
-      const { data, pagination } = res.data;
+      const { data, pagination } = res.data.data;
 
       setReports(data || []);
       setTotalPages(Math.max(1, Math.ceil((pagination.totalReports || 0) / limit)));

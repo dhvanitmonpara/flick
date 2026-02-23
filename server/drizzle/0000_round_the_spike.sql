@@ -134,8 +134,8 @@ CREATE TABLE "comments" (
 CREATE TABLE "content_reports" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"type" "report_type" NOT NULL,
-	"post_id" integer,
-	"comment_id" integer,
+	"post_id" uuid,
+	"comment_id" uuid,
 	"reported_by" uuid NOT NULL,
 	"reason" text NOT NULL,
 	"status" varchar(20) DEFAULT 'pending' NOT NULL,

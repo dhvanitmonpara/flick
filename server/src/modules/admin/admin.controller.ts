@@ -17,6 +17,35 @@ class AdminController {
 
     return HttpResponse.ok("Users fetched successfully", { users });
   }
+
+  static async getReports(req: Request) {
+    const { page, limit, status } = adminSchemas.GetReportsQuerySchema.parse(req.query);
+
+    const reports = await adminService.getReports(page, limit, status);
+
+    return HttpResponse.ok("Reports fetched successfully", {
+      data: reports.data,
+      pagination: reports.pagination
+    });
+  }
+
+  static async getAllColleges(req: Request) {
+    const colleges = await adminService.getAllColleges();
+    return HttpResponse.ok("Colleges fetched successfully", { colleges });
+  }
+
+  static async getLogs(req: Request) {
+    const { page, limit, sortBy, sortOrder } = adminSchemas.GetLogsQuerySchema.parse(req.query);
+
+    const logs = await adminService.getLogs(page, limit, sortBy, sortOrder as "asc" | "desc");
+
+    return HttpResponse.ok("Logs fetched successfully", logs);
+  }
+
+  static async getAllFeedbacks(req: Request) {
+    const feedbacks = await adminService.getAllFeedbacks();
+    return HttpResponse.ok("Feedbacks fetched successfully", feedbacks);
+  }
 }
 
 export default AdminController;

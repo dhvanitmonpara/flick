@@ -1,5 +1,5 @@
 {
-  "id": "0050493c-8dbf-40e8-8fe6-c3329e4833da",
+  "id": "b6daf544-4328-418a-8a24-5bc9fa701755",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1068,13 +1068,13 @@
         },
         "post_id": {
           "name": "post_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
         "comment_id": {
           "name": "comment_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },

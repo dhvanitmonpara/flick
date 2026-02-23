@@ -50,7 +50,7 @@ export default function LogPage() {
         throw new Error("Failed to fetch logs.");
       }
 
-      setLogs(res.data.data);
+      setLogs(res.data.data.data);
     } catch (err) {
       console.error(err);
       setError("Server error");
