@@ -21,7 +21,7 @@ function UserPage() {
         toast.error("Failed to fetch colleges.");
         return;
       }
-      setUsers(res.data.users);
+      setUsers(res.data.data.users);
     } catch (error) {
       console.error("Error fetching colleges:", error);
       toast.error("Failed to fetch colleges.");
@@ -47,7 +47,7 @@ function UserPage() {
         {users.length > 0 ? (
           <UserTable data={users} setData={setUsers} />
         ) : (
-          <div>No colleges found.</div>
+          <div>No users found.</div>
         )}
       </div>
     </div>

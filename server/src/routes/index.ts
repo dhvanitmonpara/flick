@@ -8,11 +8,11 @@ import feedbackRouter from "@/modules/feedback/feedback.route";
 import postRouter from "@/modules/post/post.route";
 import contentReportRouter from "@/modules/content-report/content-report.routes";
 import voteRouter from "@/modules/vote/vote.route";
+import adminRouter from "@/modules/admin/admin.route";
 // import notificationRouter from "@/modules/notification/notification.routes";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "@/infra/auth/auth";
 import { registerHealthRoutes } from "./health.routes";
-import adminRouter from "@/modules/admin/routes/admin.route";
 
 export const registerRoutes = (app: Application) => {
   app.use("/api/v1/posts", postRouter);

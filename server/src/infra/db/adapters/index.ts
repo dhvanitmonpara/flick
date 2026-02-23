@@ -5,6 +5,11 @@ import * as commentAdapter from "./comment.adapter";
 import * as feedbackAdapter from "./feedback.adapter";
 import * as postAdapter from "./post.adapter";
 import * as userAdapter from "./user.adapter";
+import * as adminAdapter from "./admin.adapter";
+
+export const AdminAdapter = {
+  ...adminAdapter,
+};
 
 export const BookmarkAdapter = {
   ...bookmarkAdapter,
