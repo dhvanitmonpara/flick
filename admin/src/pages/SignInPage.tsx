@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { zodResolver } from "@/lib/zod-resolver"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
@@ -23,7 +23,7 @@ type SignInFormData = z.infer<typeof signInSchema>
 function SignInPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
-  const { setProfile } = useProfileStore()
+  const setProfile = useProfileStore(s => s.setProfile)
   const navigate = useNavigate()
 
   const {
@@ -43,7 +43,7 @@ function SignInPage() {
         fetchOptions: {
           onSuccess: (ctx) => {
             if (ctx.data.user.role === 'admin') {
-              setProfile({ ...ctx.data.user, _id: ctx.data.user.id } as any)
+              setProfile({ ...ctx.data.user, id: ctx.data.user.id } as any)
               navigate('/')
             } else {
               toast.error("Unauthorized. Admin access only.")

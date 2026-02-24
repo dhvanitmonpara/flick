@@ -46,6 +46,26 @@ class AdminController {
     const feedbacks = await adminService.getAllFeedbacks();
     return HttpResponse.ok("Feedbacks fetched successfully", feedbacks);
   }
+
+  static async createCollege(req: Request) {
+    const data = adminSchemas.CreateCollegeSchema.parse(req.body);
+    const newCollege = await adminService.createCollege(data);
+    return HttpResponse.created("College created successfully", newCollege);
+  }
+
+  static async updateCollege(req: Request) {
+    const { id } = adminSchemas.CollegeIdSchema.parse(req.params);
+    const updates = adminSchemas.UpdateCollegeSchema.parse(req.body);
+
+    const updatedCollege = await adminService.updateCollege(id, updates);
+
+    if (!updatedCollege) {
+      const { HttpError } = await import("@/core/http");
+      throw HttpError.notFound("College not found");
+    }
+
+    return HttpResponse.ok("College updated successfully", updatedCollege);
+  }
 }
 
 export default AdminController;

@@ -1,7 +1,7 @@
 import { IUser } from "./User";
 
 export interface IPost extends Document {
-  _id: string;
+  id: string;
   title: string;
   content: string;
   postedBy: string | IUser;

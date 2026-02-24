@@ -15,12 +15,12 @@ const usePostStore = create<PostState>((set) => ({
   addPost: (post) => set((state) => ({ posts: [...(state.posts || []), post] })),
   removePost: (id) =>
     set((state) => ({
-      posts: state.posts?.filter((post) => post._id !== id),
+      posts: state.posts?.filter((post) => post.id !== id),
     })),
   updatePost: (id, updatedPost) =>
     set((state) => ({
       posts: state.posts?.map((post) =>
-        post._id === id ? { ...post, ...updatedPost } : post
+        post.id === id ? { ...post, ...updatedPost } : post
       ),
     })),
 }));

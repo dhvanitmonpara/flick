@@ -20,7 +20,7 @@ interface PostProps {
   avatarFallback: string
   createdAt: string
   college: string
-  _id: string
+  id: string
   title: string
   content: string
   upvoteCount: number
@@ -35,11 +35,11 @@ interface PostProps {
   topic: TPostTopic
 }
 
-function Post({ avatar, userVote, avatarFallback, _id, createdAt, college, title, content, upvoteCount, downvoteCount, commentsCount, viewsCount, username, branch, topic, bookmarked, removedPostOnAction }: PostProps) {
+function Post({ avatar, userVote, avatarFallback, id, createdAt, college, title, content, upvoteCount, downvoteCount, commentsCount, viewsCount, username, branch, topic, bookmarked, removedPostOnAction }: PostProps) {
   const profile = useProfileStore(state => state.profile)
   const navigate = useRouter().push
   return (
-    <Card onClick={() => navigate(`/p/${_id}`)} className="dark:bg-transparent bg-transparent border-none shadow-none rounded-none">
+    <Card onClick={() => navigate(`/p/${id}`)} className="dark:bg-transparent bg-transparent border-none shadow-none rounded-none">
       <CardHeader className="flex-row justify-between space-x-2 p-4">
         <div className="flex space-x-4">
           <VisuallyHidden>
@@ -65,14 +65,14 @@ function Post({ avatar, userVote, avatarFallback, _id, createdAt, college, title
             </p>
           </div>
         </div>
-        <PostDropdown removePostOnAction={removedPostOnAction} bookmarked={bookmarked} id={_id} type="post" key={_id} editableData={profile.username === username ? { title, content } : null} />
+        <PostDropdown removePostOnAction={removedPostOnAction} bookmarked={bookmarked} id={id} type="post" key={id} editableData={profile.username === username ? { title, content } : null} />
       </CardHeader>
       <CardContent>
         <h2 className="text-xl font-semibold">{title}</h2>
         <p className="text-zinc-600 dark:text-zinc-400 pt-1">{content}</p>
       </CardContent>
       <CardFooter>
-        <EngagementComponent userVote={userVote} _id={_id} targetType="post" initialCounts={{ upvotes: upvoteCount, downvotes: downvoteCount, comments: commentsCount, views: viewsCount }} key={title} show={['upvotes', "downvotes", 'comments', 'views', "share"]} />
+        <EngagementComponent userVote={userVote} id={id} targetType="post" initialCounts={{ upvotes: upvoteCount, downvotes: downvoteCount, comments: commentsCount, views: viewsCount }} key={title} show={['upvotes', "downvotes", 'comments', 'views', "share"]} />
       </CardFooter>
     </Card>
   )

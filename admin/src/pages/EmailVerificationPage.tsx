@@ -5,7 +5,8 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import axios, { AxiosError, AxiosResponse } from "axios";
+import { AxiosError } from "axios";
+import { http } from "@/services/http";
 import { toast } from 'sonner'
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -46,10 +47,9 @@ const EmailVerificationPage = () => {
   const sendOtp = useCallback(async () => {
     if (!email) navigate("/auth/signup")
     try {
-      const mailResponse: AxiosResponse = await axios.post(
-        `${import.meta.env.VITE_SERVER_API_URL}/users/otp/send`,
-        { email: email },
-        { withCredentials: true }
+      const mailResponse = await http.post(
+        `/users/otp/send`,
+        { email: email }
       );
 
       if (mailResponse.status === 200) {
@@ -78,10 +78,9 @@ const EmailVerificationPage = () => {
         return
       }
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_SERVER_API_URL}/users/otp/verify`,
-        { email: email, otp },
-        { withCredentials: true }
+      const response = await http.post(
+        `/users/otp/verify`,
+        { email: email, otp }
       );
 
       if (response.status !== 200 && response.status !== 400) {

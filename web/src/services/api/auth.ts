@@ -7,8 +7,8 @@ export const authApi = {
       const mailResponse: AxiosResponse = await http.post("/auth/otp/send", { email });
       return mailResponse.status === 200;
     },
-    verify: async (email: string, otp: string) => {
-      const verifyResponse: AxiosResponse = await http.post("/auth/registration/verify-otp", { email, otp }, { headers: { "Content-Type": "application/json" } });
+    verify: async (otp: string) => {
+      const verifyResponse: AxiosResponse = await http.post("/auth/registration/verify-otp", { otp }, { headers: { "Content-Type": "application/json" } });
       return verifyResponse.status === 200;
     },
   },

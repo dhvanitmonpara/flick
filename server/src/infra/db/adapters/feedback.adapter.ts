@@ -101,7 +101,7 @@ export const findAll = async (
     .offset(skip);
 
   return results.map((row) => ({
-    _id: row.feedbackId,
+    id: row.feedbackId,
     userId: row.userId,
     type: row.type,
     title: row.title,
@@ -109,10 +109,9 @@ export const findAll = async (
     status: row.status,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-
     user: row.authorId
       ? {
-        _id: row.authorId,
+        id: row.authorId,
         username: row.authorUsername,
         email: row.authorEmail,
       }

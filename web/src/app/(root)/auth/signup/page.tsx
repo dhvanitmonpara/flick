@@ -25,6 +25,8 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { authApi } from "@/services/api/auth"
 import { ocrApi } from "@/services/api/ocr"
+import { AxiosError } from "axios"
+import { toastError } from "@/utils/toast-error"
 
 const signUpSchema = z.object({
   email: z.email("Email is invalid"),
@@ -85,9 +87,8 @@ function SignUpPage() {
 
       sessionStorage.setItem("pending_signup_password", data.password)
       navigate(`/auth/otp/${data.email}`)
-    } catch (err) {
-      toast.error("Error signing in")
-      console.error("Sign in error", err)
+    } catch (err: unknown) {
+      toastError(err, "Failed to initialize user")
     } finally {
       setIsSubmitting(false)
     }

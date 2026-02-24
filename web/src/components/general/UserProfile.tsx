@@ -16,7 +16,7 @@ function UserProfile() {
   const navigate = useRouter().push
   return (
     <>
-      {profile._id
+      {profile?.id
         ? <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar className='cursor-pointer transition-colors duration-300 border-2 border-transparent hover:border-zinc-400'>

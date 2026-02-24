@@ -57,7 +57,7 @@ export function CollegeTable({ data, setCollege }: CollegeTableProps) {
   ];
 
   const renderActions = (college: ICollege) => (
-    <Dialog open={openDialogId === college._id} onOpenChange={(isOpen) => setOpenDialogId(isOpen ? college._id : null)}>
+    <Dialog open={openDialogId === college.id} onOpenChange={(isOpen) => setOpenDialogId(isOpen ? college.id : null)}>
       <DialogTrigger asChild>
         <Button className="bg-zinc-700 hover:bg-zinc-600 opacity-0 group-hover:opacity-100" size="sm">
           <PencilIcon className="h-4 w-4" />
@@ -71,7 +71,7 @@ export function CollegeTable({ data, setCollege }: CollegeTableProps) {
           defaultData={college}
           setOpen={() => setOpenDialogId(null)}
           setCollege={setCollege}
-          id={college._id}
+          id={college.id}
         />
       </DialogContent>
     </Dialog>

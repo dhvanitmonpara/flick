@@ -47,7 +47,7 @@ class AuthController {
   static async sendOtp(req: Request) {
     const { email } = authSchemas.otpSchema.parse(req.body);
 
-    const signupId = req.cookies.signupId || req.body.signupId;
+    const signupId = req.cookies.pending_signup || req.body.pending_signup;
 
     if (!signupId)
       throw HttpError.badRequest("Signup ID is required", {
@@ -62,7 +62,7 @@ class AuthController {
   static async verifyUserOtp(req: Request) {
     const { otp } = authSchemas.verifyOtpSchema.parse(req.body);
 
-    const signupId = req.cookies.signupId || req.body.signupId;
+    const signupId = req.cookies.pending_signup || req.body.pending_signup;
 
     if (!signupId)
       throw HttpError.badRequest("Signup ID is required", {
@@ -80,7 +80,7 @@ class AuthController {
   static async verifyOtp(req: Request) {
     const { otp } = authSchemas.verifyOtpSchema.parse(req.body);
 
-    const signupId = req.cookies.signupId || req.body.signupId;
+    const signupId = req.cookies.pending_signup || req.body.pending_signup;
 
     if (!signupId)
       throw HttpError.badRequest("Signup ID is required", {

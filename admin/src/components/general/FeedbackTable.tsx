@@ -82,9 +82,9 @@ export function FeedbackTable({
       }
 
       if (action === "delete") {
-        setData((prev) => prev.filter((feedback) => feedback._id !== id))
+        setData((prev) => prev.filter((feedback) => feedback.id !== id))
       } else {
-        setData((prev) => prev.map((feedback) => feedback._id === id ? { ...feedback, status: action === "review" ? "reviewed" : "dismissed" } : feedback))
+        setData((prev) => prev.map((feedback) => feedback.id === id ? { ...feedback, status: action === "review" ? "reviewed" : "dismissed" } : feedback))
       }
       toast.success(`Feedback ${action === "delete" ? "deleted" : (action === "review" ? "reviewed" : "dismissed")} successfully`)
 
@@ -105,14 +105,14 @@ export function FeedbackTable({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="bg-zinc-700 text-zinc-100 border-zinc-700" align="end">
-          <DropdownMenuItem className="cursor-pointer" onClick={() => handleAction(row._id, "review")}>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => handleAction(row.id, "review")}>
             Mark As Reviewed
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" onClick={() => handleAction(row._id, "dismiss")}>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => handleAction(row.id, "dismiss")}>
             Mark As Dismissed
           </DropdownMenuItem>
           <DropdownMenuSeparator className="bg-zinc-500/70" />
-          <DropdownMenuItem className="cursor-pointer" onClick={() => handleAction(row._id, "delete")}>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => handleAction(row.id, "delete")}>
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>

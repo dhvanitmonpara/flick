@@ -8,6 +8,8 @@ export class GmailProvider implements EmailProvider {
   constructor() {
     this.transporter = nodemailer.createTransport({
       service: "gmail",
+      port: 465,
+      secure: true,
       auth: {
         user: env.GMAIL_APP_USER,
         pass: env.GMAIL_APP_PASS,

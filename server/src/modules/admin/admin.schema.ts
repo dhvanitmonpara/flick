@@ -27,3 +27,25 @@ export const GetLogsQuerySchema = z.object({
 });
 
 export type GetLogsQueryType = z.infer<typeof GetLogsQuerySchema>;
+
+export const CreateCollegeSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters string"),
+  emailDomain: z.string().min(3, "Valid email domain is required (e.g. '@college.edu')"),
+  city: z.string().min(2, "City is required"),
+  state: z.string().min(2, "State is required"),
+});
+
+export type CreateCollegeType = z.infer<typeof CreateCollegeSchema>;
+
+export const UpdateCollegeSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters string").optional(),
+  emailDomain: z.string().min(3, "Valid email domain is required (e.g. '@college.edu')").optional(),
+  city: z.string().min(2, "City is required").optional(),
+  state: z.string().min(2, "State is required").optional(),
+});
+
+export type UpdateCollegeType = z.infer<typeof UpdateCollegeSchema>;
+
+export const CollegeIdSchema = z.object({
+  id: z.string().uuid("Invalid college ID format"),
+});

@@ -48,7 +48,7 @@ function FeedPage() {
   }, [fetchPosts])
 
   const removedPostOnAction = (id: string) => {
-    const updatedPost = posts?.filter(post => post._id !== id) as IPost[]
+    const updatedPost = posts?.filter(post => post.id !== id) as IPost[]
     setPosts(updatedPost)
   }
 
@@ -72,8 +72,8 @@ function FeedPage() {
             // postedBy is just a string, fallback
             return (
               <Post
-                key={post._id}
-                _id={post._id}
+                key={post.id}
+                id={post.id}
                 avatar=""
                 userVote={post.userVote ?? null}
                 username="Unknown"
@@ -96,8 +96,8 @@ function FeedPage() {
           // postedBy is a full IUser object here
           return (
             <Post
-              key={post._id}
-              _id={post._id}
+              key={post.id}
+              id={post.id}
               avatar={getAvatarUrl(postedBy)}
               college={getCollegeName(postedBy)}
               topic={post.topic}

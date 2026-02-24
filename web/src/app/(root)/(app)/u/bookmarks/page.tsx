@@ -31,7 +31,7 @@ function BookmarksPage() {
   }, [getBookmarks])
 
   const removedPostOnAction = (id: string) => {
-    setPosts((prev) => prev.filter((post) => post._id !== id))
+    setPosts((prev) => prev.filter((post) => post.id !== id))
   }
 
   if (loading) return (
@@ -51,8 +51,8 @@ function BookmarksPage() {
           commentsCount={0}
           userVote={post.userVote ?? null}
           viewsCount={0}
-          key={post._id}
-          _id={post._id}
+          key={post.id}
+          id={post.id}
           topic={post.topic}
           removedPostOnAction={removedPostOnAction}
           bookmarked={true}

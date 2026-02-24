@@ -3,13 +3,13 @@ import { PiArrowFatUpFill } from "react-icons/pi";
 import { FaComment } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
-function NotificationCard({ _redisId, actorUsernames, post, _id, seen, type, content }: Partial<INotification>) {
+function NotificationCard({ _redisId, actorUsernames, post, id, seen, type, content }: Partial<INotification>) {
   const navigate = useRouter().push
   return (
     <div
       className={`flex items-center space-x-6 py-4 px-6 border border-zinc-200 dark:border-zinc-800 ${seen ? "hover:bg-zinc-100 dark:hover:bg-zinc-800" : "bg-blue-600/5"} cursor-pointer`}
-      onClick={() => navigate(`/p/${post?._id}`)}
-      key={_id || _redisId}
+      onClick={() => navigate(`/p/${post?.id}`)}
+      key={id || _redisId}
     >
       <div className="flex justify-center items-center">
         {(type === "upvoted_post" || type === "upvoted_comment") && <PiArrowFatUpFill className="text-blue-500 text-3xl" />}

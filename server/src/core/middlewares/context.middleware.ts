@@ -16,7 +16,7 @@ async function flushAuditBuffer() {
       after: entry.after,
       reason: entry.reason,
       actorId: ctx.userId,
-      actorType: ctx.roles,
+      actorType: ctx.role,
       ipAddress: ctx.ip,
       userAgent: ctx.userAgent,
       requestId: ctx.requestId,
@@ -36,7 +36,7 @@ function observeRequest(req: Request, res: Response, next: NextFunction) {
   const ctx = {
     requestId,
     userId: req.auth?.id,
-    roles: req.auth?.role ? [req.auth.role as any] : undefined, // Casting to any to bypass ObservabilityContext type issue since it expects specific strings
+    role: req.auth?.role || "system" as any,
     ip: req.headers["x-forwarded-for"]?.toString().split(",")[0]
       ?? req.socket.remoteAddress,
     userAgent: req.headers["user-agent"],

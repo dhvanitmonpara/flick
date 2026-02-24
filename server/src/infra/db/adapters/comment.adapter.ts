@@ -219,7 +219,7 @@ export const findByIdWithAuthor = async (id: string, dbTx?: DB) => {
   if (!row) return null;
 
   return {
-    _id: row.commentId,
+    id: row.commentId,
     content: row.content,
     postId: row.postId,
     parentCommentId: row.parentCommentId,
@@ -230,7 +230,7 @@ export const findByIdWithAuthor = async (id: string, dbTx?: DB) => {
 
     author: row.authorId
       ? {
-        _id: row.authorId,
+        id: row.authorId,
         username: row.authorUsername,
         branch: row.authorBranch,
       }

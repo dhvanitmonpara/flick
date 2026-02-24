@@ -23,7 +23,7 @@ function CollegePage() {
     try {
       setLoading(true)
       if (!profile.college) return
-      const collegeId = typeof profile.college === "string" ? profile.college : profile.college._id;
+      const collegeId = typeof profile.college === "string" ? profile.college : profile.college.id;
 
       const res = await postApi.getByCollege(collegeId)
 
@@ -44,7 +44,7 @@ function CollegePage() {
   }, [fetchPosts])
 
   const removedPostOnAction = (id: string) => {
-    const updatedPost = posts?.filter(post => post._id !== id) as IPost[]
+    const updatedPost = posts?.filter(post => post.id !== id) as IPost[]
     setPosts(updatedPost)
   }
 
@@ -68,8 +68,8 @@ function CollegePage() {
             // postedBy is just a string, fallback
             return (
               <Post
-                key={post._id}
-                _id={post._id}
+                key={post.id}
+                id={post.id}
                 avatar=""
                 userVote={post.userVote ?? null}
                 username="Unknown"
@@ -92,8 +92,8 @@ function CollegePage() {
           // postedBy is a full IUser object here
           return (
             <Post
-              key={post._id}
-              _id={post._id}
+              key={post.id}
+              id={post.id}
               avatar={getAvatarUrl(postedBy)}
               college={getCollegeName(postedBy)}
               topic={post.topic}

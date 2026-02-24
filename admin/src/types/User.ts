@@ -1,7 +1,7 @@
 import { ICollege } from "./College"
 
 export interface IUser {
-  _id: string
+  id: string
   username: string
   branch: string
   college: string | ICollege

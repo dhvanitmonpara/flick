@@ -19,8 +19,8 @@ import { env } from "@/config/env";
 import UserRepo from "../user/user.repo";
 
 class AuthService {
-  getPendingUser = async (signupId: string) => {
-    const stored = (await cache.get(`pending:${signupId}`)) as PendingUser;
+  getPendingUser = async (signupId: string, options?: { bypassL1?: boolean }) => {
+    const stored = (await cache.get(`pending:${signupId}`, options)) as PendingUser;
 
     if (!stored) {
       throw HttpError.forbidden("Invalid or expired signup session");
@@ -62,7 +62,8 @@ class AuthService {
     this.checkDisposableMail(email)
 
     const encryptedEmail = CryptoTools.email.encrypt(email.toLowerCase());
-    const signupId = crypto.randomBytes(32).toString("hex");
+    // const signupId = crypto.randomBytes(32).toString("hex");
+    const signupId = crypto.randomUUID();
 
     await this.sendOtp(signupId, email);
 
@@ -151,7 +152,7 @@ class AuthService {
 
   finishRegistration = async (req: Request, password: string, res: Response) => {
     const signupId = req.cookies.pending_signup;
-    const stored = await this.getPendingUser(signupId);
+    const stored = await this.getPendingUser(signupId, { bypassL1: true });
     const { email, branch, collegeId, verified } = stored;
 
     if (!verified) {
@@ -171,6 +172,7 @@ class AuthService {
       returnHeaders: true,
     });
 
+    console.log(response)
     const rawText = await response.text();
     const parsed = JSON.parse(rawText);
     const createdUser = parsed.user;
@@ -191,7 +193,7 @@ class AuthService {
       entityType: "user",
       entityId: createdUser.id,
       after: { id: createdUser.id },
-      metadata: { registrationMethod: "better-auth" },
+      metadata: { registrationMethod: "email" },
     });
 
     return { user: createdUser, profile: createdProfile, session: parsed.session };

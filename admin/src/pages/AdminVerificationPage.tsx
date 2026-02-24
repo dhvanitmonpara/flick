@@ -20,7 +20,7 @@ const AdminVerificationPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [isOtpInvalid, setIsOtpInvalid] = useState(false);
-  const { setProfile } = useProfileStore()
+  const setProfile = useProfileStore(s => s.setProfile)
 
   const { email } = useParams()
   const navigate = useNavigate()
@@ -83,7 +83,7 @@ const AdminVerificationPage = () => {
             // Check session to get updated user data since verifyOtp doesn't return user directly
             const session = await authClient.getSession();
             if (session?.data?.user) {
-              setProfile({ ...session.data.user, _id: session.data.user.id } as any);
+              setProfile({ ...session.data.user, id: session.data.user.id } as any);
             }
             navigate(`/`);
           },

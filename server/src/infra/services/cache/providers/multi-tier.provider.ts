@@ -6,9 +6,11 @@ export class MultiTierCacheProvider implements CacheProvider {
     private ttl?: number
   ) { }
 
-  async get<T>(key: string) {
-    const l1Val = await this.l1.get<T>(key);
-    if (l1Val) return l1Val;
+  async get<T>(key: string, options?: { bypassL1?: boolean }) {
+    if (!options?.bypassL1) {
+      const l1Val = await this.l1.get<T>(key);
+      if (l1Val) return l1Val;
+    }
 
     const l2Val = await this.l2.get<T>(key);
     if (l2Val) {

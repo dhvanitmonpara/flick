@@ -12,7 +12,8 @@ const navLinks = [
 
 function Header() {
 
-  const { setProfile, removeProfile } = useProfileStore()
+  const setProfile = useProfileStore(s => s.setProfile)
+  const removeProfile = useProfileStore(s => s.removeProfile)
 
   const refreshAccessToken = useCallback(async () => {
     try {

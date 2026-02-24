@@ -5,7 +5,7 @@ import logger from "@/core/logger";
 class UserManagementService {
   static async blockUser(userId: string) {
     logger.info("Blocking user", { userId });
-    
+
     const user = await UserAdapter.findById(userId);
     if (!user) {
       logger.warn("User not found for blocking", { userId });
@@ -38,7 +38,7 @@ class UserManagementService {
 
   static async unblockUser(userId: string) {
     logger.info("Unblocking user", { userId });
-    
+
     const user = await UserAdapter.findById(userId);
     if (!user) {
       logger.warn("User not found for unblocking", { userId });
@@ -74,7 +74,7 @@ class UserManagementService {
     reason: string;
   }) {
     logger.info("Suspending user", { userId, suspensionEnds: suspensionData.ends, reason: suspensionData.reason });
-    
+
     const user = await UserAdapter.findById(userId);
     if (!user) {
       logger.warn("User not found for suspension", { userId });
@@ -131,7 +131,7 @@ class UserManagementService {
     return {
       success: true,
       users: users.map(user => ({
-        _id: user._id,
+        id: user.id,
         username: user.username,
         // Don't expose email in search results for privacy
         isBlocked: user.isBlocked,

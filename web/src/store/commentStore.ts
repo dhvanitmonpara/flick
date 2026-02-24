@@ -16,16 +16,16 @@ const useCommentStore = create<CommentState>((set) => ({
   setComments: (comments) => set({ comments }),
   removeComment: (id) =>
     set((state) => ({
-      comments: state.comments?.filter((c) => c._id !== id),
+      comments: state.comments?.filter((c) => c.id !== id),
     })),
   addComment: (comment) =>
     set((state) => ({
       comments: state.comments ? [...state.comments, comment] : [comment],
-  })),
+    })),
   updateComment: (id, updateComment) =>
     set((state) => ({
       comments: state.comments?.map((c) =>
-        c._id === id ? { ...c, ...updateComment } : c
+        c.id === id ? { ...c, ...updateComment } : c
       ),
     })),
 }));

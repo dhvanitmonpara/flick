@@ -44,16 +44,16 @@ export function UserTable({ data, setData }: UserTableProps) {
 
       setData((prev) =>
         prev.map((user) =>
-          user._id !== userId
+          user.id !== userId
             ? user
             : {
-                ...user,
-                isBlocked: action === "block" ? true : action === "unblock" ? false : user.isBlocked,
-                suspension:
-                  action === "suspend"
-                    ? { ...user.suspension, ends: new Date(new Date(payload?.ends ?? "").toUTCString()) }
-                    : user.suspension,
-              }
+              ...user,
+              isBlocked: action === "block" ? true : action === "unblock" ? false : user.isBlocked,
+              suspension:
+                action === "suspend"
+                  ? { ...user.suspension, ends: new Date(new Date(payload?.ends ?? "").toUTCString()) }
+                  : user.suspension,
+            }
         )
       );
     } catch (error) {
@@ -118,13 +118,13 @@ export function UserTable({ data, setData }: UserTableProps) {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-zinc-700 text-zinc-100 border-zinc-700" align="end">
-        <DropdownMenuItem className="cursor-pointer" onClick={() => handleAction(user._id, "block")}>
+        <DropdownMenuItem className="cursor-pointer" onClick={() => handleAction(user.id, "block")}>
           Ban User
         </DropdownMenuItem>
-        <DropdownMenuItem className="cursor-pointer" onClick={() => handleAction(user._id, "unblock")}>
+        <DropdownMenuItem className="cursor-pointer" onClick={() => handleAction(user.id, "unblock")}>
           Unban User
         </DropdownMenuItem>
-        <DropdownMenuItem className="cursor-pointer" onClick={() => handleAction(user._id, "suspend")}>
+        <DropdownMenuItem className="cursor-pointer" onClick={() => handleAction(user.id, "suspend")}>
           Suspend User
         </DropdownMenuItem>
       </DropdownMenuContent>

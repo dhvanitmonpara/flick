@@ -2,12 +2,12 @@ import { pgEnum } from "drizzle-orm/pg-core";
 import { auditActions } from "@/shared/constants/audit/actions";
 import { auditPlatforms } from "@/shared/constants/audit/platform";
 import { auditStatus } from "@/shared/constants/audit/status";
-import { roleKeys } from "@/config/roles";
 import { auditEntityTypes } from "@/shared/constants/audit/entity";
+import { auditRoles } from "@/shared/constants/audit/roles";
 
 export const AuthTypeEnum = pgEnum("authType", ["manual", "oauth"]);
 
-export const roleEnum = pgEnum("log_role", roleKeys);
+export const roleEnum = pgEnum("log_role", auditRoles);
 export const platformEnum = pgEnum("log_platform", auditPlatforms);
 export const statusEnum = pgEnum("log_status", auditStatus);
 export const actionEnum = pgEnum("log_action", auditActions);

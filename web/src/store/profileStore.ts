@@ -14,7 +14,7 @@ interface ProfileState {
 const useProfileStore = create<ProfileState>((set) => ({
   theme: "light",
   profile: {
-    _id: "",
+    id: "",
     branch: "",
     isBlocked: false,
     suspension: {
@@ -33,7 +33,7 @@ const useProfileStore = create<ProfileState>((set) => ({
   removeProfile: () =>
     set({
       profile: {
-        _id: "",
+        id: "",
         branch: "",
         isBlocked: false,
         suspension: {
@@ -47,7 +47,7 @@ const useProfileStore = create<ProfileState>((set) => ({
     }),
   // inside profileStore.js
   setTheme: (theme) => {
-    set(() => ({ theme}))
+    set(() => ({ theme }))
     localStorage.setItem("theme", theme);
     document.documentElement.setAttribute("data-theme", theme);
   },

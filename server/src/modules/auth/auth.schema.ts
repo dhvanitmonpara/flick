@@ -8,7 +8,6 @@ export const loginSchema = z.object({
 });
 
 export const verifyOtpSchema = z.object({
-  email: EmailSchema,
   otp: z.string("OTP is required"),
 });
 

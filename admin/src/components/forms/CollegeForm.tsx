@@ -1,17 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { Loader2 } from "lucide-react";
 import { env } from "@/config/env";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ICollege } from "@/types/College";
+import { http } from "@/services/http";
 
 const availableCities = ["Ahmedabad"] as const;
 const availableStates = ["Gujarat"] as const;
@@ -62,19 +63,9 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
       let res = null
 
       if (isUpdating) {
-        res = await axios.patch(`${env.apiUrl}/colleges/update/${id}`, data, {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        })
+        res = await http.patch(`/colleges/update/${id}`, data)
       } else {
-        res = await axios.post(`${env.apiUrl}/colleges`, data, {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        res = await http.post(`/colleges`, data);
       }
 
       if (res.status !== (isUpdating ? 200 : 201)) throw new Error(`Failed to ${isUpdating ? "update" : "create"} college`);
@@ -85,12 +76,12 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
 
       const college = res.data.college
       if (isUpdating) {
-        setCollege(prev => prev.map((c) => c._id === college._id ? college : c))
+        setCollege(prev => prev.map((c) => c.id === college.id ? college : c))
       } else {
         setCollege((prev) => [
           ...prev,
           {
-            _id: college._id,
+            id: college.id,
             name: college.name,
             emailDomain: college.emailDomain,
             profile: college.profile,

@@ -24,7 +24,7 @@ function ProfilePage() {
   const user = useProfileStore(state => state.profile)
 
   useEffect(() => {
-    if (!user._id) {
+    if (!user.id) {
       (async () => {
         const response = await userApi.getProfile()
 
@@ -35,7 +35,7 @@ function ProfilePage() {
         }
       })()
     }
-  }, [user._id])
+  }, [user.id])
 
   return (
     <div className="py-12">
@@ -66,8 +66,8 @@ function ProfilePage() {
                   // postedBy is just a string, fallback
                   return (
                     <Post
-                      key={post._id}
-                      _id={post._id}
+                      key={post.id}
+                      id={post.id}
                       avatar=""
                       userVote={post.userVote ?? null}
                       username="Unknown"
@@ -90,8 +90,8 @@ function ProfilePage() {
                 // postedBy is a full IUser object here
                 return (
                   <Post
-                    key={post._id}
-                    _id={post._id}
+                    key={post.id}
+                    id={post.id}
                     avatar={getAvatarUrl(postedBy)}
                     college={getCollegeName(postedBy)}
                     topic={post.topic}

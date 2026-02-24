@@ -142,7 +142,7 @@ export const findByIdWithDetails = async (
         branch: row.authorBranch,
         college: row.collegeId
           ? {
-            _id: row.collegeId,
+            id: row.collegeId,
             name: row.collegeName,
             profile: row.collegeProfile,
             email: row.collegeEmail,
@@ -275,7 +275,7 @@ export const findMany = async (
     .offset((page - 1) * limit);
 
   return results.map((row) => ({
-    _id: row.postId,
+    id: row.postId,
     title: row.title,
     content: row.content,
     topic: row.topic,
@@ -290,12 +290,12 @@ export const findMany = async (
 
     postedBy: row.authorId
       ? {
-        _id: row.authorId,
+        id: row.authorId,
         username: row.authorUsername,
         branch: row.authorBranch,
         college: row.collegeId
           ? {
-            _id: row.collegeId,
+            id: row.collegeId,
             name: row.collegeName,
             profile: row.collegeProfile,
             email: row.collegeEmail,

@@ -119,7 +119,7 @@ export const findBookmarkedPostsByUserId = async (userId: string, dbTx?: DB) => 
     .orderBy(desc(posts.createdAt));
 
   const results = rows.map((r) => ({
-    _id: r.postId,
+    id: r.postId,
     title: r.title,
     content: r.content,
     views: r.views,
@@ -132,12 +132,12 @@ export const findBookmarkedPostsByUserId = async (userId: string, dbTx?: DB) => 
 
     postedBy: r.authorId
       ? {
-        _id: r.authorId,
+        id: r.authorId,
         username: r.authorUsername,
         branch: r.authorBranch,
         college: r.collegeId
           ? {
-            _id: r.collegeId,
+            id: r.collegeId,
             name: r.collegeName,
             profile: r.collegeProfile,
             email: r.collegeEmail,

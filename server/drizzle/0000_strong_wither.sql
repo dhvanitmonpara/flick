@@ -4,7 +4,7 @@ CREATE TYPE "public"."report_type" AS ENUM('Post', 'Comment');--> statement-brea
 CREATE TYPE "public"."log_entity_type" AS ENUM('post', 'comment', 'bookmark', 'college', 'content-report', 'feedback', 'notification', 'user', 'auth', 'vote');--> statement-breakpoint
 CREATE TYPE "public"."notification_type" AS ENUM('general', 'upvoted_post', 'upvoted_comment', 'replied', 'posted');--> statement-breakpoint
 CREATE TYPE "public"."log_platform" AS ENUM('web', 'mobile', 'tv', 'server', 'other');--> statement-breakpoint
-CREATE TYPE "public"."log_role" AS ENUM('user', 'admin', 'superadmin');--> statement-breakpoint
+CREATE TYPE "public"."log_role" AS ENUM('user', 'admin', 'superadmin', 'system');--> statement-breakpoint
 CREATE TYPE "public"."log_status" AS ENUM('success', 'fail');--> statement-breakpoint
 CREATE TYPE "public"."topic_enum" AS ENUM('Ask Flick', 'Serious Discussion', 'Career Advice', 'Showcase', 'Off-topic', 'Community Event', 'Rant / Vent', 'Help / Support', 'Feedback / Suggestion', 'News / Update', 'Guide / Resource');--> statement-breakpoint
 CREATE TYPE "public"."vote_entity_enum" AS ENUM('post', 'comment');--> statement-breakpoint
@@ -13,7 +13,7 @@ CREATE TABLE "logs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"occured_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"actor_id" uuid,
-	"actor_type" "log_role"[] NOT NULL,
+	"actor_type" "log_role" NOT NULL,
 	"action" text NOT NULL,
 	"entity_type" "log_entity_type" NOT NULL,
 	"entity_id" uuid,

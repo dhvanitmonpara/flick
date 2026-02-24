@@ -2,7 +2,7 @@ import { IPost } from "./Post";
 import { IUser } from "./User";
 
 export interface IComment {
-  _id: string;
+  id: string;
   content: string;
   postId: string | IPost;
   commentedBy: string | IUser;

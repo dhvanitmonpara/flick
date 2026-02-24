@@ -1,3 +1,5 @@
+"use client"
+
 import { createContext, useEffect, useState, ReactNode } from "react";
 import io, { Socket } from "socket.io-client";
 import { env } from "@/config/env";
@@ -16,12 +18,12 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    if (!profile._id) return;
+    if (!profile?.id) return;
 
     const newSocket = io(new URL(env.NEXT_PUBLIC_SERVER_API_ENDPOINT).origin, {
       transports: ["websocket"],
       auth: {
-        userId: profile._id,
+        userId: profile.id,
       },
     });
 
@@ -32,7 +34,7 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       newSocket.disconnect();
       setSocket(null);
     };
-  }, [profile._id]);
+  }, [profile?.id]);
 
   return (
     <SocketContext.Provider value={socket}>

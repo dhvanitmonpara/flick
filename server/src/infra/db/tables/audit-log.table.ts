@@ -44,7 +44,7 @@ export const auditLogs = pgTable(
     occuredAt: timestamp("occured_at", { withTimezone: true }).defaultNow().notNull(),
 
     actorId: uuid("actor_id"),
-    actorType: roleEnum("actor_type").array().notNull(),
+    actorType: roleEnum("actor_type").notNull(),
 
     // can be improved
     action: text().notNull(),

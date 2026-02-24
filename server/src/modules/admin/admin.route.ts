@@ -12,6 +12,8 @@ router.get("/dashboard/overview", AdminController.getOverview);
 router.get("/manage/users/query", AdminController.manageUsersQuery);
 router.get("/manage/reports", AdminController.getReports);
 router.get("/colleges/get/all", AdminController.getAllColleges);
+router.post("/colleges/create", AdminController.createCollege);
+router.patch("/colleges/update/:id", AdminController.updateCollege);
 router.get("/manage/logs", AdminController.getLogs);
 router.get("/manage/feedback/all", AdminController.getAllFeedbacks);
 

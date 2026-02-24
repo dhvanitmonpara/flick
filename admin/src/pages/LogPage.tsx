@@ -1,15 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import axios from "axios";
+import { http } from "@/services/http";
 import { FaInfoCircle } from "react-icons/fa";
-
-import { env } from "@/config/env";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import PaginationTemplate from "@/components/general/PaginationTemplate";
 import { TableWrapper, ColumnDefinition } from "@/components/general/TableWrapper";
 
 type LogItem = {
-  _id: string;
+  id: string;
   action: string;
   platform: string;
   status: string;
@@ -42,15 +40,14 @@ export default function LogPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await axios.get(
-        `${env.apiUrl}/manage/logs?page=${pagination.page}&limit=${pagination.limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
-        { withCredentials: true }
+      const res = await http.get(
+        `/manage/logs?page=${pagination.page}&limit=${pagination.limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`
       );
       if (res.status !== 200) {
         throw new Error("Failed to fetch logs.");
       }
 
-      setLogs(res.data.data.data);
+      setLogs(res.data.data as LogItem[]);
     } catch (err) {
       console.error(err);
       setError("Server error");

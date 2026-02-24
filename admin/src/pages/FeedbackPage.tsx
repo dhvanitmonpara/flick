@@ -1,7 +1,6 @@
 import { FeedbackTable } from "@/components/general/FeedbackTable"
-import { env } from "@/config/env"
+import { http } from "@/services/http"
 import { IFeedback } from "@/types/Feedback"
-import axios from "axios"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -11,9 +10,8 @@ function FeedbackPage() {
 
   useEffect(() => {
     (async () => {
-      const res = await axios.get(
-        `${env.apiUrl}/manage/feedback/all`,
-        { withCredentials: true }
+      const res = await http.get(
+        `/manage/feedback/all`
       )
       if (res.status !== 200) {
         toast.error("Failed to fetch feedbacks")

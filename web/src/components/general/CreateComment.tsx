@@ -86,7 +86,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
       form.reset();
 
       if (isUpdating) {
-        updateComment(res.data.comment._id, res.data.comment)
+        updateComment(res.data.comment.id, res.data.comment)
       } else {
         addComment(res.data.comment);
       }

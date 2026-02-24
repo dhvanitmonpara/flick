@@ -17,7 +17,7 @@ function UserProfile() {
 
   return (
     <>
-      {profile._id
+      {profile?.id
         ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -80,7 +80,7 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
     try {
       setLoading(true);
 
-      if (!profile?._id) throw new Error("User not found");
+      if (!profile?.id) throw new Error("User not found");
       if (isUpdating && !id) throw new Error("Post id not found")
 
       const { allowed, reason } = validatePost(data.content);

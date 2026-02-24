@@ -14,7 +14,7 @@ function AdminLayout() {
 
   useEffect(() => {
     if (session?.user && session.user.role === 'admin') {
-      setProfile({ ...session.user, _id: session.user.id } as any);
+      setProfile({ ...session.user, id: session.user.id } as any);
     }
   }, [session, setProfile])
 

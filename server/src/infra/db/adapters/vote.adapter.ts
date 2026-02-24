@@ -97,7 +97,7 @@ export const findByQuery = async (
     .where(or(...whereConditions));
 
   return results.map(row => ({
-    _id: row.id,
+    id: row.id,
     username: row.username,
     email: row.email,
     roles: row.roles,
@@ -106,7 +106,7 @@ export const findByQuery = async (
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     college: row.collegeId ? {
-      _id: row.collegeId,
+      id: row.collegeId,
       name: row.collegeName,
       profile: row.collegeProfile,
     } : null,

@@ -1,20 +1,7 @@
 import winston from "winston";
 import { env } from "@/config/env";
-import { observabilityContext } from "@/modules/audit/audit-context";
 
 const isDev = env.NODE_ENV === "development";
-
-const addContext = winston.format((info) => {
-  const ctx = observabilityContext.getStore();
-
-  if (ctx) {
-    info.request_id = ctx.requestId;
-    info.ip = ctx.ip;
-    info.user_agent = ctx.userAgent;
-  }
-
-  return info;
-});
 
 const logger = winston.createLogger({
   level: isDev ? "debug" : "info",

@@ -1,4 +1,5 @@
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { HiDotsHorizontal } from "react-icons/hi";
 import axios from "axios";
 import { env } from "@/config/env";
@@ -8,12 +9,6 @@ import { ReportedPost } from "@/types/ReportedPost";
 import { TableWrapper, ColumnDefinition } from "@/components/general/TableWrapper";
 
 type actionType = "BAN_POST" | "SHADOW_BAN_POST" | "BAN_REPORTER" | "IGNORE_REPORT" | "BAN_USER" | "SUSPEND_USER" | "SUSPEND_REPORTER";
-
-const statusColors: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  resolved: "bg-green-100 text-green-800",
-  ignored: "bg-gray-100 text-gray-800",
-};
 
 function addDays(isoString: string, days = 3): string {
   const date = new Date(isoString);
@@ -91,7 +86,7 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
 
   const rows = reports.flatMap((groupedReport) => {
     const { targetDetails, reports } = groupedReport;
-    const postId = targetDetails?._id || "";
+    const postId = targetDetails?.id || "";
     const posterId = targetDetails?.postedBy || "";
 
     return reports.map((report) => ({
@@ -107,13 +102,13 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
       key: "targetDetails.title",
       label: "Post",
       render: (row) => (
-        <div className="text-zinc-200 font-medium">
-          {row.targetDetails?.title || "Untitled Post"}
+        <div className="text-zinc-200 font-medium flex items-center gap-2">
+          <span>{row.targetDetails?.title || "Untitled Post"}</span>
           {row.targetDetails?.isBanned && (
-            <span className="ml-2 text-xs text-red-500 font-semibold">(Banned)</span>
+            <Badge variant="destructive" className="text-xs">Banned</Badge>
           )}
           {row.targetDetails?.isShadowBanned && !row.targetDetails?.isBanned && (
-            <span className="ml-2 text-xs text-yellow-400 font-semibold">(Shadowbanned)</span>
+            <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-500">Shadowbanned</Badge>
           )}
         </div>
       ),
@@ -123,10 +118,10 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
       key: "reporter.username",
       label: "Reporter",
       render: (row) => (
-        <div className="text-sm text-zinc-400">
-          {row.reporter.username}
+        <div className="flex items-center gap-2 text-sm text-zinc-400">
+          <span>{row.reporter.username}</span>
           {row.reporter.isBlocked && (
-            <span className="ml-1 text-xs text-red-500 font-bold">(Blocked)</span>
+            <Badge variant="destructive" className="text-xs">Blocked</Badge>
           )}
         </div>
       ),
@@ -146,11 +141,23 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
       label: "Status",
       render: (row) => {
         const formattedStatus = row.status.charAt(0).toUpperCase() + row.status.slice(1);
-        const statusClass = statusColors[row.status.toLowerCase()] || statusColors["pending"];
+        let variant: "default" | "secondary" | "destructive" | "outline" = "default";
+        let extraClasses = "";
+
+        if (row.status.toLowerCase() === "pending") {
+          variant = "outline";
+          extraClasses = "border-yellow-500 text-yellow-500";
+        } else if (row.status.toLowerCase() === "resolved") {
+          variant = "default";
+          extraClasses = "bg-green-600 hover:bg-green-600/80 text-white";
+        } else if (row.status.toLowerCase() === "ignored") {
+          variant = "secondary";
+        }
+
         return (
-          <span className={`px-2 py-1 text-xs rounded-full font-semibold ${statusClass}`}>
+          <Badge variant={variant} className={extraClasses}>
             {formattedStatus}
-          </span>
+          </Badge>
         );
       },
       className: "text-right",
@@ -159,7 +166,7 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
 
   const renderActions = (row: typeof rows[0]) => {
     const buildAction = (action: actionType) => () =>
-      handleAction(action, row._id, row.postId, row.reporter._id, row.posterId);
+      handleAction(action, row.id, row.postId, row.reporter.id, row.posterId);
 
     return (
       <DropdownMenu>

@@ -1,5 +1,5 @@
 {
-  "id": "b6daf544-4328-418a-8a24-5bc9fa701755",
+  "id": "8f5f6367-4cb3-4d58-8fdc-a167c626a606",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -30,7 +30,7 @@
         },
         "actor_type": {
           "name": "actor_type",
-          "type": "log_role[]",
+          "type": "log_role",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
@@ -1663,7 +1663,8 @@
       "values": [
         "user",
         "admin",
-        "superadmin"
+        "superadmin",
+        "system"
       ]
     },
     "public.log_status": {

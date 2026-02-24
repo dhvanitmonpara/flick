@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";
-import { env } from "@/config/env";
+import { http } from "@/services/http";
 import ReportPost from "@/components/general/ReportPost";
 import PaginationTemplate from "@/components/general/PaginationTemplate";
 import { toast } from "sonner";
@@ -22,12 +21,11 @@ const PostsPage = () => {
     setLoading(true);
     try {
       const statusQuery = statuses.join(",");
-      const res = await axios.get<APIResponse>(
-        `${env.apiUrl}/manage/posts?page=${page}&limit=${limit}&status=${statusQuery}`,
-        { withCredentials: true }
+      const res = await http.get<APIResponse>(
+        `/manage/posts?page=${page}&limit=${limit}&status=${statusQuery}`
       );
 
-      console.log(res.data.data)
+      console.log(res.data)
       setReports(res.data.data);
       setTotalPages(Math.max(1, Math.ceil(res.data.totalReports / limit)));
     } catch (err) {

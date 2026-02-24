@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";
-import { env } from "@/config/env";
+import { http } from "@/services/http";
 import ReportPost from "@/components/general/ReportPost";
 import PaginationTemplate from "@/components/general/PaginationTemplate";
 import { toast } from "sonner";
@@ -10,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import useReportStore from "@/store/ReportStore";
 
 const fields = [
-  "_id",           // post._id
+  "id",           // post.id
   "title",         // post.title
   "content",       // post.content
   "postedBy",      // post.postedBy
@@ -41,16 +40,15 @@ const ReportsPage = () => {
       const queryParams = new URLSearchParams(queryParamsObj).toString();
 
       // API call
-      const res = await axios.get(
-        `${env.apiUrl}/manage/reports?${queryParams}`,
-        { withCredentials: true }
+      const res = await http.get(
+        `/manage/reports?${queryParams}`
       );
 
-      if (res.status !== 200 || !res.data?.data.data || !res.data?.data.pagination) {
+      if (res.status !== 200 || !res.data?.data || !res.data?.pagination) {
         throw new Error("Invalid response from server");
       }
 
-      const { data, pagination } = res.data.data;
+      const { data, pagination } = res.data as any;
 
       setReports(data || []);
       setTotalPages(Math.max(1, Math.ceil((pagination.totalReports || 0) / limit)));

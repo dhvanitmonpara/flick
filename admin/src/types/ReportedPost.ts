@@ -1,6 +1,6 @@
 export interface ReportedPost {
   targetDetails: {
-    _id: string;
+    id: string;
     title: string;
     content: string;
     postedBy: string;
@@ -9,13 +9,13 @@ export interface ReportedPost {
   };
   type: "Post" | "Comment"
   reports: Array<{
-    _id: string;
+    id: string;
     reason: string;
     message: string;
     status: "pending" | "resolved" | "ignored";
     createdAt: string;
     reporter: {
-      _id: string;
+      id: string;
       username: string;
       isBlocked: boolean;
       suspension: {

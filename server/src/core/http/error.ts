@@ -60,7 +60,7 @@ class HttpError extends Error {
   ) {
     return new HttpError({
       statusCode,
-      code: options.code ?? defaultCode,
+      code: options?.code ?? defaultCode,
       message,
       ...options,
     });

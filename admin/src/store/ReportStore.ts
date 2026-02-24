@@ -14,20 +14,20 @@ const useReportStore = create<ReportStore>((set) => ({
   updateReportStatus: (postId, reportId, newStatus) =>
     set((state) => ({
       reports: state.reports?.map((post) =>
-        post.targetDetails._id === postId
+        post.targetDetails.id === postId
           ? {
-              ...post,
-              reports: post.reports.map((report) =>
-                report._id === reportId ? { ...report, status: newStatus } : report
-              ),
-            }
+            ...post,
+            reports: post.reports.map((report) =>
+              report.id === reportId ? { ...report, status: newStatus } : report
+            ),
+          }
           : post
       ) || [],
-    })),  
+    })),
   updateReport: (updatedReport, id) =>
     set((state) => {
       const reports = state.reports?.map((post) => {
-        const reportIndex = post.reports.findIndex((r) => r._id === id);
+        const reportIndex = post.reports.findIndex((r) => r.id === id);
         if (reportIndex !== -1) {
           const updatedReports = [...post.reports];
           updatedReports[reportIndex] = updatedReport;
@@ -36,7 +36,7 @@ const useReportStore = create<ReportStore>((set) => ({
         return post;
       });
       return { reports: reports || [] };
-    }),  
+    }),
 }));
 
 export default useReportStore;

@@ -4,7 +4,7 @@ import { CacheProvider } from "../cache.interface";
 export class RedisCacheProvider implements CacheProvider {
   constructor(private client: Redis) { }
 
-  async get<_T>(key: string) {
+  async get<_T>(key: string, _options?: { bypassL1?: boolean }) {
     const val = await this.client.get(key);
     return val ? JSON.parse(val) : null;
   }

@@ -8,7 +8,7 @@ type TNotificationType =
   | "posted"
 
 interface INotification {
-  _id?: string;
+  id?: string;
   type: TNotificationType;
   seen: boolean;
   receiverId: string;

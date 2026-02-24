@@ -17,7 +17,7 @@ export type AuditEntry = {
 export type ObservabilityContext = {
   requestId: string;
   userId?: string;
-  roles?: Role[];
+  role?: Role;
   ip?: string;
   userAgent?: string;
   platform?: string;

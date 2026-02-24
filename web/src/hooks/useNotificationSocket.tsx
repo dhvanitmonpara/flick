@@ -15,9 +15,9 @@ export function useNotificationSocket() {
     if (!socket) return;
 
     const profile = useProfileStore.getState().profile;
-    if (!profile?._id) return;
+    if (!profile?.id) return;
 
-    socket.emit("initial-setup", { userId: profile._id });
+    socket.emit("initial-setup", { userId: profile.id });
 
     const handleNotification = (notification: { actorUsername: string, type: INotification["type"], postId: string }) => {
       toast.success(`${notification.actorUsername} ${getNotificationAction(notification.type)}`, {

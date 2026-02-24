@@ -92,7 +92,7 @@ function PostPage() {
       return;
     }
 
-    const post = posts?.find((post) => post._id === id);
+    const post = posts?.find((post) => post.id === id);
 
     if (post) {
       setCurrentPost(post);
@@ -110,10 +110,10 @@ function PostPage() {
 
   return (
     <div className="divide-y divide-zinc-300/60 dark:divide-zinc-700/50">
-      {currentPost?._id &&
+      {currentPost?.id &&
         <Post
-          key={currentPost._id}
-          _id={currentPost._id}
+          key={currentPost.id}
+          id={currentPost.id}
           avatar={getAvatarUrl(currentPost.postedBy)}
           bookmarked={currentPost.bookmarked ?? false}
           college={getCollegeName(currentPost.postedBy)}
@@ -141,7 +141,7 @@ function PostPage() {
         </>
         : (comments
           ? comments.map((comment) => (
-            <Comment key={comment._id} comment={comment} />
+            <Comment key={comment.id} comment={comment} />
           ))
           : <p>Comments not found</p>
         )}
@@ -156,7 +156,7 @@ function buildCommentTree(comments: IComment[]): IComment[] {
   // Add all comments to map and init children
   comments.forEach(comment => {
     comment.children = [];
-    commentMap.set(comment._id, comment);
+    commentMap.set(comment.id, comment);
   });
 
   // Link children to their parent

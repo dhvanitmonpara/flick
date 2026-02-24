@@ -35,10 +35,10 @@ function NotificationsPage() {
         const unseen: INotification[] = res.data.notifications.filter((n: INotification) => !n.seen)
         if (unseen.length) {
           await notificationApi.markSeen(
-            unseen.map((n) => n._id).filter((id): id is string => Boolean(id)),
+            unseen.map((n) => n.id).filter((id): id is string => Boolean(id)),
           )
           setNotifications((prev) =>
-            prev.map((n) => (unseen.some((u) => u._id === n._id) ? { ...n, seen: true } : n))
+            prev.map((n) => (unseen.some((u) => u.id === n.id) ? { ...n, seen: true } : n))
           )
         }
       } catch (err) {
@@ -54,11 +54,11 @@ function NotificationsPage() {
       {loading && <p>Loading notifications...</p>}
       {notifications.map((n) => (
         <NotificationCard
-          key={n._id || n._redisId}
+          key={n.id || n._redisId}
           _redisId={n._redisId}
           actorUsernames={n.actorUsernames}
           post={n.post}
-          _id={n._id}
+          id={n.id}
           content={n.content}
           receiverId={n.receiverId}
           seen={n.seen}

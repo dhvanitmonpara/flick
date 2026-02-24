@@ -12,7 +12,7 @@ interface ProfileState {
 const useProfileStore = create<ProfileState>(
   (set) => ({
     profile: {
-      _id: "",
+      id: "",
       email: "",
     },
     setProfile: (profile) => set({ profile }),
@@ -23,7 +23,7 @@ const useProfileStore = create<ProfileState>(
     removeProfile: () =>
       set({
         profile: {
-          _id: "",
+          id: "",
           email: "",
         },
       }),

@@ -20,7 +20,7 @@ type Count = {
 
 type EngagementComponentProps = {
   initialCounts: Count;
-  _id: string
+  id: string
   targetType: 'post' | 'comment'
   initialUpvoted?: boolean;
   initialDownvoted?: boolean;
@@ -30,7 +30,7 @@ type EngagementComponentProps = {
 
 const EngagementComponent = ({
   initialCounts = { upvotes: 0, downvotes: 0, comments: 0, views: 0 },
-  _id,
+  id,
   userVote,
   targetType = 'post',
   show = ['upvotes', 'downvotes', 'comments', 'views'],
@@ -95,18 +95,18 @@ const EngagementComponent = ({
       if (action === 'post') {
         await voteApi.create({
           voteType: type,
-          targetId: _id,
+          targetId: id,
           targetType,
         });
       } else if (action === 'delete') {
         await voteApi.remove({
-          targetId: _id,
+          targetId: id,
           targetType,
         });
       } else if (action === 'patch') {
         await voteApi.update({
           voteType: type,
-          targetId: _id,
+          targetId: id,
           targetType,
         });
       }
@@ -152,7 +152,7 @@ const EngagementComponent = ({
 
       {show.includes('comments') && (
         <div className="group cursor-pointer flex items-center gap-1 bg-zinc-200 dark:bg-zinc-800 py-1 px-2 rounded-full">
-          <CommentButton className="group-hover:text-zinc-600 dark:group-hover:text-zinc-200 group-hover:scale-105 duration-300 transition-all" parentCommentId={targetType === "comment" ? _id : null} />
+          <CommentButton className="group-hover:text-zinc-600 dark:group-hover:text-zinc-200 group-hover:scale-105 duration-300 transition-all" parentCommentId={targetType === "comment" ? id : null} />
           <span className="text-sm text-gray-600 dark:text-gray-400 min-w-3 pr-1">{optimisticCounts.comments}</span>
         </div>
       )}
@@ -167,7 +167,7 @@ const EngagementComponent = ({
       )}
 
       {show.includes('share') && (
-        <ShareButton id={_id} />
+        <ShareButton id={id} />
       )}
     </div>
   );

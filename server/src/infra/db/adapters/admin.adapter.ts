@@ -16,7 +16,7 @@ export const getManageUsersQuery = async (username?: string, email?: string, dbT
 
   const fetchedUsers = await client
     .select({
-      _id: users.id,
+      id: users.id,
       username: users.username,
       email: auth.email,
       branch: users.branch,
@@ -34,7 +34,7 @@ export const getManageUsersQuery = async (username?: string, email?: string, dbT
     .where(queryFilters.length > 0 ? and(...queryFilters) : undefined);
 
   const formattedUsers = fetchedUsers.map(user => ({
-    _id: user._id,
+    id: user.id,
     username: user.username,
     email: user.email,
     branch: user.branch,
@@ -94,7 +94,7 @@ export const getReports = async (page: number, limit: number, statuses: string[]
     if (!grouped.has(targetId)) {
       grouped.set(targetId, {
         targetDetails: {
-          _id: targetId,
+          id: targetId,
           title: r.type === 'Post' ? r.postTitle : '',
           content: r.type === 'Post' ? r.postContent : r.commentContent,
           postedBy: r.type === 'Post' ? r.postAuthor : r.commentAuthor,
@@ -108,13 +108,13 @@ export const getReports = async (page: number, limit: number, statuses: string[]
 
     const group = grouped.get(targetId);
     group.reports.push({
-      _id: r.id,
+      id: r.id,
       reason: r.reason,
       message: r.message,
       status: r.status,
       createdAt: r.createdAt?.toISOString(),
       reporter: {
-        _id: r.reporterId,
+        id: r.reporterId,
         username: r.reporterUsername,
         isBlocked: r.reporterIsBlocked,
         suspension: {
@@ -145,7 +145,7 @@ export const getAllColleges = async (dbTx?: DB) => {
 
   const fetchedColleges = await client
     .select({
-      _id: colleges.id,
+      id: colleges.id,
       name: colleges.name,
       profile: colleges.profile,
       emailDomain: colleges.emailDomain,
@@ -178,7 +178,7 @@ export const getLogs = async (page: number, limit: number, sortBy: string, sortO
   const [{ count }] = await client.select({ count: sql<number>`count(*)` }).from(auditLogs);
 
   const data = rawLogs.map((log) => ({
-    _id: log.id,
+    id: log.id,
     action: log.action,
     platform: log.userAgent || "System",
     status: log.reason ? "Failed" : "Success",
@@ -220,9 +220,9 @@ export const getAllFeedbacks = async (dbTx?: DB) => {
     .orderBy(desc(feedbacks.createdAt));
 
   const data = rawFeedback.map((fb) => ({
-    _id: fb.id,
+    id: fb.id,
     userId: {
-      _id: fb.userId || "",
+      id: fb.userId || "",
       name: fb.userName || "Unknown",
       email: fb.userEmail || "Unknown",
     },
@@ -233,4 +233,38 @@ export const getAllFeedbacks = async (dbTx?: DB) => {
   }));
 
   return data;
+};
+
+export const createCollege = async (data: { name: string; emailDomain: string; city: string; state: string }, dbTx?: DB) => {
+  const client = dbTx ?? db;
+  const [newCollege] = await client.insert(colleges).values(data).returning();
+
+  return {
+    id: newCollege.id,
+    name: newCollege.name,
+    emailDomain: newCollege.emailDomain,
+    city: newCollege.city,
+    state: newCollege.state,
+    profile: newCollege.profile,
+  };
+};
+
+export const updateCollege = async (id: string, updates: Partial<typeof colleges.$inferInsert>, dbTx?: DB) => {
+  const client = dbTx ?? db;
+  const [updatedCollege] = await client
+    .update(colleges)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(colleges.id, id))
+    .returning();
+
+  if (!updatedCollege) return null;
+
+  return {
+    id: updatedCollege.id,
+    name: updatedCollege.name,
+    emailDomain: updatedCollege.emailDomain,
+    city: updatedCollege.city,
+    state: updatedCollege.state,
+    profile: updatedCollege.profile,
+  };
 };

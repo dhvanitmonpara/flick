@@ -42,13 +42,13 @@ function Comment({ comment, className, depth = 0 }: { comment: IComment, classNa
               </p>
             </div>
           </div>
-          <PostDropdown showBookmark={false} id={comment._id} type="comment" key={comment._id} editableData={{ title: "", content: comment.content }} />
+          <PostDropdown showBookmark={false} id={comment.id} type="comment" key={comment.id} editableData={{ title: "", content: comment.content }} />
         </CardHeader>
         <CardContent>
           <p className="text-zinc-600 dark:text-zinc-400 pt-1">{comment.content}</p>
         </CardContent>
         <CardFooter>
-          <EngagementComponent userVote={comment.userVote ?? null} _id={comment._id} targetType="comment" initialCounts={{ upvotes: comment.upvoteCount, downvotes: comment.downvoteCount, comments: comment.children?.length ?? 0 }} key={comment._id} show={['upvotes', "downvotes", "comments"]} />
+          <EngagementComponent userVote={comment.userVote ?? null} id={comment.id} targetType="comment" initialCounts={{ upvotes: comment.upvoteCount, downvotes: comment.downvoteCount, comments: comment.children?.length ?? 0 }} key={comment.id} show={['upvotes', "downvotes", "comments"]} />
         </CardFooter>
         {comment.children && comment.children.length > 0 && (
           isExpanded ?
@@ -57,7 +57,7 @@ function Comment({ comment, className, depth = 0 }: { comment: IComment, classNa
                 } border-zinc-300 dark:border-zinc-700`}
             >
               {comment.children.map((child) => (
-                <Comment key={child._id} comment={child} depth={depth + 1} />
+                <Comment key={child.id} comment={child} depth={depth + 1} />
               ))}
               <button className="px-3 p-2 ml-4 my-2 transition-colors flex space-x-2 justify-center items-center hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-md" onClick={() => setIsExpanded(false)}>
                 <span className="text-sm font-semibold text-zinc-600 dark:text-zinc-400">Hide replies</span>
