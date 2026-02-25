@@ -10,4 +10,7 @@ export const toPublicUser = (user: UserSelect) => ({
   updatedAt: user.updatedAt,
 });
 
+export const toInternalUser = (user: UserSelect) => ({ ...user, });
+
 export type PublicUser = ReturnType<typeof toPublicUser>;
+export type InternalUser = ReturnType<typeof toInternalUser>;

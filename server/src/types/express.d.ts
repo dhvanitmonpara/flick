@@ -1,4 +1,5 @@
 import { InternalAuth } from "@/modules/auth/auth.dto";
+import { InternalUser } from "@/modules/user/user.dto";
 import "express";
 
 declare global {
@@ -6,6 +7,7 @@ declare global {
     interface Request {
       id?: string;
       auth?: InternalAuth;
+      user?: InternalUser;
       session: {
         id: string;
         createdAt: Date;

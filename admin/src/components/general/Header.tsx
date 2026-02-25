@@ -1,9 +1,8 @@
 import { Link, NavLink } from "react-router-dom"
 import UserProfile from "./UserProfile";
-import { useCallback, useEffect } from "react";
-import axios, { isAxiosError } from "axios";
+import { useEffect } from "react";
 import useProfileStore from "@/store/profileStore";
-import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 
 const navLinks = [
   { to: "/home", label: "Home" },
@@ -15,57 +14,23 @@ function Header() {
   const setProfile = useProfileStore(s => s.setProfile)
   const removeProfile = useProfileStore(s => s.removeProfile)
 
-  const refreshAccessToken = useCallback(async () => {
-    try {
-
-      const res = await axios.post(`${import.meta.env.VITE_SERVER_API_URL}/users/refresh`, {}, {
-        withCredentials: true,
-      })
-
-      if (res.status !== 200) {
-        toast.error(res.data.message || "Something went wrong while refreshing access token")
-        return
-      }
-
-      setProfile(res.data)
-    } catch (error) {
-      if (isAxiosError(error)) {
-        toast.error(error.response?.data?.error || "Something went wrong while refreshing access token")
-      } else {
-        console.log(error)
-      }
-      removeProfile()
-    }
-  }, [removeProfile, setProfile])
-
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchSession = async () => {
       try {
-        const user = await axios.get(`${import.meta.env.VITE_SERVER_API_URL}/users/me`, {
-          withCredentials: true,
-        })
-
-        if (user.status !== 201) {
-          toast.error(user.data.message || "Something went wrong while fetching user")
-          return
-        }
-
-        setProfile(user.data.data)
-      } catch (error) {
-        if (isAxiosError(error)) {
-          if (error.response?.status === 401 || error.response?.data?.error === "Access token not found") {
-            await refreshAccessToken()
-          } else {
-            toast.error(error.response?.data?.message || "Something went wrong while fetching user")
-          }
+        const session = await authClient.getSession();
+        if (session?.data?.user) {
+          setProfile({ ...session.data.user, id: session.data.user.id } as any);
         } else {
-          console.log(error)
+          removeProfile();
         }
+      } catch (error) {
+        console.error("Error fetching session:", error);
+        removeProfile();
       }
-    }
+    };
 
-    fetchUser()
-  }, [refreshAccessToken, setProfile])
+    fetchSession();
+  }, [setProfile, removeProfile])
 
   return (
     <>

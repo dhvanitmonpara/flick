@@ -5,7 +5,7 @@ import * as postSchemas from "./post.schema";
 
 @Controller()
 class PostController {
- static async createPost(req: Request) {
+  static async createPost(req: Request) {
     const { title, content, topic } = postSchemas.CreatePostSchema.parse(req.body);
     const userId = req.user.id;
 
@@ -18,8 +18,8 @@ class PostController {
 
     return HttpResponse.created("Post created successfully", { post: newPost });
   }
-  
-   static async getPosts(req: Request) {
+
+  static async getPosts(req: Request) {
     const { page, limit, sortBy, sortOrder, topic, collegeId, branch } = postSchemas.GetPostsQuerySchema.parse(req.query)
 
     const userId = req.user?.id;
@@ -38,18 +38,16 @@ class PostController {
     return HttpResponse.ok("Posts retrieved successfully", result);
   }
 
- static async getPostById(req: Request) {
+  static async getPostById(req: Request) {
     const { id } = postSchemas.PostIdSchema.parse(req.params);
     const userId = req.user?.id;
 
     const post = await postService.getPostById(id, userId);
 
-    return HttpResponse.ok("Post retrieved successfully", {
-      post,
-    });
+    return HttpResponse.ok("Post retrieved successfully", { post });
   }
 
- static async updatePost(req: Request) {
+  static async updatePost(req: Request) {
     const { id } = postSchemas.PostIdSchema.parse(req.params);
     const { title, content, topic } = postSchemas.UpdatePostSchema.parse(req.body);
     const userId = req.user.id;
@@ -72,7 +70,7 @@ class PostController {
     return HttpResponse.ok("Post deleted successfully");
   }
 
-   static async incrementPostViews(req: Request) {
+  static async incrementPostViews(req: Request) {
     const { id } = postSchemas.PostIdSchema.parse(req.params);
 
     await postService.incrementPostViews(id);
@@ -80,7 +78,7 @@ class PostController {
     return HttpResponse.ok("Post view incremented")
   }
 
-   static async getPostsByCollege(req: Request) {
+  static async getPostsByCollege(req: Request) {
     const { collegeId } = postSchemas.CollegeIdSchema.parse(req.params);
     const { page, limit, sortBy, sortOrder } = postSchemas.GetPostsQuerySchema.parse(req.query)
 
@@ -97,7 +95,7 @@ class PostController {
     return HttpResponse.ok("Posts retrieved successfully by college", result);
   }
 
- static async getPostsByBranch(req: Request) {
+  static async getPostsByBranch(req: Request) {
     const { branch } = postSchemas.BranchSchema.parse(req.params);
     const { page, limit, sortBy, sortOrder } = postSchemas.GetPostsQuerySchema.parse(req.query)
 

@@ -19,19 +19,15 @@ class UserController {
 
     const users = await userService.searchUsers(query);
 
-    return HttpResponse.ok("Users fetched successfully", users);
+    return HttpResponse.ok("Users fetched successfully", users.map(toPublicUser));
   }
 
   static async getUserProfile(req: Request) {
-    const user = await userService.getUserProfile(req.auth.id)
-    return HttpResponse.ok("User fetched successfully!", user);
+    return HttpResponse.ok("User fetched successfully!", toPublicUser(req.user));
   }
 
   static async acceptTerms(req: Request) {
-    const authId = req.auth.id;
-    const user = await userService.getUserProfile(authId);
-
-    await userService.acceptTerms(user.id);
+    await userService.acceptTerms(req.user.id);
 
     return HttpResponse.ok("Terms accepted successfully");
   }

@@ -1,3 +1,5 @@
+"use client"
+
 import useProfileStore from "@/store/profileStore"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"

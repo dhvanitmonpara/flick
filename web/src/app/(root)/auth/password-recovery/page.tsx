@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authApi } from "@/services/api/auth";
+import { authClient } from "@/lib/auth-client";
 import { zodResolver } from "@/lib/zod-resolver";
 import { isAxiosError } from "axios";
 import { Loader2 } from "lucide-react";
@@ -46,10 +46,15 @@ function PasswordRecovery() {
     setIsSubmitting(true)
     try {
       const resetUrl = `${window.location.origin}/auth/password-recovery/reset`;
-      const isResetSuccess = await authApi.resetPassword.initialize(data.email, resetUrl)
 
-      if (!isResetSuccess) {
-        toast.error("Error sending reset link. Try again")
+      // @ts-ignore - forgetPassword exists when emailAndPassword plugin is enabled but TS isn't inferring it here
+      const { error } = await authClient.forgetPassword({
+        email: data.email,
+        redirectTo: resetUrl
+      })
+
+      if (error) {
+        toast.error(error.message || "Error sending reset link. Try again")
         return
       }
 

@@ -172,9 +172,7 @@ class AuthService {
       returnHeaders: true,
     });
 
-    console.log(response)
-    const rawText = await response.text();
-    const parsed = JSON.parse(rawText);
+    const parsed = await response.json();
     const createdUser = parsed.user;
 
     const createdProfile = await UserRepo.Write.create({
@@ -185,7 +183,6 @@ class AuthService {
     });
 
     if (res && response.headers) forwardSetCookieHeaders(response.headers, res);
-
     await cache.del(`pending:${signupId}`);
 
     await recordAudit({

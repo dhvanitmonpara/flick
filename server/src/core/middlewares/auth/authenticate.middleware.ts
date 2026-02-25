@@ -10,13 +10,11 @@ export const authenticate = async (req: Request, _: Response, next: NextFunction
   const headers = fromNodeHeaders(req.headers);
   logger.info("Authenticate headers", { cookie: headers.get("cookie") });
 
-  const session = await auth.api.getSession({
-    headers,
-  });
+  const session = await auth.api.getSession({ headers });
 
   logger.info("Session returned", { session: !!session });
 
-  if (!session) {
+  if (!session || !session.session.userId) {
     throw HttpError.unauthorized("Unauthorized");
   }
 

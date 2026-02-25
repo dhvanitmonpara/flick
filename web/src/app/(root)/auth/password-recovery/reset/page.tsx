@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authApi } from "@/services/api/auth";
+import { authClient } from "@/lib/auth-client";
 import { zodResolver } from "@/lib/zod-resolver";
 import { isAxiosError } from "axios";
 import { Loader2 } from "lucide-react";
@@ -60,10 +60,17 @@ function ResetPassword() {
 
     setIsSubmitting(true)
     try {
-      const isResetSuccess = await authApi.resetPassword.finalize(data.password, token)
+      const { error } = await authClient.resetPassword({
+        newPassword: data.password,
+        fetchOptions: {
+          query: {
+            token: token
+          }
+        }
+      })
 
-      if (!isResetSuccess) {
-        toast.error("Error resetting password, It might have expired.")
+      if (error) {
+        toast.error(error.message || "Error resetting password, It might have expired.")
         return
       }
 

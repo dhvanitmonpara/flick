@@ -1,31 +1,22 @@
 import { Router } from "express";
 import postController from "./post.controller";
-import { authenticate } from "@/core/middlewares";
+import { ensureRatelimit } from "@/core/middlewares";
+import { authenticateUser } from "@/core/middlewares/pipelines";
 
 const router = Router();
 
-// Create post (authenticated users)
-router.route("/").post(authenticate, postController.createPost);
+router.use(ensureRatelimit.api);
 
-// Get all posts with filtering
 router.route("/").get(postController.getPosts);
-
-// Get single post by ID
 router.route("/:id").get(postController.getPostById);
-
-// Update post (author only)
-router.route("/:id").patch(authenticate, postController.updatePost);
-
-// Delete post (author only)
-router.route("/:id").delete(authenticate, postController.deletePost);
-
-// Increment post views
 router.route("/:id/view").post(postController.incrementPostViews);
-
-// Get posts by college
 router.route("/college/:collegeId").get(postController.getPostsByCollege);
-
-// Get posts by branch
 router.route("/branch/:branch").get(postController.getPostsByBranch);
+
+router.use(authenticateUser);
+
+router.route("/").post(postController.createPost);
+router.route("/:id").delete(postController.deletePost);
+router.route("/:id").patch(postController.updatePost);
 
 export default router;

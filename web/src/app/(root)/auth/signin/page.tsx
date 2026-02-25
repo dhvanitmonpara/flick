@@ -15,7 +15,7 @@ import { handleGoogleOAuthRedirect } from "@/utils/googleOAuthRedirect"
 import { Separator } from "@/components/ui/separator"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { authApi } from "@/services/api/auth"
+import { authClient } from "@/lib/auth-client"
 
 const signInSchema = z.object({
   email: z.email("Email is invalid"),
@@ -40,11 +40,18 @@ function SignInPage() {
   const onSubmit = async (data: SignInFormData) => {
     setIsSubmitting(true)
     try {
-      const isSuccess = await authApi.session.login(data.email, data.password)
+      const { data: signInData, error } = await authClient.signIn.email({
+        email: data.email,
+        password: data.password,
+      });
 
-      if (!isSuccess) {
-        toast.error("Error signing in, Try again")
-        return
+      if (error) {
+        if (error.status === 400 && error.code === "NO_PASSWORD_FOUND_ERROR") {
+          navigate(`/auth/password-recovery?email=${data.email}`)
+          return
+        }
+        toast.error(error.message || "Error signing in, Try again")
+        return;
       }
 
       navigate('/')
@@ -52,10 +59,6 @@ function SignInPage() {
     } catch (err) {
       console.error("Sign in error", err)
       if (isAxiosError(err)) {
-        if (err.response?.status === 400 && err.response?.data.code === "NO_PASSWORD_FOUND_ERROR") {
-          navigate(`/auth/password-recovery?email=${data.email}`)
-          return
-        }
         toast.error(err.response?.data.error || "Error signing in, Try again")
       } else {
         toast.error("Error signing in, Try again")

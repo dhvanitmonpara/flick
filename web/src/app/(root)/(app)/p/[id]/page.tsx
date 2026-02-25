@@ -1,3 +1,5 @@
+"use client"
+
 import Comment from "@/components/general/Comment";
 import CreateComment from "@/components/general/CreateComment";
 import Post from "@/components/general/Post"

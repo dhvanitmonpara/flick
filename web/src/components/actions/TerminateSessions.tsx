@@ -2,7 +2,7 @@ import { useErrorHandler } from "@/hooks/useErrorHandler"
 import { AxiosError } from "axios"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { authApi } from "@/services/api/auth"
+import { authClient } from "@/lib/auth-client"
 
 function TerminateSessions() {
   const navigate = useRouter().push
@@ -14,10 +14,10 @@ function TerminateSessions() {
     try {
       toastId = toast.loading("Terminating sessions...")
 
-      const isSuccess = await authApi.session.logoutAll()
+      const { error } = await authClient.revokeOtherSessions()
 
-      if (!isSuccess) {
-        throw new Error("Failed to terminate sessions")
+      if (error) {
+        throw new Error(error.message || "Failed to terminate sessions")
       }
 
       navigate("/")
