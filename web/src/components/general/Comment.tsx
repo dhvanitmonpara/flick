@@ -21,7 +21,7 @@ function Comment({ comment, className, depth = 0 }: { comment: IComment, classNa
   return (
     <>
       <Card className={`dark:bg-transparent bg-transparent border-x-0 shadow-none rounded-none ${className}`}>
-        <CardHeader className="flex-row justify-between space-x-2 p-4">
+        <CardHeader className="flex flex-row justify-between space-x-2 p-4">
           <div className="flex space-x-4">
             <VisuallyHidden>
               <CardTitle>{(isUser(comment.commentedBy) && isCollege(comment.commentedBy.college)) ? comment.commentedBy.college.name : "Unknown College"}</CardTitle>

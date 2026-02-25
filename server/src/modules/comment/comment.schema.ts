@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const CreateCommentSchema = z.object({
   content: z.string().min(1, "Comment content is required").max(1000, "Comment content too long"),
-  parentCommentId: z.string().uuid("Invalid parent comment ID").optional(),
+  parentCommentId: z.uuid("Invalid parent comment ID").nullable().optional(),
 });
 
 export const UpdateCommentSchema = z.object({

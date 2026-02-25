@@ -11,11 +11,10 @@ class CommentService {
       limit?: number;
       sortBy?: "createdAt" | "updatedAt";
       sortOrder?: "asc" | "desc";
-      userId?: string;
     }
   ) {
     logger.info("Fetching comments by post ID", { postId, options });
-    
+
     const comments = await CommentRepo.CachedRead.findByPostId(postId, options);
     const totalComments = await CommentRepo.CachedRead.countByPostId(postId);
 
@@ -31,13 +30,13 @@ class CommentService {
         totalPages: Math.ceil(totalComments / limit),
       },
     };
-    
-    logger.info("Retrieved comments by post ID", { 
-      postId, 
-      commentsCount: comments.length, 
+
+    logger.info("Retrieved comments by post ID", {
+      postId,
+      commentsCount: comments.length,
       totalComments,
       page,
-      limit 
+      limit
     });
 
     return result;
@@ -49,12 +48,12 @@ class CommentService {
     commentedBy: string;
     parentCommentId?: string;
   }) {
-    logger.info("Creating comment", { 
-      postId: commentData.postId, 
+    logger.info("Creating comment", {
+      postId: commentData.postId,
       commentedBy: commentData.commentedBy,
-      parentCommentId: commentData.parentCommentId 
+      parentCommentId: commentData.parentCommentId
     });
-    
+
     const newComment = await CommentRepo.Write.create({
       content: commentData.content.trim(),
       postId: commentData.postId,
@@ -62,10 +61,10 @@ class CommentService {
       parentCommentId: commentData.parentCommentId || null,
     });
 
-    logger.info("Comment created successfully", { 
-      commentId: newComment.id, 
+    logger.info("Comment created successfully", {
+      commentId: newComment.id,
       postId: newComment.postId,
-      commentedBy: newComment.commentedBy 
+      commentedBy: newComment.commentedBy
     });
 
     await recordAudit({
@@ -81,7 +80,7 @@ class CommentService {
 
   async updateComment(commentId: string, userId: string, content: string) {
     logger.info("Updating comment", { commentId, userId });
-    
+
     // First check if comment exists and get author info
     const existingComment = await CommentRepo.CachedRead.findByIdWithAuthor(commentId);
     if (!existingComment) {

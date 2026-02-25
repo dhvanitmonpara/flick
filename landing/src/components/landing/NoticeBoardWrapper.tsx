@@ -13,7 +13,7 @@ export function FlickNoticeBoard({
 }: FlickNoticeBoardProps) {
   return (
     <div className="flex justify-center items-center py-10">
-      <div className="border-[20px] rounded-xl shadow-lg bg-green-board bg-cover bg-center border-wood-frame max-w-4xl w-full relative">
+      <div className="border-20 rounded-xl shadow-lg bg-green-board bg-cover bg-center border-wood-frame max-w-4xl w-full relative">
         {/* Screenshot */}
         <div className="relative m-8 bg-white shadow-lg rounded-md overflow-hidden border border-gray-300">
           <Image

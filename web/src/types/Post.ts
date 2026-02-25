@@ -1,7 +1,7 @@
 import { IUser } from "./User";
 import { TPostTopic } from "@/types/postTopics";
 
-export interface IPost extends Document {
+export interface IPost {
   id: string;
   title: string;
   content: string;

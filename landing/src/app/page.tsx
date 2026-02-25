@@ -11,6 +11,7 @@ import { TextAnimate } from "@/components/magicui/text-animate";
 import howItWorksSteps from "@/data/HowItWorksSteps";
 import { FaChartLine, FaRocket, FaUniversity } from "react-icons/fa";
 import { HiOutlineUserCircle } from "react-icons/hi";
+import BackgroundPattern from "@/components/landing/BackgroundPattern";
 
 const mockPosts = [
   {
@@ -137,9 +138,10 @@ const mockPosts = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-tr bg-[linear-gradient(to_right,_#fdfcfb,_#e2d1c3)]">
+    <div className="min-h-screen relative bg-linear-to-tr bg-[linear-gradient(to_right,#fdfcfb,#e2d1c3)] z-0 isolation">
+      <BackgroundPattern />
       <Header />
-      <div className="max-w-6xl mx-auto px-8 lg:px-4">
+      <div className="max-w-6xl mx-auto px-8 lg:px-4 relative z-10">
         <div className="flex flex-col justify-center items-center gap-6 sm:gap-8 h-[450px] sm:h-[500px] md:h-[550px] lg:h-[600px] pb-8">
           <AnimateWrapper delay={0.05} once>
             <SecondaryButton />
@@ -168,7 +170,7 @@ export default function Home() {
               branch={post.branch}
               className={[
                 (index === 2) ? "row-span-2 mt-16" : "row-span-3",
-                index === 0 && "!row-span-1 mt-8",
+                index === 0 && "row-span-1! mt-8",
                 "p-4 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.10)] overflow-hidden"
               ].join(" ")}
             />
@@ -218,8 +220,8 @@ export default function Home() {
           <FAQs />
         </div>
       </div>
-      <div className="mt-24 sm:mt-32 animate-fade-in-blur flex flex-col justify-center items-center space-y-6 px-4 text-center">
-        <h1 style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.05)' }} className="font-neue-montreal text-[#5f4b32]/5 text-6xl sm:text-7xl md:text-8xl lg:text-9xl xl:text-[10rem] 2xl:text-[12rem] font-extrabold bg-gradient-to-r from-[#dfaf83] via-[#f0cda0] to-[#c4a484] bg-clip-text">
+      <div className="mt-24 sm:mt-32 animate-fade-in-blur flex flex-col justify-center items-center space-y-6 px-4 text-center relative z-10">
+        <h1 style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.05)' }} className="font-neue-montreal text-[#5f4b32]/5 text-6xl sm:text-7xl md:text-8xl lg:text-9xl xl:text-[10rem] 2xl:text-[12rem] font-extrabold bg-linear-to-r from-[#dfaf83] via-[#f0cda0] to-[#c4a484] bg-clip-text">
           Join Flick Today
         </h1>
 

@@ -40,7 +40,7 @@ function Post({ avatar, userVote, avatarFallback, id, createdAt, college, title,
   const navigate = useRouter().push
   return (
     <Card onClick={() => navigate(`/p/${id}`)} className="dark:bg-transparent bg-transparent border-none shadow-none rounded-none">
-      <CardHeader className="flex-row justify-between space-x-2 p-4">
+      <CardHeader className="flex flex-row justify-between space-x-2 p-4">
         <div className="flex space-x-4">
           <VisuallyHidden>
             <CardTitle>{title}</CardTitle>

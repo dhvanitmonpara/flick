@@ -1,11 +1,10 @@
 import { Router } from "express";
 import VoteController from "./vote.controller";
-// import { authenticate, blockSuspensionMiddleware } from "@/core/middlewares";
-import { authenticate } from "@/core/middlewares";
+import { withRequiredUserContext } from "@/core/middlewares/pipelines";
 
 const router = Router();
 
-router.use(authenticate);
+router.use(withRequiredUserContext);
 
 router
   .route("/")

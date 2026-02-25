@@ -43,24 +43,21 @@ class CommentController {
     const { postId } = commentSchemas.PostIdSchema.parse(req.params);
     const { page, limit, sortBy, sortOrder } = commentSchemas.GetCommentsQuerySchema.parse(req.query)
 
-    const userId = req.user?.id;
-
     const result = await commentService.getCommentsByPostId(postId, {
       page,
       limit,
       sortBy,
       sortOrder,
-      userId,
     });
 
-    return HttpResponse.ok("Comment retrieved successfully", result);
+    return HttpResponse.ok("Comments retrieved successfully", result);
   }
 
   static async getCommentById(req: Request) {
     const { commentId } = commentSchemas.CommentIdSchema.parse(req.params);
 
     const comment = await commentService.getCommentById(commentId);
-    return HttpResponse.ok("Comments retrieved successfully", { comment });
+    return HttpResponse.ok("Comment retrieved successfully", { comment });
   }
 }
 

@@ -48,6 +48,15 @@ const EngagementComponent = ({
     setDownvoted(userVote === 'downvote');
   }, [userVote]);
 
+  useEffect(() => {
+    setOptimisticCounts(prev => ({
+      ...prev,
+      upvotes: initialCounts.upvotes ?? prev.upvotes,
+      downvotes: initialCounts.downvotes ?? prev.downvotes,
+      comments: initialCounts.comments ?? prev.comments,
+      views: initialCounts.views ?? prev.views,
+    }));
+  }, [initialCounts.upvotes, initialCounts.downvotes, initialCounts.comments, initialCounts.views]);
 
   const getUpdatedCounts = (prevCounts: Count, upvoted: boolean, downvoted: boolean, type: 'upvote' | 'downvote') => {
     const newCounts = { ...prevCounts };
@@ -159,7 +168,7 @@ const EngagementComponent = ({
 
       {show.includes('views') && (
         <div className="group cursor-pointer flex items-center gap-1 bg-zinc-200 dark:bg-zinc-800 py-1 px-2 rounded-full">
-          <button disabled={isVoting} onClick={(e) => { e.stopPropagation(); toast.info("Analytics feature is under development") }} aria-label={downvoted ? 'Remove downvote' : 'Downvote'} className="p-0.5 focus:outline-none">
+          <button onClick={(e) => { e.stopPropagation(); toast.info("Analytics feature is under development") }} aria-label="Views" className="p-0.5 focus:outline-none">
             <FaEye className="text-gray-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-200 group-hover:scale-105 duration-300 transition-all text-xl m-0.5" />
           </button>
           <span className="text-sm text-gray-600 dark:text-gray-400 min-w-3 pr-1">{optimisticCounts.views}</span>
