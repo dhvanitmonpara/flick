@@ -10,12 +10,15 @@ import { useErrorHandler } from "@/hooks/useErrorHandler";
 import NotificationButton from "./NotificationButton";
 import { userApi } from "@/services/api/user";
 import { authClient } from "@/lib/auth-client";
+import { Button } from "../ui/button";
+import { useRouter } from "next/navigation";
 
 function AuthCard({ className }: { className?: string }) {
 
   const [fetching, setFetching] = useState(true)
   const setProfile = useProfileStore(state => state.setProfile);
   const { handleError } = useErrorHandler()
+  const navigate = useRouter().push
   const { data: session, isPending } = authClient.useSession();
 
   useEffect(() => {
@@ -54,7 +57,12 @@ function AuthCard({ className }: { className?: string }) {
         : session?.user ? <>
           <NotificationButton />
           <UserProfile />
-        </> : null
+        </> : <Button
+          onClick={() => navigate("/auth/signin")}
+          className="rounded-full"
+        >
+          Sign In
+        </Button>
       }
     </div>
   )

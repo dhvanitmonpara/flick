@@ -31,4 +31,14 @@ export class NodeCacheProvider implements CacheProvider {
   async has(key: string) {
     return this.cache.has(key);
   }
+
+  async incr(key: string): Promise<number> {
+    const minTtl = this.cache.getTtl(key) ?? 0;
+    const current = (this.cache.get<number>(key) || 0) + 1;
+    // Calculate remaining TTL based on NodeCache getTtl logic (returns timestamp).
+    // Note: To simplify, we'll just set it without explicit TTL if it didn't have one, 
+    // or use stdTTL. NodeCache lets us set it.
+    this.cache.set(key, current);
+    return current;
+  }
 }

@@ -37,7 +37,9 @@ class PostService {
       after: { id: newPost.id },
     });
 
-    return newPost;
+    const postWithDetails = await PostRepo.Read.findByIdWithDetails(newPost.id, postData.postedBy);
+
+    return postWithDetails || newPost;
   }
 
   async getPostById(id: string, userId?: string) {
@@ -67,19 +69,7 @@ class PostService {
     branch?: string;
     userId?: string;
   }) {
-    logger.info("Fetching posts", { options });
-
-    let postsResult;
-    try {
-      // const postsResult = await PostRepo.CachedRead.findMany(options);
-      postsResult = await PostRepo.CachedRead.findMany(options);
-    } catch (error) {
-      console.log(error)
-      console.log("🔥 PG MESSAGE:", error.message);
-      console.log("🔥 PG DETAIL:", error.detail);
-      console.log("🔥 PG HINT:", error.hint);
-      console.log("🔥 PG CODE:", error.code);
-    }
+    const postsResult = await PostRepo.CachedRead.findMany(options);
     const posts = Array.isArray(postsResult) ? postsResult : [];
     const totalCount = await PostRepo.CachedRead.countAll({
       topic: options?.topic,

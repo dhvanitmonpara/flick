@@ -2,6 +2,9 @@ import { HttpError } from "@/core/http";
 import CommentRepo from "./comment.repo";
 import recordAudit from "@/lib/record-audit";
 import logger from "@/core/logger";
+import cache from "@/infra/services/cache";
+import commentCacheKeys from "./comment.cache-keys";
+import postCacheKeys from "../post/post.cache-keys";
 
 class CommentService {
   async getCommentsByPostId(
@@ -75,14 +78,24 @@ class CommentService {
       metadata: { postId: newComment.postId, parentCommentId: newComment.parentCommentId }
     })
 
-    return newComment;
+    const commentWithAuthor = await CommentRepo.Read.findByIdWithAuthor(newComment.id);
+
+    if (newComment.parentCommentId) {
+      await cache.incr(commentCacheKeys.commentRepliesVersionKey(newComment.parentCommentId));
+    } else {
+      await cache.incr(commentCacheKeys.postCommentsVersionKey(newComment.postId));
+    }
+    await cache.incr(postCacheKeys.postVersionKey(newComment.postId));
+    await cache.incr(postCacheKeys.postsListVersionKey());
+
+    return commentWithAuthor || newComment;
   }
 
   async updateComment(commentId: string, userId: string, content: string) {
     logger.info("Updating comment", { commentId, userId });
 
     // First check if comment exists and get author info
-    const existingComment = await CommentRepo.CachedRead.findByIdWithAuthor(commentId);
+    const existingComment = await CommentRepo.CachedRead.findById(commentId);
     if (!existingComment) {
       logger.warn("Comment not found for update", { commentId, userId });
       throw HttpError.notFound("Comment not found", {
@@ -116,12 +129,18 @@ class CommentService {
       after: { content },
     })
 
+    if (existingComment.parentCommentId) {
+      await cache.incr(commentCacheKeys.commentRepliesVersionKey(existingComment.parentCommentId));
+    } else {
+      await cache.incr(commentCacheKeys.postCommentsVersionKey(existingComment.postId));
+    }
+
     return updatedComment;
   }
 
   async deleteComment(commentId: string, userId: string) {
     // First check if comment exists and get author info
-    const existingComment = await CommentRepo.CachedRead.findByIdWithAuthor(commentId);
+    const existingComment = await CommentRepo.CachedRead.findById(commentId);
     if (!existingComment) {
       throw HttpError.notFound("Comment not found", {
         code: "COMMENT_NOT_FOUND",
@@ -148,6 +167,14 @@ class CommentService {
       before: { id: deletedComment.id },
       metadata: { userId }
     })
+
+    if (deletedComment.parentCommentId) {
+      await cache.incr(commentCacheKeys.commentRepliesVersionKey(deletedComment.parentCommentId));
+    } else {
+      await cache.incr(commentCacheKeys.postCommentsVersionKey(deletedComment.postId));
+    }
+    await cache.incr(postCacheKeys.postVersionKey(deletedComment.postId));
+    await cache.incr(postCacheKeys.postsListVersionKey());
 
     return deletedComment;
   }

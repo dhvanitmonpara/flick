@@ -9,8 +9,8 @@ const VoteRepo = {
   },
   CachedRead: {
     findByUserAndTarget:
-      (userId: string, targetId: string, doesTargetedPost: boolean, dbTx?: DB) =>
-        cached(voteCacheKeys.userIdAndTarget(userId, targetId), () => voteAdapter.findByUserAndTarget(userId, targetId, doesTargetedPost, dbTx))
+      (userId: string, targetId: string, targetType: "post" | "comment", dbTx?: DB) =>
+        cached(voteCacheKeys.userIdAndTarget(userId, targetId), () => voteAdapter.findByUserAndTarget(userId, targetId, targetType, dbTx))
   },
   Write: {
     create: voteAdapter.create,

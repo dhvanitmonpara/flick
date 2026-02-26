@@ -43,4 +43,10 @@ export class MultiTierCacheProvider implements CacheProvider {
     const l2Has = await this.l2.has(key);
     return l1Has || l2Has;
   }
+
+  async incr(key: string): Promise<number> {
+    const l2Val = await this.l2.incr(key);
+    await this.l1.set(key, l2Val, this.ttl);
+    return l2Val;
+  }
 }

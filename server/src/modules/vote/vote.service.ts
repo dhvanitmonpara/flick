@@ -71,10 +71,8 @@ class VoteService {
   static async patchVote(userId: string, targetType: "post" | "comment", targetId: string, voteType: "upvote" | "downvote") {
     logger.info("Patching vote", { userId, targetType, targetId, voteType });
 
-    const doesTargetedPost = targetType === "post"
-
     const txResponse = await runTransaction(async tx => {
-      const existingVote = await VoteRepo.CachedRead.findByUserAndTarget(userId, targetId, doesTargetedPost, tx);
+      const existingVote = await VoteRepo.CachedRead.findByUserAndTarget(userId, targetId, targetType, tx);
       if (!existingVote) {
         logger.warn("Vote not found for patch", { userId, targetType, targetId });
         throw HttpError.notFound("Vote not found to patch");
@@ -88,7 +86,7 @@ class VoteService {
 
       const updatedVote = await VoteRepo.Write.update(existingVote.id, { voteType }, tx)
 
-      const TargetRepo = doesTargetedPost ? PostRepo : CommentRepo
+      const TargetRepo = targetType === "post" ? PostRepo : CommentRepo
       const target = await TargetRepo.CachedRead.findAuthorId(targetId, tx)
 
       if (!target) {
@@ -134,17 +132,15 @@ class VoteService {
   static async delete(userId: string, targetId: string, targetType: "post" | "comment") {
     logger.info("Deleting vote", { userId, targetType, targetId });
 
-    const doesTargetedPost = targetType === "post"
-
     const deletedVoteId = await runTransaction(async tx => {
-      const deletedVote = await VoteRepo.Write.deleteByUserAndTarget(userId, targetId, doesTargetedPost, tx);
+      const deletedVote = await VoteRepo.Write.deleteByUserAndTarget(userId, targetId, targetType, tx);
 
       if (!deletedVote) {
         logger.warn("Vote not found for deletion", { userId, targetType, targetId });
         throw HttpError.notFound("Vote not found");
       }
 
-      const TargetRepo = doesTargetedPost ? PostRepo : CommentRepo
+      const TargetRepo = targetType === "post" ? PostRepo : CommentRepo
       const target = await TargetRepo.CachedRead.findAuthorId(targetId, tx)
 
       if (!target) {

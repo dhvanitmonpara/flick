@@ -11,10 +11,10 @@ const PostRepo = {
     findAuthorId: (id: string, dbTx?: DB) =>
       cached(postCacheKeys.id(id), () => PostAdapter.findAuthorId(id, dbTx)),
 
-    findByIdWithDetails: (id: string, userId?: string, dbTx?: DB) =>
-      cached(postCacheKeys.idWithDetails(id, userId), () => PostAdapter.findByIdWithDetails(id, userId, dbTx)),
+    findByIdWithDetails: async (id: string, userId?: string, dbTx?: DB) =>
+      cached(await postCacheKeys.idWithDetails(id, userId), () => PostAdapter.findByIdWithDetails(id, userId, dbTx)),
 
-    findMany: (
+    findMany: async (
       options?: {
         page?: number;
         limit?: number;
@@ -37,7 +37,7 @@ const PostRepo = {
       const userId = options?.userId;
 
       return cached(
-        postCacheKeys.many(page, limit, sortBy, sortOrder, topic, collegeId, branch, userId),
+        await postCacheKeys.many(page, limit, sortBy, sortOrder, topic, collegeId, branch, userId),
         () => PostAdapter.findMany(options, dbTx)
       );
     },

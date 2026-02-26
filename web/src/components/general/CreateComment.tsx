@@ -93,6 +93,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
       }
 
       if (setOpen) setOpen(false);
+      if (isWriting) setIsWriting(false)
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
         const code = error.response.data.code;
@@ -157,7 +158,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
                         }}
                         className={`${isWriting ? "min-h-40" : "h-10"} p-3 text-lg transition-all bg-zinc-100 dark:bg-zinc-800 ${hasBanned ? "border-red-500" : ""}`}
                       />
-                      {isWriting && <button className="absolute top-2 right-6 p-2 rounded-md bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 cursor-pointer" onClick={() => {
+                      {isWriting && <button className="absolute top-2 right-2 p-2 rounded-md bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 cursor-pointer" onClick={() => {
                         if (!field.value) handleEscape()
                         else setWarningOpen(true);
                       }}>

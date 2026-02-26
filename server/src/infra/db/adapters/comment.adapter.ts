@@ -209,9 +209,15 @@ export const findByIdWithAuthor = async (id: string, dbTx?: DB) => {
       authorId: users.id,
       authorUsername: users.username,
       authorBranch: users.branch,
+
+      // College
+      collegeId: colleges.id,
+      collegeName: colleges.name,
+      collegeProfile: colleges.profile,
     })
     .from(comments)
     .leftJoin(users, sql`${comments.commentedBy}::text = ${users.id}::text`)
+    .leftJoin(colleges, sql`${users.collegeId}::text = ${colleges.id}::text`)
     .where(eq(comments.id, id))
     .limit(1);
 
@@ -226,13 +232,22 @@ export const findByIdWithAuthor = async (id: string, dbTx?: DB) => {
     isBanned: row.isBanned,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    commentedBy: row.commentedBy,
+    upvoteCount: 0,
+    downvoteCount: 0,
+    userVote: null,
 
-    author: row.authorId
+    commentedBy: row.authorId
       ? {
         id: row.authorId,
         username: row.authorUsername,
         branch: row.authorBranch,
+        college: row.collegeId
+          ? {
+            id: row.collegeId,
+            name: row.collegeName,
+            profile: row.collegeProfile,
+          }
+          : null,
       }
       : null,
   };

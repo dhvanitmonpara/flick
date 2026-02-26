@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { users } from "./auth.table";
+import { platformUser as users } from "./auth.table";
 import { posts } from "./post.table";
 import { bookmarks } from "./bookmark.table";
 import { votes } from "./vote.table";
@@ -61,4 +61,4 @@ export const contentReportRelations = relations(contentReports, ({ one }) => ({
     fields: [contentReports.commentId],
     references: [comments.id],
   }),
-}));
+})); users

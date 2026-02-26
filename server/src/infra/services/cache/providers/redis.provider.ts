@@ -32,4 +32,8 @@ export class RedisCacheProvider implements CacheProvider {
   async has(key: string) {
     return (await this.client.exists(key)) === 1;
   }
+
+  async incr(key: string): Promise<number> {
+    return this.client.incr(key);
+  }
 }

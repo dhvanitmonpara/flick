@@ -150,7 +150,7 @@ const EngagementComponent = ({
             className="group flex cursor-pointer items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 hover:bg-zinc-300 dark:hover:bg-zinc-700/80 rounded-full px-2 py-1 transition-colors"
           >
             <PiArrowFatUpFill className={`pointer-events-none text-lg transition-transform ${upvoted ? "text-blue-500" : "text-zinc-500 dark:text-zinc-400"} group-hover:scale-110 group-hover:text-blue-500`} />
-            <span className={`pointer-events-none text-sm font-medium pr-1 select-none transition-colors ${upvoted ? "text-blue-500" : "text-zinc-600 dark:text-zinc-400 group-hover:text-blue-500"}`}>{optimisticCounts.upvotes}</span>
+            <span className={`pointer-events-none text-sm font-medium pr-1 select-none transition-colors ${upvoted ? "text-blue-500" : "text-zinc-600 dark:text-zinc-400 group-hover:text-blue-500"}`}>{optimisticCounts.upvotes ?? 0}</span>
           </button>
         )}
         {(show.includes('upvotes') && show.includes('downvotes')) && (
@@ -165,7 +165,7 @@ const EngagementComponent = ({
             className="group flex cursor-pointer items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 hover:bg-zinc-300 dark:hover:bg-zinc-700/80 rounded-full px-2 py-1 transition-colors"
           >
             <PiArrowFatDownFill className={`pointer-events-none text-lg transition-transform ${downvoted ? "text-red-500" : "text-zinc-500 dark:text-zinc-400"} group-hover:scale-110 group-hover:text-red-500`} />
-            <span className={`pointer-events-none text-sm font-medium pr-1 select-none transition-colors ${downvoted ? "text-red-500" : "text-zinc-600 dark:text-zinc-400 group-hover:text-red-500"}`}>{optimisticCounts.downvotes}</span>
+            <span className={`pointer-events-none text-sm font-medium pr-1 select-none transition-colors ${downvoted ? "text-red-500" : "text-zinc-600 dark:text-zinc-400 group-hover:text-red-500"}`}>{optimisticCounts.downvotes ?? 0}</span>
           </button>
         )}
       </div>
@@ -178,7 +178,7 @@ const EngagementComponent = ({
             aria-label="Comments"
           >
             <FaComment className="pointer-events-none text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 group-hover:scale-110 duration-300 transition-all text-base" />
-            <span className="pointer-events-none text-sm font-medium text-zinc-600 dark:text-zinc-400 pr-0.5 select-none">{optimisticCounts.comments}</span>
+            <span className="pointer-events-none text-sm font-medium text-zinc-600 dark:text-zinc-400 pr-0.5 select-none">{optimisticCounts.comments ?? 0}</span>
           </button>
         </CommentButton>
       )}
@@ -190,7 +190,7 @@ const EngagementComponent = ({
           aria-label={`${optimisticCounts.views} views`}
         >
           <FaEye className="pointer-events-none text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 group-hover:scale-110 duration-300 transition-all text-base" />
-          <span className="pointer-events-none text-sm font-medium text-zinc-600 dark:text-zinc-400 pr-0.5 select-none">{optimisticCounts.views}</span>
+          <span className="pointer-events-none text-sm font-medium text-zinc-600 dark:text-zinc-400 pr-0.5 select-none">{optimisticCounts.views ?? 0}</span>
         </button>
       )}
 

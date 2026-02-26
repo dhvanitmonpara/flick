@@ -2,11 +2,10 @@ import { Request } from "express";
 import { Controller, HttpResponse } from "@/core/http";
 import collegeService from "./college.service";
 import * as collegeSchemas from "./college.schema";
-import { validateRequest } from "@/core/middlewares";
 
 @Controller()
 class CollegeController {
- static async createCollege(req: Request) {
+  static async createCollege(req: Request) {
     const { name, emailDomain, city, state, profile } = collegeSchemas.CreateCollegeSchema.parse(req.body);
 
     const newCollege = await collegeService.createCollege({
@@ -22,7 +21,7 @@ class CollegeController {
     });
   }
 
- static async getColleges(req: Request) {
+  static async getColleges(req: Request) {
     const { city, state } = collegeSchemas.CollegeFiltersSchema.parse(req.query);
 
     const colleges = await collegeService.getColleges({ city, state });
@@ -33,7 +32,7 @@ class CollegeController {
     });
   }
 
- static async getCollegeById(req: Request) {
+  static async getCollegeById(req: Request) {
     const { id } = collegeSchemas.CollegeIdSchema.parse(req.params);
 
     const college = await collegeService.getCollegeById(id);
@@ -43,7 +42,7 @@ class CollegeController {
     });
   }
 
- static async updateCollege(req: Request) {
+  static async updateCollege(req: Request) {
     const { id } = collegeSchemas.CollegeIdSchema.parse(req.params);
     const updates = collegeSchemas.UpdateCollegeSchema.parse(req.body);
 
@@ -54,7 +53,7 @@ class CollegeController {
     });
   }
 
- static async deleteCollege(req: Request) {
+  static async deleteCollege(req: Request) {
     const { id } = collegeSchemas.CollegeIdSchema.parse(req.params);
 
     await collegeService.deleteCollege(id);

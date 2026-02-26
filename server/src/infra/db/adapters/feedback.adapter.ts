@@ -113,7 +113,6 @@ export const findAll = async (
       ? {
         id: row.authorId,
         username: row.authorUsername,
-        email: row.authorEmail,
       }
       : null,
   }));

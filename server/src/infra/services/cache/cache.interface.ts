@@ -4,6 +4,7 @@ export interface CacheProvider {
   del(key: string): Promise<boolean>;
   flush(): Promise<void>;
   has(key: string): Promise<boolean>;
+  incr(key: string): Promise<number>;
 }
 
 export interface RedisSessionStoreInterface {

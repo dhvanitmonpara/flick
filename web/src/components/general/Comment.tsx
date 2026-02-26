@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BsDot } from "react-icons/bs";
 import EngagementComponent from "./EngagementComponent";
 import PostDropdown from "../actions/PostDropdown";
-import { isCollege, isUser } from "@/utils/helpers";
+import { formatDate, isCollege, isUser } from "@/utils/helpers";
 import { IComment } from "@/types/Comment";
 import { useState } from "react";
 import { IoMdArrowDropdown, IoMdArrowDropup } from "react-icons/io";
@@ -32,13 +32,13 @@ function Comment({ comment, className, depth = 0 }: { comment: IComment, classNa
               <AvatarFallback>{""}</AvatarFallback>
             </Avatar>
             <div>
-              <h2>{(isUser(comment.commentedBy) && isCollege(comment.commentedBy.college)) ? comment.commentedBy.college.name : "Unknown College"}</h2>
+              <h2>{isUser(comment.commentedBy) ? comment.commentedBy.branch : "Unknown"}</h2>
               <p className="flex space-x-0.5 text-xs text-zinc-600 dark:text-zinc-400">
                 <span>{isUser(comment.commentedBy) ? comment.commentedBy.username : comment.commentedBy}</span>
                 <BsDot size={16} />
-                <span>{isUser(comment.commentedBy) ? comment.commentedBy.branch : "Unknown"}</span>
+                <span>{(isUser(comment.commentedBy) && isCollege(comment.commentedBy.college)) ? comment.commentedBy.college.name : "Unknown College"}</span>
                 <BsDot size={16} />
-                <span>{comment.createdAt}</span>
+                <span>{formatDate(comment.createdAt)}</span>
               </p>
             </div>
           </div>

@@ -145,7 +145,6 @@ export const findByIdWithDetails = async (
             id: row.collegeId,
             name: row.collegeName,
             profile: row.collegeProfile,
-            email: row.collegeEmail,
           }
           : null,
       }
@@ -298,7 +297,6 @@ export const findMany = async (
             id: row.collegeId,
             name: row.collegeName,
             profile: row.collegeProfile,
-            email: row.collegeEmail,
           }
           : null,
       }

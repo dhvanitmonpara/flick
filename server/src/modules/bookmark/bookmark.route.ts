@@ -1,11 +1,12 @@
 import { Router } from "express";
 import bookmarkControllers from "./bookmark.controller";
-import { authenticate, ensureRatelimit } from "@/core/middlewares";
+import { ensureRatelimit } from "@/core/middlewares";
+import { withRequiredUserContext } from "@/core/middlewares/pipelines";
 
 const router = Router();
 
 router.use(ensureRatelimit.api);
-router.use(authenticate)
+router.use(withRequiredUserContext)
 
 router.route("/:postId").get(bookmarkControllers.getBookmark);
 router.route("/user").get(bookmarkControllers.getUserBookmarkedPosts);

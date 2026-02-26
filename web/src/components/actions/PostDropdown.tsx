@@ -192,11 +192,11 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
                 <DialogTitle>Delete Post</DialogTitle>
                 <DialogDescription>Are you sure you want to delete this post?</DialogDescription>
               </DialogHeader>
-              <div className="flex justify-center items-center space-x-2">
-                <Button className="w-full" disabled={loading} onClick={() => setOpen(false)}>
+              <div className="flex justify-end items-center space-x-2">
+                <Button disabled={loading} onClick={() => setOpen(false)}>
                   Cancel
                 </Button>
-                <Button className="w-full" disabled={loading} onClick={handleDelete} variant="destructive">
+                <Button disabled={loading} onClick={handleDelete} variant="destructive">
                   {loading ? <><Loader2 className="animate-spin" /> Deleting...</> : "Delete"}
                 </Button>
               </div>

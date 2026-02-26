@@ -14,7 +14,7 @@ const CommentRepo = {
     findByIdWithAuthor: (id: string, dbTx?: DB) =>
       cached(commentCacheKeys.id(id), () => CommentAdapter.findByIdWithAuthor(id, dbTx)),
 
-    findByPostId: (
+    findByPostId: async (
       postId: string,
       options?: {
         page?: number;
@@ -32,7 +32,7 @@ const CommentRepo = {
       const userId = options?.userId;
 
       return cached(
-        commentCacheKeys.postComments(postId, page, limit, sortBy, sortOrder, userId),
+        await commentCacheKeys.postComments(postId, page, limit, sortBy, sortOrder, userId),
         () => CommentAdapter.findByPostId(postId, options, dbTx)
       );
     },

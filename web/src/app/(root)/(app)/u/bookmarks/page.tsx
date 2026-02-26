@@ -1,3 +1,5 @@
+"use client"
+
 import Post from "@/components/general/Post"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
 import { IPost } from "@/types/Post"
