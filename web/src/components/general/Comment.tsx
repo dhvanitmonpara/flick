@@ -20,8 +20,8 @@ function Comment({ comment, className, depth = 0 }: { comment: IComment, classNa
   const [isExpanded, setIsExpanded] = useState(false);
   return (
     <>
-      <Card className={`dark:bg-transparent bg-transparent border-x-0 shadow-none rounded-none ${className}`}>
-        <CardHeader className="flex flex-row justify-between space-x-2 p-4">
+      <Card className={`dark:bg-transparent bg-transparent border-0 shadow-none rounded-none ${className}`}>
+        <CardHeader className="flex flex-row justify-between space-x-2 px-4 pt-4">
           <div className="flex space-x-4">
             <VisuallyHidden>
               <CardTitle>{(isUser(comment.commentedBy) && isCollege(comment.commentedBy.college)) ? comment.commentedBy.college.name : "Unknown College"}</CardTitle>

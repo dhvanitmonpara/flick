@@ -9,7 +9,6 @@ function Post({ title, description, date, university, username, branch, classNam
   branch: string
   className?: string
 }) {
-  console.log(className)
   return (
     <div className={`animate-fade-in-blur bg-[repeating-linear-gradient(#fefefe,#fefefe_24px,#ddd_25px)] border-2 gap-4 border-zinc-200 rounded-2xl p-4 sm:p-6 flex flex-col ${className}`}>
       <div className="flex justify-start items-start gap-4">

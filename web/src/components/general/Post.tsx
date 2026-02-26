@@ -14,6 +14,7 @@ import PostDropdown from "../actions/PostDropdown";
 import { TPostTopic } from "@/types/postTopics";
 import useProfileStore from "@/store/profileStore";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface PostProps {
   avatar: string,
@@ -38,13 +39,19 @@ interface PostProps {
 function Post({ avatar, userVote, avatarFallback, id, createdAt, college, title, content, upvoteCount, downvoteCount, commentsCount, viewsCount, username, branch, topic, bookmarked, removedPostOnAction }: PostProps) {
   const profile = useProfileStore(state => state.profile)
   const navigate = useRouter().push
+
+  const handleLinkClick = (e: React.MouseEvent, link?: string) => {
+    e.stopPropagation();
+    if (link) navigate(link)
+  }
+
   return (
-    <Card onClick={() => navigate(`/p/${id}`)} className="dark:bg-transparent bg-transparent border-none shadow-none rounded-none">
-      <CardHeader className="flex flex-row justify-between space-x-2 p-4">
+    <Card onClick={(e) => handleLinkClick(e, `/p/${id}`)} className="dark:bg-transparent bg-transparent border-none shadow-none rounded-none">
+      <CardHeader className="flex flex-row justify-between space-x-2 px-4 pt-4">
         <div className="flex space-x-4">
           <VisuallyHidden>
-            <CardTitle>{title}</CardTitle>
-            <CardDescription>{content}</CardDescription>
+            <CardTitle onClick={(e) => handleLinkClick(e, `/p/${id}`)}>{title}</CardTitle>
+            <CardDescription onClick={(e) => handleLinkClick(e, `/p/${id}`)}>{content}</CardDescription>
           </VisuallyHidden>
           <Avatar>
             <AvatarImage src={avatar} />
@@ -52,16 +59,16 @@ function Post({ avatar, userVote, avatarFallback, id, createdAt, college, title,
           </Avatar>
           <div className="space-y-1">
             <h2 className="flex items-center space-x-0.5 font-semibold text-zinc-900 dark:text-zinc-100">
-              <span>{branch}</span>
+              <Link onClick={(e) => handleLinkClick(e, `/branch/${branch}`)} className="hover:underline" href={`/branch/${branch}`}>{branch}</Link>
               <BsDot size={14} />
               <span className="text-xs text-zinc-600 dark:text-zinc-400">{createdAt}</span>
             </h2>
             <p className="flex space-x-0.5 text-xs text-zinc-600 dark:text-zinc-400">
-              <span>{college}</span>
+              <Link onClick={(e) => handleLinkClick(e, `/college/${college}`)} className="hover:underline" href={`/college/${college}`}>{college}</Link>
               <BsDot size={16} />
-              <span>{username}</span>
+              <Link onClick={(e) => handleLinkClick(e, `/user/${username}`)} className="hover:underline" href={`/user/${username}`}>{username}</Link>
               <BsDot size={16} />
-              <span>{topic}</span>
+              <Link onClick={(e) => handleLinkClick(e, `/topic/${topic}`)} className="hover:underline" href={`/topic/${topic}`}>{topic}</Link>
             </p>
           </div>
         </div>

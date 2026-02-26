@@ -107,11 +107,13 @@ function PostPage() {
   }, [fetchComments, fetchPostById, id, incrementView, navigate, posts, resetComments]);
 
   if (loadingPosts || !currentPost) {
-    return <SkeletonCard />
+    return <div className="divide-y divide-zinc-300/60 dark:divide-zinc-700/50 w-full">
+      <SkeletonCard />
+    </div>
   }
 
   return (
-    <div className="divide-y divide-zinc-300/60 dark:divide-zinc-700/50">
+    <div className="dark:divide-zinc-700/50 w-full">
       {currentPost?.id &&
         <Post
           key={currentPost.id}
@@ -134,19 +136,23 @@ function PostPage() {
           commentsCount={currentPost.commentsCount ?? comments?.length ?? 0}
         />
       }
-      <CreateComment />
-      {loading
-        ? <>
-          {[...Array(10)].map((_, index) => (
-            <SkeletonCard key={index} />
-          ))}
-        </>
-        : (comments
-          ? comments.map((comment) => (
-            <Comment key={comment.id} comment={comment} />
-          ))
-          : <p>Comments not found</p>
-        )}
+      <div className="px-4">
+        <CreateComment />
+      </div>
+      <div className="divide-y! divide-zinc-300/60 dark:divide-zinc-700/50">
+        {loading
+          ? <>
+            {[...Array(10)].map((_, index) => (
+              <SkeletonCard key={index} />
+            ))}
+          </>
+          : (comments
+            ? comments.map((comment) => (
+              <Comment key={comment.id} comment={comment} />
+            ))
+            : <p>Comments not found</p>
+          )}
+      </div>
     </div >
   )
 }

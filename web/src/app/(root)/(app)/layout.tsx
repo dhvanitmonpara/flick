@@ -22,10 +22,12 @@ function AppLayout({ children }: { children: React.ReactElement }) {
   const reset = useSearchParams().get('reset');
 
   return (
-    <div className="flex max-w-7xl mx-auto w-full h-screen pr-8">
+    <div className="flex max-w-7xl mx-auto w-full h-screen pr-8 divide-x divide-zinc-200 dark:divide-zinc-800">
       <SocketProvider>
         <Sidebar />
-        {children}
+        <div className="max-h-screen overflow-y-auto no-scrollbar w-full">
+          {children}
+        </div>
         <TrendingPostSection />
         {(reset === "true") && <TerminateSessions />}
       </SocketProvider>
