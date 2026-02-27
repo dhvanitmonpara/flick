@@ -6,7 +6,7 @@ class UserManagementService {
   static async blockUser(userId: string) {
     logger.info("Blocking user", { userId });
 
-    const user = await UserAdapter.findById(userId);
+    const user = await UserAdapter.findModerationById(userId);
     if (!user) {
       logger.warn("User not found for blocking", { userId });
       throw HttpError.notFound("User not found");
@@ -39,7 +39,7 @@ class UserManagementService {
   static async unblockUser(userId: string) {
     logger.info("Unblocking user", { userId });
 
-    const user = await UserAdapter.findById(userId);
+    const user = await UserAdapter.findModerationById(userId);
     if (!user) {
       logger.warn("User not found for unblocking", { userId });
       throw HttpError.notFound("User not found");
@@ -75,7 +75,7 @@ class UserManagementService {
   }) {
     logger.info("Suspending user", { userId, suspensionEnds: suspensionData.ends, reason: suspensionData.reason });
 
-    const user = await UserAdapter.findById(userId);
+    const user = await UserAdapter.findModerationById(userId);
     if (!user) {
       logger.warn("User not found for suspension", { userId });
       throw HttpError.notFound("User not found");
@@ -142,7 +142,7 @@ class UserManagementService {
   }
 
   static async getUserById(userId: string) {
-    const user = await UserAdapter.findById(userId);
+    const user = await UserAdapter.findModerationById(userId);
     if (!user) {
       throw HttpError.notFound("User not found");
     }

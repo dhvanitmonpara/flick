@@ -67,7 +67,7 @@ export const findWithFilters = async (
 };
 
 export const findByTargetId = async (
-  targetId: number,
+  targetId: string,
   type: "Post" | "Comment",
   db?: DBTx
 ): Promise<ContentReportSelect[]> => {
@@ -90,7 +90,7 @@ export const updateStatus = async (id: string, status: string, db?: DBTx): Promi
 };
 
 export const updateManyByTargetId = async (
-  targetId: number,
+  targetId: string,
   type: "Post" | "Comment",
   status: string,
   db?: DBTx

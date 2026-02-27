@@ -13,10 +13,14 @@ function UserPage() {
 
   const onSubmit = async (data?: React.FormEvent<HTMLFormElement>) => {
     try {
+      const username = data?.currentTarget?.username?.value?.trim();
+      const email = data?.currentTarget?.email?.value?.trim();
+      const params = new URLSearchParams();
+      if (username) params.set("username", username);
+      if (email) params.set("email", email);
+      const query = params.toString();
 
-      const query = `${data?.currentTarget?.username ? `?username=${data.currentTarget.username}` : ""}${data?.currentTarget?.email ? `&email=${data.currentTarget.email}` : ""}`
-
-      const res = await axios.get(`${env.apiUrl}/manage/users/query${query}`, { withCredentials: true });
+      const res = await axios.get(`${env.apiUrl}/admin/users/search${query ? `?${query}` : ""}`, { withCredentials: true });
       if (res.status !== 200) {
         toast.error("Failed to fetch colleges.");
         return;

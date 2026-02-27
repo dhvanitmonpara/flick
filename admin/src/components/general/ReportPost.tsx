@@ -29,29 +29,29 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
   ) => {
     try {
       let url = "";
-      let payload = {};
+      let payload: Record<string, unknown> = {};
+      let method: "patch" | "put" = "put";
 
       switch (action) {
         case "BAN_POST":
-          url = `${env.apiUrl}/manage/posts/ban/${targetId}`;
+          url = `${env.apiUrl}/moderation/posts/${targetId}/moderation-state`;
+          payload = { state: "banned" };
           break;
         case "SHADOW_BAN_POST":
-          url = `${env.apiUrl}/manage/posts/shadowban/${targetId}`;
+          url = `${env.apiUrl}/moderation/posts/${targetId}/moderation-state`;
+          payload = { state: "shadow_banned" };
           break;
         case "BAN_USER":
         case "BAN_REPORTER": {
           const userId = action === "BAN_USER" ? posterId : reporterId;
-          url = `${env.apiUrl}/manage/users/block/${userId}`;
-          payload = {
-            ends: addDays(new Date().toISOString(), 3),
-            reason: "Violation of community guidelines",
-          };
+          url = `${env.apiUrl}/admin/users/${userId}/moderation-state`;
+          payload = { blocked: true };
           break;
         }
         case "SUSPEND_USER":
         case "SUSPEND_REPORTER": {
           const userId = action === "SUSPEND_USER" ? posterId : reporterId;
-          url = `${env.apiUrl}/manage/users/suspension/${userId}`;
+          url = `${env.apiUrl}/admin/users/${userId}/moderation-state`;
           const daysInput = window.prompt("Enter number of days for suspension:", "3");
           const days = parseInt(daysInput ?? "3", 10);
           if (isNaN(days) || days <= 0) {
@@ -63,11 +63,15 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
             toast.error("Suspension cancelled — reason is required.");
             return;
           }
-          payload = { ends: addDays(new Date().toISOString(), days), reason };
+          payload = {
+            blocked: true,
+            suspension: { ends: addDays(new Date().toISOString(), days), reason },
+          };
           break;
         }
         case "IGNORE_REPORT":
-          url = `${env.apiUrl}/manage/reports/status/${reportId}`;
+          url = `${env.apiUrl}/reports/${reportId}`;
+          method = "patch";
           payload = { status: "ignored" };
           break;
         default:
@@ -75,7 +79,11 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
           return;
       }
 
-      await axios.patch(url, payload, { withCredentials: true });
+      if (method === "patch") {
+        await axios.patch(url, payload, { withCredentials: true });
+      } else {
+        await axios.put(url, payload, { withCredentials: true });
+      }
       toast.success(`Successfully performed ${action}`);
       updateReportStatus(targetId, reportId, action === "IGNORE_REPORT" ? "ignored" : "resolved");
     } catch (error) {

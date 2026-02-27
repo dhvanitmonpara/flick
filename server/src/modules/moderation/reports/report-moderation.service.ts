@@ -1,5 +1,5 @@
 import { HttpError } from "@/core/http";
-import ContentReportRepo from "./content-report.repo";
+import ContentReportRepo from "./report-moderation.repo";
 import { ContentReportInsert } from "@/infra/db/tables/content-report.table";
 import logger from "@/core/logger";
 import recordAudit from "@/lib/record-audit";
@@ -53,7 +53,7 @@ class ContentReportService {
 
   static async getUserReports(userId: string) {
     logger.info("Fetching user reports", { userId });
-    
+
     const reports = await ContentReportRepo.Read.findByUserId(userId);
     logger.info("Retrieved user reports", { userId, count: reports.length });
     return reports;
@@ -61,7 +61,7 @@ class ContentReportService {
 
   static async getAllReports() {
     logger.info("Fetching all reports");
-    
+
     const reports = await ContentReportRepo.Read.findAll();
     logger.info("Retrieved all reports", { count: reports.length });
     return reports;
@@ -110,12 +110,12 @@ class ContentReportService {
   }
 
   static async updateReportsByTargetId(
-    targetId: number,
+    targetId: string,
     type: "Post" | "Comment",
     status: string = "resolved"
   ) {
     const report = await ContentReportRepo.Write.updateManyByTargetId(targetId, type, status);
-
+    ``
     await recordAudit({
       action: "user:reported:content",
       entityType: "content-report",

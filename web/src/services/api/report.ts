@@ -7,6 +7,6 @@ export const reportApi = {
     reason: string;
     message: string;
   }) => {
-    return http.post("/content-reports", payload);
+    return http.post("/reports", payload);
   },
 };

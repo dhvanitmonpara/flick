@@ -23,20 +23,19 @@ function addDays(isoString: string, days: number = 3): string {
 export function UserTable({ data, setData }: UserTableProps) {
   const handleAction = async (userId: string, action: "block" | "suspend" | "unblock") => {
     try {
-      let url = "";
-      let payload: { ends?: string; reason?: string } = {};
+      const url = `${env.apiUrl}/admin/users/${userId}/moderation-state`;
+      const payload: { blocked: boolean; suspension?: { ends: string; reason: string } } = {
+        blocked: action !== "unblock",
+      };
 
-      if (action === "block") {
-        url = `${env.apiUrl}/manage/users/block/${userId}`;
-      } else if (action === "unblock") {
-        url = `${env.apiUrl}/manage/users/unblock/${userId}`;
-      } else if (action === "suspend") {
-        url = `${env.apiUrl}/manage/users/suspend/${userId}`;
-        const ends = addDays(new Date().toISOString(), 3);
-        payload = { ends, reason: "Violation of community guidelines" };
+      if (action === "suspend") {
+        payload.suspension = {
+          ends: addDays(new Date().toISOString(), 3),
+          reason: "Violation of community guidelines",
+        };
       }
 
-      const res = await axios.patch(url, payload, { withCredentials: true });
+      const res = await axios.put(url, payload, { withCredentials: true });
       if (res.status !== 200) {
         toast.error(`Failed to ${action} user.`);
         return;
@@ -51,7 +50,7 @@ export function UserTable({ data, setData }: UserTableProps) {
               isBlocked: action === "block" ? true : action === "unblock" ? false : user.isBlocked,
               suspension:
                 action === "suspend"
-                  ? { ...user.suspension, ends: new Date(new Date(payload?.ends ?? "").toUTCString()) }
+                  ? { ...user.suspension, ends: new Date(new Date(payload.suspension?.ends ?? "").toUTCString()) }
                   : user.suspension,
             }
         )

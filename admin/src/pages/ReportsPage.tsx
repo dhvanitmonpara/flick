@@ -41,7 +41,7 @@ const ReportsPage = () => {
 
       // API call
       const res = await http.get(
-        `/manage/reports?${queryParams}`
+        `/reports?${queryParams}`
       );
 
       if (res.status !== 200 || !res.data?.data || !res.data?.pagination) {

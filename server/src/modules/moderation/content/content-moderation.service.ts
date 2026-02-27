@@ -1,12 +1,12 @@
 import { HttpError } from "@/core/http";
 import { PostAdapter, CommentAdapter } from "@/infra/db/adapters";
-import ContentReportService from "./content-report.service.js";
 import logger from "@/core/logger";
+import ContentReportService from "../reports/report-moderation.service";
 
 class ContentModerationService {
   static async banPost(postId: string) {
     logger.info("Banning post", { postId });
-    
+
     const post = await PostAdapter.findById(postId);
     if (!post) {
       logger.warn("Post not found for banning", { postId });
@@ -25,7 +25,7 @@ class ContentModerationService {
     }
 
     // Update related reports to resolved
-    await ContentReportService.updateReportsByTargetId(parseInt(postId), "Post", "resolved");
+    await ContentReportService.updateReportsByTargetId(postId, "Post", "resolved");
 
     logger.info("Post banned successfully", { postId, title: updatedPost.title });
 
@@ -82,7 +82,7 @@ class ContentModerationService {
     }
 
     // Update related reports to resolved
-    await ContentReportService.updateReportsByTargetId(parseInt(postId), "Post", "resolved");
+    await ContentReportService.updateReportsByTargetId(postId, "Post", "resolved");
 
     return {
       success: true,
@@ -137,7 +137,7 @@ class ContentModerationService {
     }
 
     // Update related reports to resolved
-    await ContentReportService.updateReportsByTargetId(parseInt(commentId), "Comment", "resolved");
+    await ContentReportService.updateReportsByTargetId(commentId, "Comment", "resolved");
 
     return {
       success: true,
@@ -166,7 +166,7 @@ class ContentModerationService {
     }
 
     const content = updatedComment.content
-    const substringedContent = content.length() > 50 ? content.substring(0, 50) + "..." : content
+    const substringedContent = content.length > 50 ? content.substring(0, 50) + "..." : content
 
     return {
       success: true,

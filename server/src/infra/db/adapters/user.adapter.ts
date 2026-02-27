@@ -1,27 +1,12 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, ilike, or, sql } from "drizzle-orm";
 import db from "@/infra/db";
 import type { DB } from "@/infra/db/types";
-import { users } from "@/infra/db/tables";
+import { auth, colleges, users } from "@/infra/db/tables";
 
 export type UserInclude = {
   auth?: boolean;
   college?: boolean;
 };
-
-const buildWith = (include: UserInclude) => ({
-  college: include.college ? true : undefined,
-
-  auth: include.auth
-    ? {
-      columns: {
-        id: true,
-        emailVerified: true,
-        role: true,
-        banned: true,
-      },
-    }
-    : undefined,
-});
 
 export const findById = async (
   userId: string,
@@ -29,10 +14,50 @@ export const findById = async (
   dbTx?: DB
 ) => {
   const client = dbTx ?? db;
+  if (include.auth && include.college) {
+    return client.query.users.findFirst({
+      where: eq(users.id, userId),
+      with: {
+        college: true,
+        auth: {
+          columns: {
+            id: true,
+            emailVerified: true,
+            role: true,
+            banned: true,
+          },
+        },
+      },
+    });
+  }
+
+  if (include.auth) {
+    return client.query.users.findFirst({
+      where: eq(users.id, userId),
+      with: {
+        auth: {
+          columns: {
+            id: true,
+            emailVerified: true,
+            role: true,
+            banned: true,
+          },
+        },
+      },
+    });
+  }
+
+  if (include.college) {
+    return client.query.users.findFirst({
+      where: eq(users.id, userId),
+      with: {
+        college: true,
+      },
+    });
+  }
 
   return client.query.users.findFirst({
     where: eq(users.id, userId),
-    with: buildWith(include),
   });
 };
 
@@ -42,10 +67,50 @@ export const findByAuthId = async (
   dbTx?: DB
 ) => {
   const client = dbTx ?? db;
+  if (include.auth && include.college) {
+    return client.query.users.findFirst({
+      where: eq(users.authId, authId),
+      with: {
+        college: true,
+        auth: {
+          columns: {
+            id: true,
+            emailVerified: true,
+            role: true,
+            banned: true,
+          },
+        },
+      },
+    });
+  }
+
+  if (include.auth) {
+    return client.query.users.findFirst({
+      where: eq(users.authId, authId),
+      with: {
+        auth: {
+          columns: {
+            id: true,
+            emailVerified: true,
+            role: true,
+            banned: true,
+          },
+        },
+      },
+    });
+  }
+
+  if (include.college) {
+    return client.query.users.findFirst({
+      where: eq(users.authId, authId),
+      with: {
+        college: true,
+      },
+    });
+  }
 
   return client.query.users.findFirst({
     where: eq(users.authId, authId),
-    with: buildWith(include),
   });
 };
 
@@ -55,10 +120,50 @@ export const findByUsername = async (
   dbTx?: DB
 ) => {
   const client = dbTx ?? db;
+  if (include.auth && include.college) {
+    return client.query.users.findFirst({
+      where: eq(users.username, username.toLowerCase()),
+      with: {
+        college: true,
+        auth: {
+          columns: {
+            id: true,
+            emailVerified: true,
+            role: true,
+            banned: true,
+          },
+        },
+      },
+    });
+  }
+
+  if (include.auth) {
+    return client.query.users.findFirst({
+      where: eq(users.username, username.toLowerCase()),
+      with: {
+        auth: {
+          columns: {
+            id: true,
+            emailVerified: true,
+            role: true,
+            banned: true,
+          },
+        },
+      },
+    });
+  }
+
+  if (include.college) {
+    return client.query.users.findFirst({
+      where: eq(users.username, username.toLowerCase()),
+      with: {
+        college: true,
+      },
+    });
+  }
 
   return client.query.users.findFirst({
     where: eq(users.username, username.toLowerCase()),
-    with: buildWith(include),
   });
 };
 
@@ -116,4 +221,193 @@ export const updateById = async (
     .returning();
 
   return updated ?? null;
+};
+
+type ModerationUser = {
+  id: string;
+  username: string;
+  email: string | null;
+  roles: string | null;
+  isBlocked: boolean;
+  suspension: {
+    ends: Date | null;
+    reason: string | null;
+  } | null;
+  college: {
+    id: string | null;
+    name: string | null;
+    profile: string | null;
+  } | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+const toModerationUser = (row: {
+  id: string;
+  username: string;
+  email: string | null;
+  role: string | null;
+  isBlocked: boolean | null;
+  banEnds: Date | null;
+  banReason: string | null;
+  collegeId: string | null;
+  collegeName: string | null;
+  collegeProfile: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}): ModerationUser => ({
+  id: row.id,
+  username: row.username,
+  email: row.email,
+  roles: row.role,
+  isBlocked: row.isBlocked ?? false,
+  suspension: row.banEnds || row.banReason
+    ? {
+      ends: row.banEnds,
+      reason: row.banReason,
+    }
+    : null,
+  college: row.collegeId
+    ? {
+      id: row.collegeId,
+      name: row.collegeName,
+      profile: row.collegeProfile,
+    }
+    : null,
+  createdAt: row.createdAt,
+  updatedAt: row.updatedAt,
+});
+
+const getModerationUserRow = async (userId: string, dbTx?: DB) => {
+  const client = dbTx ?? db;
+  const rows = await client
+    .select({
+      id: users.id,
+      username: users.username,
+      email: auth.email,
+      role: auth.role,
+      isBlocked: auth.banned,
+      banEnds: auth.banExpires,
+      banReason: auth.banReason,
+      collegeId: colleges.id,
+      collegeName: colleges.name,
+      collegeProfile: colleges.profile,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      authId: users.authId,
+    })
+    .from(users)
+    .leftJoin(auth, eq(users.authId, auth.id))
+    .leftJoin(colleges, eq(users.collegeId, colleges.id))
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  return rows[0] ?? null;
+};
+
+export const findModerationById = async (userId: string, dbTx?: DB) => {
+  const row = await getModerationUserRow(userId, dbTx);
+  if (!row) return null;
+  return toModerationUser(row);
+};
+
+export const blockUser = async (userId: string, dbTx?: DB) => {
+  const client = dbTx ?? db;
+  const row = await getModerationUserRow(userId, client);
+  if (!row) return null;
+
+  await client
+    .update(auth)
+    .set({
+      banned: true,
+      banReason: null,
+      banExpires: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(auth.id, row.authId));
+
+  return findModerationById(userId, client);
+};
+
+export const unblockUser = async (userId: string, dbTx?: DB) => {
+  const client = dbTx ?? db;
+  const row = await getModerationUserRow(userId, client);
+  if (!row) return null;
+
+  await client
+    .update(auth)
+    .set({
+      banned: false,
+      banReason: null,
+      banExpires: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(auth.id, row.authId));
+
+  return findModerationById(userId, client);
+};
+
+export const suspendUser = async (
+  userId: string,
+  suspension: { ends: Date; reason: string },
+  dbTx?: DB
+) => {
+  const client = dbTx ?? db;
+  const row = await getModerationUserRow(userId, client);
+  if (!row) return null;
+
+  await client
+    .update(auth)
+    .set({
+      banned: true,
+      banReason: suspension.reason,
+      banExpires: suspension.ends,
+      updatedAt: new Date(),
+    })
+    .where(eq(auth.id, row.authId));
+
+  return findModerationById(userId, client);
+};
+
+export const getSuspensionStatus = async (userId: string, dbTx?: DB) => {
+  const user = await findModerationById(userId, dbTx);
+  if (!user) return null;
+  return { suspension: user.suspension };
+};
+
+export const findByQuery = async (
+  filters: { email?: string; username?: string },
+  dbTx?: DB
+) => {
+  const client = dbTx ?? db;
+  const conditions = [];
+
+  if (filters.email) {
+    conditions.push(ilike(auth.email, `%${filters.email.trim()}%`));
+  }
+  if (filters.username) {
+    conditions.push(ilike(users.username, `%${filters.username.trim().toLowerCase()}%`));
+  }
+
+  const rows = await client
+    .select({
+      id: users.id,
+      username: users.username,
+      email: auth.email,
+      role: auth.role,
+      isBlocked: auth.banned,
+      banEnds: auth.banExpires,
+      banReason: auth.banReason,
+      collegeId: colleges.id,
+      collegeName: colleges.name,
+      collegeProfile: colleges.profile,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+    })
+    .from(users)
+    .leftJoin(auth, eq(users.authId, auth.id))
+    .leftJoin(colleges, eq(users.collegeId, colleges.id))
+    .where(conditions.length ? and(...conditions) : undefined);
+
+  return rows.map(toModerationUser);
 };
