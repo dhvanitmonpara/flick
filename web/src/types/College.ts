@@ -1,5 +1,5 @@
-export interface ICollege {
-  id: string
-  name: string
-  profile: string
+export interface College {
+  id: string;
+  name: string;
+  profile: string;
 }

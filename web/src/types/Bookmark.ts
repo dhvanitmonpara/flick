@@ -1,10 +1,10 @@
-import { IPost } from "./Post";
-import { IUser } from "./User";
+import { Post } from "./Post";
+import { User } from "./User";
 
-interface IBookmark {
+interface Bookmark {
   id: string;
-  userId: string | IUser;
-  postId: string | IPost
+  userId: string | User;
+  postId: string | Post;
 }
 
-export default IBookmark
+export default Bookmark;

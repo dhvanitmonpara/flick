@@ -1,14 +1,12 @@
-import { ICollege } from "./College"
+import { College } from "./College";
 
-export interface IUser {
-  id: string
-  username: string
-  branch: string
-  college: string | ICollege
-  isBlocked: boolean
-  suspension: {
-    ends: Date
-    reason: string
-    howManyTimes: number
-  }
+export interface User {
+  id: string;
+  username: string;
+  branch: string;
+  college: string | College | null;
+  collegeId?: string | null;
+  karma?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }

@@ -1,19 +1,21 @@
 import DashboardTab from "@/components/general/DashboardTab";
 import { tabs } from "@/constants/tabs";
+import { authClient } from "@/lib/auth-client";
+import { hasAdminAccess } from "@/lib/roles";
 import useProfileStore from "@/store/profileStore";
 import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
-import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 function AdminLayout() {
 
-  const { profile, setProfile } = useProfileStore()
+  const { setProfile, removeProfile } = useProfileStore()
   const { data: session, isPending } = authClient.useSession()
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (session?.user && session.user.role === 'admin') {
+    if (session?.user && hasAdminAccess(session.user.role)) {
       setProfile({ ...session.user, id: session.user.id } as any);
     }
   }, [session, setProfile])
@@ -21,8 +23,16 @@ function AdminLayout() {
   useEffect(() => {
     if (!isPending && !session?.user) {
       navigate("/auth/signin");
+      return;
     }
-  }, [navigate, session, isPending]);
+
+    if (!isPending && session?.user && !hasAdminAccess(session.user.role)) {
+      removeProfile();
+      authClient.signOut();
+      toast.error("Unauthorized. Admin access only.");
+      navigate("/auth/signin", { replace: true });
+    }
+  }, [navigate, session, isPending, removeProfile]);
 
   if (isPending) {
     return <div className="w-screen h-screen flex justify-center items-center bg-zinc-900 text-white">Loading...</div>

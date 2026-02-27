@@ -1,12 +1,12 @@
 import { themeType } from "@/lib/types";
-import { IUser } from "@/types/User";
+import { User } from "@/types/User";
 import { create } from "zustand";
 
 interface ProfileState {
   theme: themeType
-  profile: IUser;
-  setProfile: (profile: IUser) => void;
-  updateProfile: (updatedProfile: Partial<IUser>) => void;
+  profile: User;
+  setProfile: (profile: User) => void;
+  updateProfile: (updatedProfile: Partial<User>) => void;
   removeProfile: () => void;
   setTheme: (theme: themeType) => void;
 }
@@ -16,14 +16,8 @@ const useProfileStore = create<ProfileState>((set) => ({
   profile: {
     id: "",
     branch: "",
-    isBlocked: false,
-    suspension: {
-      ends: new Date(),
-      howManyTimes: 0,
-      reason: "",
-    },
     username: "",
-    college: "",
+    college: null,
   },
   setProfile: (profile) => set({ profile }),
   updateProfile: (updatedProfile) =>
@@ -35,14 +29,8 @@ const useProfileStore = create<ProfileState>((set) => ({
       profile: {
         id: "",
         branch: "",
-        isBlocked: false,
-        suspension: {
-          ends: new Date(),
-          howManyTimes: 0,
-          reason: "",
-        },
         username: "",
-        college: "",
+        college: null,
       },
     }),
   // inside profileStore.js

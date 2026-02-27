@@ -1,6 +1,6 @@
 import useProfileStore from '@/store/profileStore'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
-import { IUser } from '@/types/User';
+import { User } from '@/types/User';
 import { isCollege, isUser } from '@/utils/helpers';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '../ui/dropdown-menu';
 import { FaUser } from 'react-icons/fa';
@@ -9,7 +9,7 @@ import { IoBookmarkSharp, IoSettingsSharp } from 'react-icons/io5'
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-const getCollegeProfile = (user: IUser | string) => isUser(user) && isCollege(user.college) ? user.college.profile : "Unknown College";
+const getCollegeProfile = (user: User | string | null) => isUser(user) && isCollege(user.college) ? user.college.profile : "Unknown College";
 
 function UserProfile() {
   const profile = useProfileStore(state => state.profile)

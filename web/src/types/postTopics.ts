@@ -1,4 +1,3 @@
-// postTopics.ts
 export const PostTopic = [
   "Ask Flick",
   "Serious Discussion",
@@ -13,4 +12,4 @@ export const PostTopic = [
   "Guide / Resource"
 ] as const;
 
-export type TPostTopic = typeof PostTopic[number];
+export type PostTopic = typeof PostTopic[number];

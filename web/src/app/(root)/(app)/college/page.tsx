@@ -5,7 +5,7 @@ import SkeletonCard from "@/components/skeletons/PostSkeleton"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
 import usePostStore from "@/store/postStore"
 import useProfileStore from "@/store/profileStore"
-import { IPost } from "@/types/Post"
+import type { Post as PostEntity } from "@/types/Post"
 import { formatDate, getAvatarUrl, getCollegeName, isUser } from "@/utils/helpers"
 import { AxiosError } from "axios"
 import { useCallback, useEffect, useState } from "react"
@@ -44,7 +44,7 @@ function CollegePage() {
   }, [fetchPosts])
 
   const removedPostOnAction = (id: string) => {
-    const updatedPost = posts?.filter(post => post.id !== id) as IPost[]
+    const updatedPost = posts?.filter(post => post.id !== id) as PostEntity[]
     setPosts(updatedPost)
   }
 
@@ -90,7 +90,7 @@ function CollegePage() {
             )
           }
 
-          // postedBy is a full IUser object here
+          // postedBy is a full User object here
           return (
             <Post
               key={post.id}

@@ -10,6 +10,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import useProfileStore from "@/store/profileStore";
 import { authClient } from "@/lib/auth-client";
+import { hasAdminAccess } from "@/lib/roles";
 
 const OTP_EXPIRE_TIME = 60;
 const MAX_ATTEMPTS = 3;
@@ -82,8 +83,13 @@ const AdminVerificationPage = () => {
             toast.success("OTP verified successfully!");
             // Check session to get updated user data since verifyOtp doesn't return user directly
             const session = await authClient.getSession();
-            if (session?.data?.user) {
+            if (session?.data?.user && hasAdminAccess(session.data.user.role)) {
               setProfile({ ...session.data.user, id: session.data.user.id } as any);
+            } else {
+              toast.error("Unauthorized. Admin access only.");
+              await authClient.signOut();
+              navigate("/auth/signin", { replace: true });
+              return;
             }
             navigate(`/`);
           },

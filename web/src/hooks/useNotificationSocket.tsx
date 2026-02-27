@@ -4,7 +4,7 @@ import useProfileStore from "@/store/profileStore"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import getNotificationAction from "@/utils/getNotificationAction"
-import { INotification } from "@/types/Notification"
+import { Notification } from "@/types/Notification"
 
 export function useNotificationSocket() {
   const [notificationCount, setNotificationCount] = useState(0)
@@ -19,7 +19,7 @@ export function useNotificationSocket() {
 
     socket.emit("initial-setup", { userId: profile.id });
 
-    const handleNotification = (notification: { actorUsername: string, type: INotification["type"], postId: string }) => {
+    const handleNotification = (notification: { actorUsername: string, type: Notification["type"], postId: string }) => {
       toast.success(`${notification.actorUsername} ${getNotificationAction(notification.type)}`, {
         duration: 5000,
         action: {

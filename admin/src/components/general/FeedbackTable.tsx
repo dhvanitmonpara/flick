@@ -1,14 +1,13 @@
 import { TableWrapper } from "./TableWrapper"
-import { IFeedback } from "@/types/Feedback";
+import { Feedback } from "@/types/Feedback";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { HiDotsHorizontal } from "react-icons/hi";
 import { toast } from "sonner";
-import axios from "axios";
-import { env } from "@/config/env";
+import { rootHttp } from "@/services/http";
 
 type FeedbackTableProps = {
-  data: IFeedback[];
-  setData: React.Dispatch<React.SetStateAction<IFeedback[]>>
+  data: Feedback[];
+  setData: React.Dispatch<React.SetStateAction<Feedback[]>>
 };
 
 export function FeedbackTable({
@@ -20,14 +19,14 @@ export function FeedbackTable({
       key: "type",
       label: "Type",
       className: "py-0",
-      render: (row: IFeedback) => (
+      render: (row: Feedback) => (
         <div className={`h-12 w-3 ${row.type === "feedback" ? "bg-green-400" : "bg-red-400"}`}></div>
       )
     },
     {
       key: "title",
       label: "Title",
-      render: (row: IFeedback) => (
+      render: (row: Feedback) => (
         <span
           className="text-zinc-300 cursor-pointer truncate max-w-[200px]"
           onClick={() => navigator.clipboard.writeText(row.title)}
@@ -39,7 +38,7 @@ export function FeedbackTable({
     {
       key: "content",
       label: "Content",
-      render: (row: IFeedback) => (
+      render: (row: Feedback) => (
         <span
           className="text-zinc-300 max-w-[200px]"
           onClick={() => navigator.clipboard.writeText(row.content)}
@@ -51,7 +50,7 @@ export function FeedbackTable({
     {
       key: "status",
       label: "Status",
-      render: (row: IFeedback) => (
+      render: (row: Feedback) => (
         <span
           className={{
             new: "text-yellow-400",
@@ -71,9 +70,9 @@ export function FeedbackTable({
     try {
       let res = null
       if (action === "delete") {
-        res = await axios.delete(`${env.apiUrl}/manage/feedback/single/${id}`, { withCredentials: true })
+        res = await rootHttp.delete(`/feedbacks/${id}`)
       } else {
-        res = await axios.patch(`${env.apiUrl}/manage/feedback/status/${id}`, { status: action === "review" ? "reviewed" : "dismissed" }, { withCredentials: true })
+        res = await rootHttp.patch(`/feedbacks/${id}/status`, { status: action === "review" ? "reviewed" : "dismissed" })
       }
 
       if (res.status !== 200) {
@@ -96,7 +95,7 @@ export function FeedbackTable({
     }
   }
 
-  const renderActions = (row: IFeedback) => {
+  const renderActions = (row: Feedback) => {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -121,7 +120,7 @@ export function FeedbackTable({
   };
 
   return (
-    <TableWrapper<IFeedback>
+    <TableWrapper<Feedback>
       data={data}
       columns={columns}
       renderActions={renderActions}

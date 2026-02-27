@@ -1,4 +1,4 @@
-import { ICollege } from "@/types/College";
+import { College } from "@/types/College";
 import { PencilIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -16,14 +16,14 @@ import CollegeForm from "../forms/CollegeForm";
 import { ColumnDefinition, TableWrapper } from "./TableWrapper";
 
 interface CollegeTableProps {
-  data: ICollege[];
-  setCollege: React.Dispatch<React.SetStateAction<ICollege[]>>;
+  data: College[];
+  setCollege: React.Dispatch<React.SetStateAction<College[]>>;
 }
 
 export function CollegeTable({ data, setCollege }: CollegeTableProps) {
   const [openDialogId, setOpenDialogId] = useState<string | null>(null);
 
-  const columns: ColumnDefinition<ICollege>[] = [
+  const columns: ColumnDefinition<College>[] = [
     { key: "name", label: "Name" },
     {
       key: "profile",
@@ -56,7 +56,7 @@ export function CollegeTable({ data, setCollege }: CollegeTableProps) {
     { key: "state", label: "State" },
   ];
 
-  const renderActions = (college: ICollege) => (
+  const renderActions = (college: College) => (
     <Dialog open={openDialogId === college.id} onOpenChange={(isOpen) => setOpenDialogId(isOpen ? college.id : null)}>
       <DialogTrigger asChild>
         <Button className="bg-zinc-700 hover:bg-zinc-600 opacity-0 group-hover:opacity-100" size="sm">
@@ -78,7 +78,7 @@ export function CollegeTable({ data, setCollege }: CollegeTableProps) {
   );
 
   return (
-    <TableWrapper<ICollege>
+    <TableWrapper<College>
       data={data}
       columns={columns}
       renderActions={renderActions}

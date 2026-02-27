@@ -1,7 +1,7 @@
 import TrendingPostCard from "./TrendingPostCard"
 import { useCallback, useEffect, useState } from "react"
 import { AxiosError } from "axios"
-import { ITrendingPost } from "@/types/TrendingPost"
+import { TrendingPost } from "@/types/TrendingPost"
 import { toast } from "sonner"
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,7 +10,7 @@ import { postApi } from "@/services/api/post";
 
 function TrendingPostSection() {
 
-  const [posts, setPosts] = useState<ITrendingPost[]>([])
+  const [posts, setPosts] = useState<TrendingPost[]>([])
   const [loading, setLoading] = useState(false)
 
   const { handleError } = useErrorHandler()

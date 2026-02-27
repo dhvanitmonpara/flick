@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { http } from "@/services/http";
 import { toast } from "sonner";
-import { ICollege } from "@/types/College";
+import { College } from "@/types/College";
 import { CollegeTable } from "@/components/general/CollegeTable";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 function CollegePage() {
-  const [colleges, setColleges] = useState<ICollege[]>([]);
+  const [colleges, setColleges] = useState<College[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Create College Form State

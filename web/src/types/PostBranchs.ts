@@ -1,4 +1,3 @@
-// postTopics.ts
 export const PostBranches = [
   "BCA",
   "B.TECH",
@@ -16,4 +15,4 @@ export const PostBranches = [
   "BSC AI"
 ] as const;
 
-export type TPostBranch = typeof PostBranches[number];
+export type PostBranch = typeof PostBranches[number];

@@ -1,11 +1,11 @@
-import { IUser } from "./User";
-import { TPostTopic } from "@/types/postTopics";
+import { User } from "./User";
+import { PostTopic } from "@/types/postTopics";
 
-export interface IPost {
+export interface Post {
   id: string;
   title: string;
   content: string;
-  postedBy: string | IUser;
+  postedBy: string | User | null;
   isBanned: boolean;
   isShadowBanned: boolean;
   karma: number;
@@ -15,7 +15,7 @@ export interface IPost {
   downvoteCount: number;
   views: number;
   commentsCount?: number;
-  topic: TPostTopic;
+  topic: PostTopic;
   isPrivate?: boolean;
   createdAt: string;
   updatedAt: string;

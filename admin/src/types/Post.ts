@@ -1,10 +1,10 @@
-import { IUser } from "./User";
+import { User } from "./User";
 
-export interface IPost extends Document {
+export interface Post {
   id: string;
   title: string;
   content: string;
-  postedBy: string | IUser;
+  postedBy: string | User;
   isBanned: boolean;
   isShadowBanned: boolean;
   karma: number;

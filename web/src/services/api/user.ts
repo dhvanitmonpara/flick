@@ -1,11 +1,11 @@
 import { http } from "../http";
 
 export const userApi = {
-  getMe: async () => {
-    return http.get("/users/me");
+  getMe: async (options?: { signal?: AbortSignal; timeout?: number }) => {
+    return http.get("/users/me", options);
   },
-  getProfile: async () => {
-    return http.get("/users/me");
+  getProfile: async (options?: { signal?: AbortSignal; timeout?: number }) => {
+    return http.get("/users/me", options);
   },
   acceptTerms: async () => {
     return http.post("/users/accept-terms", {});

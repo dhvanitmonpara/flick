@@ -1,7 +1,7 @@
 import { BsEye } from "react-icons/bs"
 import { Card } from "../ui/card"
-import { ITrendingPost } from "@/types/TrendingPost"
-function TrendingPostCard({ title, category, time, views }: ITrendingPost) {
+import { TrendingPost } from "@/types/TrendingPost"
+function TrendingPostCard({ title, category, time, views }: TrendingPost) {
   return (
     <Card className="p-4 bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer border-none space-y-1">
       <div className="flex justify-between">

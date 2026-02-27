@@ -7,15 +7,7 @@ import { Button } from "@/components/ui/button";
 import { IoRefresh } from "react-icons/io5";
 import { Loader2 } from "lucide-react";
 import useReportStore from "@/store/ReportStore";
-
-const fields = [
-  "id",           // post.id
-  "title",         // post.title
-  "content",       // post.content
-  "postedBy",      // post.postedBy
-  "isBanned",      // post.isBanned 
-  "isShadowBanned" // post.isShadowBanned
-];
+import { ReportedPost } from "@/types/ReportedPost";
 
 const ReportsPage = () => {
   const { reports, setReports } = useReportStore();
@@ -33,22 +25,22 @@ const ReportsPage = () => {
       const queryParamsObj: Record<string, string> = {
         page: page.toString(),
         limit: limit.toString(),
-        status: statusQuery, // e.g., "pending,resolved"
-        ...(Array.isArray(fields) && fields.length > 0 ? { fields: fields.join(",") } : {}),
+        status: statusQuery,
       };
 
       const queryParams = new URLSearchParams(queryParamsObj).toString();
 
-      // API call
-      const res = await http.get(
-        `/reports?${queryParams}`
-      );
+      const res = await http.get(`/manage/reports?${queryParams}`);
+      const payload = res.data as {
+        data: ReportedPost[];
+        pagination: { totalReports: number; page: number; limit: number };
+      };
 
-      if (res.status !== 200 || !res.data?.data || !res.data?.pagination) {
+      if (res.status !== 200 || !payload?.data || !payload?.pagination) {
         throw new Error("Invalid response from server");
       }
 
-      const { data, pagination } = res.data as any;
+      const { data, pagination } = payload;
 
       setReports(data || []);
       setTotalPages(Math.max(1, Math.ceil((pagination.totalReports || 0) / limit)));

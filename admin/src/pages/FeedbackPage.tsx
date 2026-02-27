@@ -1,12 +1,12 @@
 import { FeedbackTable } from "@/components/general/FeedbackTable"
 import { http } from "@/services/http"
-import { IFeedback } from "@/types/Feedback"
+import { Feedback } from "@/types/Feedback"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 function FeedbackPage() {
 
-  const [feedback, setFeedback] = useState<IFeedback[]>([])
+  const [feedback, setFeedback] = useState<Feedback[]>([])
 
   useEffect(() => {
     (async () => {

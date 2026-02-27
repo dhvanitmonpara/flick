@@ -3,7 +3,7 @@ import { HttpError } from "@/core/http";
 
 const requireUser = async (req: Request, _: Response, next: NextFunction) => {
   if (!req.user) {
-    return HttpError.notFound("User not found");
+    throw HttpError.notFound("User not found");
   }
   next();
 }

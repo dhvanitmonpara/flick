@@ -2,7 +2,7 @@
 
 import Post from "@/components/general/Post"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
-import { IPost } from "@/types/Post"
+import type { Post as PostEntity } from "@/types/Post"
 import { useCallback, useEffect, useState } from "react"
 import { AxiosError } from "axios"
 import { isCollege, isUser } from "@/utils/helpers"
@@ -11,7 +11,7 @@ import { bookmarkApi } from "@/services/api/bookmark"
 
 function BookmarksPage() {
 
-  const [posts, setPosts] = useState<IPost[]>([])
+  const [posts, setPosts] = useState<PostEntity[]>([])
   const [loading, setLoading] = useState(true)
   const { handleError } = useErrorHandler()
 

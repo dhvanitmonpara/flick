@@ -1,12 +1,11 @@
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { HiDotsHorizontal } from "react-icons/hi";
-import axios from "axios";
-import { env } from "@/config/env";
 import { toast } from "sonner";
 import useReportStore from "@/store/ReportStore";
 import { ReportedPost } from "@/types/ReportedPost";
 import { TableWrapper, ColumnDefinition } from "@/components/general/TableWrapper";
+import { http, rootHttp } from "@/services/http";
 
 type actionType = "BAN_POST" | "SHADOW_BAN_POST" | "BAN_REPORTER" | "IGNORE_REPORT" | "BAN_USER" | "SUSPEND_USER" | "SUSPEND_REPORTER";
 
@@ -24,6 +23,7 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
     action: actionType,
     reportId: string,
     targetId: string,
+    targetType: "Post" | "Comment",
     reporterId: string,
     posterId: string
   ) => {
@@ -31,27 +31,36 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
       let url = "";
       let payload: Record<string, unknown> = {};
       let method: "patch" | "put" = "put";
+      let client = rootHttp;
 
       switch (action) {
         case "BAN_POST":
-          url = `${env.apiUrl}/moderation/posts/${targetId}/moderation-state`;
+          url =
+            targetType === "Comment"
+              ? `/moderation/comments/${targetId}/moderation-state`
+              : `/moderation/posts/${targetId}/moderation-state`;
           payload = { state: "banned" };
           break;
         case "SHADOW_BAN_POST":
-          url = `${env.apiUrl}/moderation/posts/${targetId}/moderation-state`;
+          if (targetType === "Comment") {
+            toast.error("Shadow ban is only supported for posts.");
+            return;
+          }
+          url = `/moderation/posts/${targetId}/moderation-state`;
           payload = { state: "shadow_banned" };
           break;
         case "BAN_USER":
         case "BAN_REPORTER": {
           const userId = action === "BAN_USER" ? posterId : reporterId;
-          url = `${env.apiUrl}/admin/users/${userId}/moderation-state`;
+          url = `/users/${userId}/moderation-state`;
           payload = { blocked: true };
+          client = http;
           break;
         }
         case "SUSPEND_USER":
         case "SUSPEND_REPORTER": {
           const userId = action === "SUSPEND_USER" ? posterId : reporterId;
-          url = `${env.apiUrl}/admin/users/${userId}/moderation-state`;
+          url = `/users/${userId}/moderation-state`;
           const daysInput = window.prompt("Enter number of days for suspension:", "3");
           const days = parseInt(daysInput ?? "3", 10);
           if (isNaN(days) || days <= 0) {
@@ -67,10 +76,11 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
             blocked: true,
             suspension: { ends: addDays(new Date().toISOString(), days), reason },
           };
+          client = http;
           break;
         }
         case "IGNORE_REPORT":
-          url = `${env.apiUrl}/reports/${reportId}`;
+          url = `/reports/${reportId}`;
           method = "patch";
           payload = { status: "ignored" };
           break;
@@ -80,9 +90,10 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
       }
 
       if (method === "patch") {
-        await axios.patch(url, payload, { withCredentials: true });
+        await client.patch(url, payload);
       } else {
-        await axios.put(url, payload, { withCredentials: true });
+        await client.put(url, payload);
+        await rootHttp.patch(`/reports/${reportId}`, { status: "resolved" });
       }
       toast.success(`Successfully performed ${action}`);
       updateReportStatus(targetId, reportId, action === "IGNORE_REPORT" ? "ignored" : "resolved");
@@ -96,12 +107,14 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
     const { targetDetails, reports } = groupedReport;
     const postId = targetDetails?.id || "";
     const posterId = targetDetails?.postedBy || "";
+    const targetType = groupedReport.type;
 
     return reports.map((report) => ({
       ...report,
       targetDetails,
       postId,
       posterId,
+      targetType,
     }));
   });
 
@@ -174,7 +187,7 @@ const ReportedPostTable = ({ reports }: { reports: ReportedPost[] }) => {
 
   const renderActions = (row: typeof rows[0]) => {
     const buildAction = (action: actionType) => () =>
-      handleAction(action, row.id, row.postId, row.reporter.id, row.posterId);
+      handleAction(action, row.id, row.postId, row.targetType, row.reporter.id, row.posterId);
 
     return (
       <DropdownMenu>

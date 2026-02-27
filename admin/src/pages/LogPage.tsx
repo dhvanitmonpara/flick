@@ -48,6 +48,10 @@ export default function LogPage() {
       }
 
       setLogs(res.data.data as LogItem[]);
+      setPagination((prev) => ({
+        ...prev,
+        ...(res.data.pagination as Pagination),
+      }));
     } catch (err) {
       console.error(err);
       setError("Server error");

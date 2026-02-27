@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { env } from "@/config/env";
 import useProfileStore from "@/store/profileStore";
-import { IUser } from "@/types/User";
+import { User } from "@/types/User";
 import axios, { AxiosError } from "axios";
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ export const useErrorHandler = () => {
   const setProfile = useProfileStore(state => state.setProfile);
   const removeProfile = useProfileStore(state => state.removeProfile);
 
-  const refreshPromiseRef = useRef<Promise<IUser> | null>(null);
+  const refreshPromiseRef = useRef<Promise<User> | null>(null);
   const abortController = useRef<AbortController | null>(null);
 
   useEffect(() => {

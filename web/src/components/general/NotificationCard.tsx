@@ -1,9 +1,9 @@
-import { INotification } from "@/types/Notification"
+import { Notification } from "@/types/Notification"
 import { PiArrowFatUpFill } from "react-icons/pi";
 import { FaComment } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
-function NotificationCard({ _redisId, actorUsernames, post, id, seen, type, content }: Partial<INotification>) {
+function NotificationCard({ _redisId, actorUsernames, post, id, seen, type, content }: Partial<Notification>) {
   const navigate = useRouter().push
   return (
     <div

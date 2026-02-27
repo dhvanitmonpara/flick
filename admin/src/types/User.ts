@@ -1,15 +1,15 @@
-import { ICollege } from "./College"
+import { College } from "./College";
 
-export interface IUser {
-  id: string
-  username: string
-  branch: string
-  college: string | ICollege
-  isBlocked: boolean
+export interface User {
+  id: string;
+  username: string;
+  branch: string;
+  college: string | College;
+  isBlocked: boolean;
   suspension: {
-    ends: Date
-    reason: string
-    howManyTimes: number
-  }
-  createdAt?: Date
+    ends: string | Date | null;
+    reason: string | null;
+    howManyTimes: number;
+  } | null;
+  createdAt?: string | Date;
 }

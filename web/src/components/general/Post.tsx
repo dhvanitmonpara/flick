@@ -11,7 +11,7 @@ import {
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import EngagementComponent from "./EngagementComponent";
 import PostDropdown from "../actions/PostDropdown";
-import { TPostTopic } from "@/types/postTopics";
+import { PostTopic } from "@/types/postTopics";
 import useProfileStore from "@/store/profileStore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -34,7 +34,7 @@ interface PostProps {
   branch: string
   bookmarked: boolean
   removedPostOnAction?: (id: string) => void
-  topic: TPostTopic
+  topic: PostTopic
   isPrivate?: boolean
 }
 

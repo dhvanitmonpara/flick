@@ -1,12 +1,12 @@
-import { IPost } from "@/types/Post";
+import { Post } from "@/types/Post";
 import { create } from "zustand";
 
 interface PostState {
-  posts: IPost[] | null;
-  setPosts: (posts: IPost[]) => void;
-  addPost: (post: IPost) => void;
+  posts: Post[] | null;
+  setPosts: (posts: Post[]) => void;
+  addPost: (post: Post) => void;
   removePost: (id: string) => void;
-  updatePost: (id: string, updatedPost: Partial<IPost>) => void;
+  updatePost: (id: string, updatedPost: Partial<Post>) => void;
 }
 
 const usePostStore = create<PostState>((set) => ({

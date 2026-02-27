@@ -1,23 +1,21 @@
-import { IPost } from "./Post";
+import { Post } from "./Post";
 
-type TNotificationType =
+export type NotificationType =
   | "general"
   | "upvoted_post"
   | "upvoted_comment"
   | "replied"
-  | "posted"
+  | "posted";
 
-interface INotification {
+export interface Notification {
   id?: string;
-  type: TNotificationType;
+  type: NotificationType;
   seen: boolean;
   receiverId: string;
   actorUsernames: string[];
   _retries?: number;
   content?: string;
   postId: string;
-  post?: IPost | null
+  post?: Post | null;
   _redisId: string;
 }
-
-export type { INotification, TNotificationType };

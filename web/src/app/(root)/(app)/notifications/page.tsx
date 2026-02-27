@@ -2,7 +2,7 @@
 
 import NotificationCard from "@/components/general/NotificationCard"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
-import { INotification } from "@/types/Notification"
+import { Notification } from "@/types/Notification"
 import { AxiosError } from "axios"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -10,7 +10,7 @@ import { notificationApi } from "@/services/api/notification"
 
 function NotificationsPage() {
 
-  const [notifications, setNotifications] = useState<INotification[]>([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
 
   const { handleError } = useErrorHandler()
@@ -32,7 +32,7 @@ function NotificationsPage() {
         // Optional delay
         await new Promise((res) => setTimeout(res, 3000))
 
-        const unseen: INotification[] = res.data.notifications.filter((n: INotification) => !n.seen)
+        const unseen: Notification[] = res.data.notifications.filter((n: Notification) => !n.seen)
         if (unseen.length) {
           await notificationApi.markSeen(
             unseen.map((n) => n.id).filter((id): id is string => Boolean(id)),

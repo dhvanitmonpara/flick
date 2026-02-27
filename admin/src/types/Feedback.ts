@@ -1,10 +1,10 @@
-export interface IFeedback {
+export interface Feedback {
   id: string;
   userId: {
     id: string;
     name: string;
     email: string;
-    avatar?: string; // optional if you want to use images
+    avatar?: string;
   };
   type: "feedback" | "bug";
   title: string;

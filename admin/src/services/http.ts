@@ -1,22 +1,60 @@
 import { env } from "@/config/env";
-import axios from "axios";
+import axios, { type AxiosInstance } from "axios";
 import type { ApiResponse, BackendEnvelope } from "@/types/api";
 
+const stripTrailingSlash = (value: string) => value.replace(/\/+$/, "");
+const stripAdminSuffix = (value: string) => value.replace(/\/admin$/, "");
+
+const adminApiBase = stripTrailingSlash(env.apiUrl);
+const rootApiBase = stripAdminSuffix(adminApiBase);
+
 export const http = axios.create({
-  baseURL: env.apiUrl,
+  baseURL: adminApiBase,
   withCredentials: true,
 });
 
-http.interceptors.request.use(
-  (config) => {
-    const token = getAccessToken();
-    if (token && !config.headers.Authorization) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+export const rootHttp = axios.create({
+  baseURL: rootApiBase,
+  withCredentials: true,
+});
+
+const withAccessToken = (client: AxiosInstance) => {
+  client.interceptors.request.use(
+    (config) => {
+      const token = getAccessToken();
+      if (token && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+};
+
+const withEnvelopeNormalizer = (client: AxiosInstance) => {
+  client.interceptors.response.use(
+    (response) => {
+      const body = response.data as BackendEnvelope<unknown>;
+
+      const normalized: ApiResponse<unknown> = {
+        success: body.success,
+        message: body.message,
+        errors: body.errors,
+        meta: body.meta,
+        data: body.data,
+
+        status: response.status,
+        statusText: response.statusText,
+        config: response.config,
+        headers: response.headers,
+        request: response.request,
+      };
+
+      return normalized;
+    },
+    (error) => Promise.reject(error)
+  );
+};
 
 let getAccessToken: () => string | null = () => null;
 
@@ -53,6 +91,9 @@ export function setAuthCallbacks(
   onRefreshFailure = onFailure;
 }
 
+withAccessToken(http);
+withAccessToken(rootHttp);
+
 http.interceptors.response.use(
   (res) => res,
   async (error) => {
@@ -64,7 +105,7 @@ http.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(token => {
-          if (original.headers) {
+          if (token && original.headers) {
             original.headers.Authorization = `Bearer ${token}`;
           }
           return http(original);
@@ -77,14 +118,14 @@ http.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshResponse = await http.post("/auth/refresh");
-        const newAccessToken = refreshResponse.data.accessToken;
+        const refreshResponse = await rootHttp.post("/auth/refresh");
+        const newAccessToken = (refreshResponse.data as { accessToken?: string } | undefined)?.accessToken ?? null;
 
-        if (original.headers) {
+        if (newAccessToken && original.headers) {
           original.headers.Authorization = `Bearer ${newAccessToken}`;
         }
 
-        if (onRefreshSuccess) {
+        if (newAccessToken && onRefreshSuccess) {
           onRefreshSuccess(newAccessToken);
         }
 
@@ -108,25 +149,5 @@ http.interceptors.response.use(
   }
 );
 
-http.interceptors.response.use(
-  (response) => {
-    const body = response.data as BackendEnvelope<unknown>;
-
-    const normalized: ApiResponse<unknown> = {
-      success: body.success,
-      message: body.message,
-      errors: body.errors,
-      meta: body.meta,
-      data: body.data,
-
-      status: response.status,
-      statusText: response.statusText,
-      config: response.config,
-      headers: response.headers,
-      request: response.request,
-    };
-
-    return normalized;
-  },
-  (error) => Promise.reject(error)
-);
+withEnvelopeNormalizer(http);
+withEnvelopeNormalizer(rootHttp);

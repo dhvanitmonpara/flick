@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { IoMdEye, IoMdEyeOff } from "react-icons/io"
 import useProfileStore from "@/store/profileStore"
 import { authClient } from "@/lib/auth-client"
+import { hasAdminAccess } from "@/lib/roles"
 
 const signInSchema = z.object({
   email: z.string().email("Email is invalid"),
@@ -42,7 +43,7 @@ function SignInPage() {
         password: data.password,
         fetchOptions: {
           onSuccess: (ctx) => {
-            if (ctx.data.user.role === 'admin') {
+            if (hasAdminAccess(ctx.data.user.role)) {
               setProfile({ ...ctx.data.user, id: ctx.data.user.id } as any)
               navigate('/')
             } else {

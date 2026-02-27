@@ -1,15 +1,14 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../ui/hover-card";
 import { toast } from "sonner";
-import { IUser } from "@/types/User";
+import { User } from "@/types/User";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { HiDotsHorizontal } from "react-icons/hi";
-import { env } from "@/config/env";
-import axios from "axios";
 import { TableWrapper, ColumnDefinition } from "@/components/general/TableWrapper";
+import { http } from "@/services/http";
 
 interface UserTableProps {
-  data: IUser[];
-  setData: React.Dispatch<React.SetStateAction<IUser[]>>;
+  data: User[];
+  setData: React.Dispatch<React.SetStateAction<User[]>>;
 }
 
 function addDays(isoString: string, days: number = 3): string {
@@ -23,7 +22,7 @@ function addDays(isoString: string, days: number = 3): string {
 export function UserTable({ data, setData }: UserTableProps) {
   const handleAction = async (userId: string, action: "block" | "suspend" | "unblock") => {
     try {
-      const url = `${env.apiUrl}/admin/users/${userId}/moderation-state`;
+      const url = `/users/${userId}/moderation-state`;
       const payload: { blocked: boolean; suspension?: { ends: string; reason: string } } = {
         blocked: action !== "unblock",
       };
@@ -35,7 +34,7 @@ export function UserTable({ data, setData }: UserTableProps) {
         };
       }
 
-      const res = await axios.put(url, payload, { withCredentials: true });
+      const res = await http.put(url, payload);
       if (res.status !== 200) {
         toast.error(`Failed to ${action} user.`);
         return;
@@ -50,7 +49,11 @@ export function UserTable({ data, setData }: UserTableProps) {
               isBlocked: action === "block" ? true : action === "unblock" ? false : user.isBlocked,
               suspension:
                 action === "suspend"
-                  ? { ...user.suspension, ends: new Date(new Date(payload.suspension?.ends ?? "").toUTCString()) }
+                  ? {
+                    ends: new Date(new Date(payload.suspension?.ends ?? "").toUTCString()),
+                    reason: payload.suspension?.reason ?? user.suspension?.reason ?? null,
+                    howManyTimes: user.suspension?.howManyTimes ?? 0,
+                  }
                   : user.suspension,
             }
         )
@@ -61,7 +64,7 @@ export function UserTable({ data, setData }: UserTableProps) {
     }
   };
 
-  const columns: ColumnDefinition<IUser>[] = [
+  const columns: ColumnDefinition<User>[] = [
     {
       key: "username",
       label: "Username",
@@ -105,11 +108,14 @@ export function UserTable({ data, setData }: UserTableProps) {
     {
       key: "suspension.ends",
       label: "Suspension",
-      render: (user) => user.suspension?.ends?.toDateString() ?? "N/A",
+      render: (user) =>
+        user.suspension?.ends
+          ? new Date(user.suspension.ends).toDateString()
+          : "N/A",
     },
   ];
 
-  const renderActions = (user: IUser) => (
+  const renderActions = (user: User) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="px-3 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm text-zinc-100 bg-zinc-700 rounded-md">
@@ -131,7 +137,7 @@ export function UserTable({ data, setData }: UserTableProps) {
   );
 
   return (
-    <TableWrapper<IUser>
+    <TableWrapper<User>
       data={data}
       columns={columns}
       renderActions={renderActions}

@@ -1,6 +1,6 @@
-import { INotification } from "@/types/Notification";
+import { Notification } from "@/types/Notification";
 
-const getNotificationAction = (type: INotification["type"]) => {
+const getNotificationAction = (type: Notification["type"]) => {
   switch (type) {
     case "upvoted_post":
       return "upvoted your post";

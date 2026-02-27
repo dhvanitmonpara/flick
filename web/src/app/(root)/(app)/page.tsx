@@ -4,7 +4,7 @@ import Post from "@/components/general/Post"
 import SkeletonCard from "@/components/skeletons/PostSkeleton"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
 import usePostStore from "@/store/postStore"
-import { IPost } from "@/types/Post"
+import type { Post as PostEntity } from "@/types/Post"
 import { formatDate, getAvatarUrl, getCollegeName, isUser } from "@/utils/helpers"
 import { AxiosError } from "axios"
 import { useSearchParams } from "next/navigation"
@@ -56,7 +56,7 @@ function Feed() {
   }, [fetchPosts])
 
   const removedPostOnAction = (id: string) => {
-    const updatedPost = posts?.filter(post => post.id !== id) as IPost[]
+    const updatedPost = posts?.filter(post => post.id !== id) as PostEntity[]
     setPosts(updatedPost)
   }
 
@@ -102,7 +102,7 @@ function Feed() {
             )
           }
 
-          // postedBy is a full IUser object here
+          // postedBy is a full User object here
           return (
             <Post
               key={post.id}

@@ -7,9 +7,9 @@ import SkeletonCard from "@/components/skeletons/PostSkeleton";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import useCommentStore from "@/store/commentStore";
 import usePostStore from "@/store/postStore";
-import { IComment } from "@/types/Comment";
-import { IPost } from "@/types/Post";
-import { IUser } from "@/types/User";
+import type { Comment as CommentEntity } from "@/types/Comment";
+import type { Post as PostEntity } from "@/types/Post";
+import type { User as UserEntity } from "@/types/User";
 import { formatDate, isCollege, isUser } from "@/utils/helpers";
 import { AxiosError } from "axios";
 import { useParams, useRouter } from "next/navigation";
@@ -17,13 +17,13 @@ import { useCallback, useEffect, useState } from "react";
 import { postApi } from "@/services/api/post";
 import { commentApi } from "@/services/api/comment";
 
-const getAvatarUrl = (user: IUser | string) => isUser(user) && isCollege(user.college) ? user.college.profile : "";
-const getCollegeName = (user: IUser | string) => isUser(user) && isCollege(user.college) ? user.college.name : "Unknown College";
-const getUsername = (user: IUser | string) => isUser(user) ? user.username : "Anonymous";
+const getAvatarUrl = (user: UserEntity | string | null) => isUser(user) && isCollege(user.college) ? user.college.profile : "";
+const getCollegeName = (user: UserEntity | string | null) => isUser(user) && isCollege(user.college) ? user.college.name : "Unknown College";
+const getUsername = (user: UserEntity | string | null) => isUser(user) ? user.username : "Anonymous";
 
 function PostPage() {
 
-  const [currentPost, setCurrentPost] = useState<IPost | null>(null)
+  const [currentPost, setCurrentPost] = useState<PostEntity | null>(null)
   const [loading, setLoading] = useState(false)
   const [loadingPosts, setLoadingPosts] = useState(false)
 
@@ -158,9 +158,9 @@ function PostPage() {
   )
 }
 
-function buildCommentTree(comments: IComment[]): IComment[] {
-  const commentMap = new Map<string, IComment>();
-  const roots: IComment[] = [];
+function buildCommentTree(comments: CommentEntity[]): CommentEntity[] {
+  const commentMap = new Map<string, CommentEntity>();
+  const roots: CommentEntity[] = [];
 
   // Add all comments to map and init children
   comments.forEach(comment => {

@@ -21,13 +21,14 @@ const PostsPage = () => {
     setLoading(true);
     try {
       const statusQuery = statuses.join(",");
-      const res = await http.get<APIResponse>(
-        `/manage/posts?page=${page}&limit=${limit}&status=${statusQuery}`
-      );
+      const res = await http.get(`/manage/reports?page=${page}&limit=${limit}&status=${statusQuery}`);
+      const payload = res.data as {
+        data: ReportedPost[];
+        pagination: { totalReports: number; page: number; limit: number };
+      };
 
-      console.log(res.data)
-      setReports(res.data.data);
-      setTotalPages(Math.max(1, Math.ceil(res.data.totalReports / limit)));
+      setReports(payload.data || []);
+      setTotalPages(Math.max(1, Math.ceil((payload.pagination?.totalReports || 0) / limit)));
     } catch (err) {
       console.error("Error fetching reported posts:", err);
       toast.error("Failed to load reported posts.");
@@ -62,14 +63,5 @@ const PostsPage = () => {
     </div>
   );
 };
-
-interface APIResponse {
-  success: boolean;
-  data: ReportedPost[];
-  page: number;
-  limit: number;
-  totalReports: number;
-  appliedFilters: string[];
-}
 
 export default PostsPage;

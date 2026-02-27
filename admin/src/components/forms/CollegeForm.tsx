@@ -9,9 +9,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { Loader2 } from "lucide-react";
-import { env } from "@/config/env";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ICollege } from "@/types/College";
+import { College } from "@/types/College";
 import { http } from "@/services/http";
 
 const availableCities = ["Ahmedabad"] as const;
@@ -28,10 +27,10 @@ const collegeSchema = z.object({
 type CollegeFormValues = z.infer<typeof collegeSchema>;
 
 function CollegeForm({ defaultData, id, setOpen, setCollege }: {
-  defaultData?: ICollege | null,
+  defaultData?: College | null,
   id?: string,
   setOpen?: (open: boolean) => void,
-  setCollege: React.Dispatch<React.SetStateAction<ICollege[]>>
+  setCollege: React.Dispatch<React.SetStateAction<College[]>>
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -65,16 +64,16 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
       if (isUpdating) {
         res = await http.patch(`/colleges/update/${id}`, data)
       } else {
-        res = await http.post(`/colleges`, data);
+        res = await http.post(`/colleges/create`, data);
       }
 
       if (res.status !== (isUpdating ? 200 : 201)) throw new Error(`Failed to ${isUpdating ? "update" : "create"} college`);
-      if (!res.data.college) throw new Error(`Failed to ${isUpdating ? "update" : "create"} college`);
+      if (!res.data) throw new Error(`Failed to ${isUpdating ? "update" : "create"} college`);
 
-      toast.success(`Post ${isUpdating ? "updated" : "created"} successfully!`);
+      toast.success(`College ${isUpdating ? "updated" : "created"} successfully!`);
       form.reset();
 
-      const college = res.data.college
+      const college = res.data as College
       if (isUpdating) {
         setCollege(prev => prev.map((c) => c.id === college.id ? college : c))
       } else {
@@ -99,7 +98,7 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
           setError(error.response.data.message);
         }
       }
-      toast.error(`Failed to ${isUpdating ? "update" : "create"} post`);
+      toast.error(`Failed to ${isUpdating ? "update" : "create"} college`);
     } finally {
       setLoading(false);
     }

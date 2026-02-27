@@ -12,11 +12,11 @@ import { BsDot } from "react-icons/bs";
 import EngagementComponent from "./EngagementComponent";
 import PostDropdown from "../actions/PostDropdown";
 import { formatDate, isCollege, isUser } from "@/utils/helpers";
-import { IComment } from "@/types/Comment";
+import type { Comment as CommentEntity } from "@/types/Comment";
 import { useState } from "react";
 import { IoMdArrowDropdown, IoMdArrowDropup } from "react-icons/io";
 
-function Comment({ comment, className, depth = 0 }: { comment: IComment, className?: string, depth?: number }) {
+function Comment({ comment, className, depth = 0 }: { comment: CommentEntity, className?: string, depth?: number }) {
   const [isExpanded, setIsExpanded] = useState(false);
   return (
     <>

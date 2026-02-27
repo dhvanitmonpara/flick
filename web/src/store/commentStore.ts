@@ -1,13 +1,13 @@
-import { IComment } from "@/types/Comment";
+import { Comment } from "@/types/Comment";
 import { create } from "zustand";
 
 interface CommentState {
-  comments: IComment[] | null;
-  setComments: (comments: IComment[]) => void;
+  comments: Comment[] | null;
+  setComments: (comments: Comment[]) => void;
   removeComment: (id: string) => void;
-  addComment: (comment: IComment) => void;
+  addComment: (comment: Comment) => void;
   resetComments: () => void;
-  updateComment: (id: string, updatedPost: Partial<IComment>) => void;
+  updateComment: (id: string, updatedPost: Partial<Comment>) => void;
 }
 
 const useCommentStore = create<CommentState>((set) => ({

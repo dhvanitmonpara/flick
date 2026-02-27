@@ -3,23 +3,23 @@ import { formatDate, getAvatarUrl, getCollegeName, isCollege, isUser } from "@/u
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BsDot } from "react-icons/bs"
 import { useEffect, useState } from "react"
-import { IUser } from "@/types/User"
-import { ICollege } from "@/types/College"
-import { IPost } from "@/types/Post"
+import type { User as UserEntity } from "@/types/User"
+import type { College as CollegeEntity } from "@/types/College"
+import type { Post as PostEntity } from "@/types/Post"
 import Post from "@/components/general/Post"
 import { Skeleton } from "@/components/ui/skeleton"
 import SkeletonCard from "@/components/skeletons/PostSkeleton"
 import { userApi } from "@/services/api/user"
 
-interface IProfile extends IUser {
-  college: ICollege,
-  posts: IPost[],
+interface Profile extends UserEntity {
+  college: CollegeEntity,
+  posts: PostEntity[],
   karma: number
 }
 
 function ProfilePage() {
 
-  const [profile, setProfile] = useState<null | IProfile>(null)
+  const [profile, setProfile] = useState<null | Profile>(null)
 
   const user = useProfileStore(state => state.profile)
 
@@ -29,7 +29,7 @@ function ProfilePage() {
         const response = await userApi.getProfile()
 
         if (response.status === 200) {
-          setProfile(response.data.data)
+          setProfile(response.data)
         } else {
           console.error("Failed to fetch profile data")
         }
@@ -88,7 +88,7 @@ function ProfilePage() {
                   )
                 }
 
-                // postedBy is a full IUser object here
+                // postedBy is a full User object here
                 return (
                   <Post
                     key={post.id}
