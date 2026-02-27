@@ -20,6 +20,7 @@ export const CreatePostSchema = z.object({
   topic: z.enum(topicEnum).refine((val) => topicEnum.includes(val), {
     message: "Invalid topic selected",
   }),
+  isPrivate: z.boolean().optional(),
 });
 
 export const UpdatePostSchema = z.object({
@@ -28,6 +29,7 @@ export const UpdatePostSchema = z.object({
   topic: z.enum(topicEnum).refine((val) => topicEnum.includes(val), {
     message: "Invalid topic selected",
   }).optional(),
+  isPrivate: z.boolean().optional(),
 });
 
 export const PostIdSchema = z.object({
@@ -39,7 +41,32 @@ export const GetPostsQuerySchema = z.object({
   limit: z.string().transform(val => Math.max(1, Math.min(50, parseInt(val) || 10))).optional(),
   sortBy: z.enum(["createdAt", "updatedAt", "views"]).optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
-  topic: z.enum(topicEnum).optional(),
+  topic: z.string().optional().transform((val) => {
+    if (!val) return undefined;
+
+    // Try exact match first
+    if (topicEnum.includes(val as any)) {
+      return val;
+    }
+
+    // Try case-insensitive match
+    const lowerVal = val.toLowerCase();
+    const matchedTopic = topicEnum.find(topic => topic.toLowerCase() === lowerVal);
+    if (matchedTopic) {
+      return matchedTopic;
+    }
+
+    // Try URL-decoded match (ask+flick -> ask flick -> Ask Flick)
+    const decodedVal = val.replace(/\+/g, ' ').toLowerCase();
+    const decodedMatch = topicEnum.find(topic =>
+      topic.toLowerCase().replace(/\s+/g, ' ') === decodedVal
+    );
+    if (decodedMatch) {
+      return decodedMatch;
+    }
+
+    return undefined;
+  }),
   collegeId: z.uuid("Invalid college ID").optional(),
   branch: z.string().optional(),
 });

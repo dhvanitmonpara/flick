@@ -56,6 +56,7 @@ function BookmarksPage() {
           key={post.id}
           id={post.id}
           topic={post.topic}
+          isPrivate={post.isPrivate}
           removedPostOnAction={removedPostOnAction}
           bookmarked={true}
           avatar={isUser(post.postedBy) && isCollege(post.postedBy.college) ? post.postedBy.college.profile : ""}

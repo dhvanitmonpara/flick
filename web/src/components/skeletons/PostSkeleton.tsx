@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton"; // Assuming you have a Skel
 export default function SkeletonCard() {
   return (
     <Card className="dark:bg-transparent bg-transparent border-none shadow-none rounded-none">
-      <CardHeader className="flex-row justify-between space-x-2 p-4">
+      <CardHeader className="flex flex-row justify-between space-x-2 p-4">
         <div className="flex space-x-4">
           <Skeleton className="h-10 w-10 rounded-full" />
           <div className="space-y-2">

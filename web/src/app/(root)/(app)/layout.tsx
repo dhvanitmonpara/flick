@@ -16,6 +16,7 @@ import { SocketProvider } from "@/socket/SocketContext";
 import TrendingPostSection from "@/components/general/TrendingPostSection";
 import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import parseTopic from "@/utils/parse-topic";
 
 function AppLayout({ children }: { children: React.ReactElement }) {
 
@@ -60,7 +61,7 @@ function Sidebar() {
         {showAllBranches
           ? <>
             {PostBranches.map((branch) => (
-              <Tab key={branch} to={`/branch/${branch.toLowerCase().replace(" ", "+")}`} text={branch} />
+              <Tab key={branch} to={`/?branch=${branch.toLowerCase().replace(" ", "+")}`} text={branch} />
             ))}
             <button className="flex justify-center items-center space-x-1 cursor-pointer text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 pl-4 py-2" onClick={() => setShowAllBranches(false)}>
               <span>Show less</span>
@@ -69,7 +70,7 @@ function Sidebar() {
           </>
           : <>
             {PostBranches.filter((_, index) => index < 5).map((branch) => (
-              <Tab key={branch} to={`/branch/${branch.toLowerCase().replace(" ", "+")}`} text={branch} />
+              <Tab key={branch} to={`/?branch=${branch.toLowerCase().replace(" ", "+")}`} text={branch} />
             ))}
             <button className="flex justify-center items-center space-x-1 cursor-pointer text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 pl-4 py-2" onClick={() => setShowAllBranches(true)}>
               <span>Show more</span>
@@ -82,7 +83,7 @@ function Sidebar() {
         {showAllTopics
           ? <>
             {PostTopic.map((topic) => (
-              <Tab key={topic} to={`/topic/${topic.toLocaleLowerCase().replace(" / ", "_").replace(" ", "+")}`} text={topic} />
+              <Tab key={topic} to={`/?topic=${parseTopic(topic)}`} text={topic} />
             ))}
             <button className="flex justify-center items-center space-x-1 cursor-pointer text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 pl-4 py-2" onClick={() => setShowAllTopics(false)}>
               <span>Show less</span>
@@ -91,7 +92,7 @@ function Sidebar() {
           </>
           : <>
             {PostTopic.filter((_, index) => index < 5).map((topic) => (
-              <Tab key={topic} to={`/topic/${topic.toLocaleLowerCase().replace(" / ", "_").replace(" ", "+")}`} text={topic} />
+              <Tab key={topic} to={`/?topic=${parseTopic(topic)}`} text={topic} />
             ))}
             <button className="flex justify-center items-center space-x-1 cursor-pointer text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 pl-4 py-2" onClick={() => setShowAllTopics(true)}>
               <span>Show more</span>
@@ -111,8 +112,10 @@ function Sidebar() {
 
 function Tab({ to, text, activeIcon, passiveIcon }: { to: string, text: string, activeIcon?: ReactNode, passiveIcon?: ReactNode }) {
   const pathname = usePathname()
-  return <Link href={to} className={`flex justify-start items-center space-x-3 px-4 ${activeIcon && passiveIcon ? "py-2" : "py-1.5"} rounded-md ${pathname === to ? "bg-zinc-200/50 dark:bg-zinc-800/40 text-zinc-900 dark:text-zinc-100" : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/40"}`}>
-    {pathname === to ? (activeIcon || null) : (passiveIcon || null)}
+  const currentSearchParams = useSearchParams()
+  const isActive = to.includes("?") ? `${pathname}?${currentSearchParams.toString()}` === to : pathname === to
+  return <Link href={to} className={`flex justify-start items-center space-x-3 px-4 ${activeIcon && passiveIcon ? "py-2" : "py-1.5"} rounded-md ${isActive ? "bg-zinc-200/50 dark:bg-zinc-800/40 text-zinc-900 dark:text-zinc-100" : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/40"}`}>
+    {isActive ? (activeIcon || null) : (passiveIcon || null)}
     <span>
       {text}
     </span>

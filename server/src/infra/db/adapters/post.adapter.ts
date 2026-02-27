@@ -1,4 +1,4 @@
-import { and, desc, eq, sql, asc } from "drizzle-orm";
+import { and, desc, eq, sql, asc, or } from "drizzle-orm";
 import db from "@/infra/db/index";
 import type { DB } from "@/infra/db/types";
 import { posts, users, colleges, votes, bookmarks, comments } from "../tables";
@@ -84,6 +84,7 @@ export const findByIdWithDetails = async (
       title: posts.title,
       content: posts.content,
       topic: posts.topic,
+      isPrivate: posts.isPrivate,
       views: posts.views,
       isBanned: posts.isBanned,
       isShadowBanned: posts.isShadowBanned,
@@ -126,6 +127,7 @@ export const findByIdWithDetails = async (
     title: row.title,
     content: row.content,
     topic: row.topic,
+    isPrivate: row.isPrivate,
     views: row.views,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -162,6 +164,7 @@ export const findMany = async (
     collegeId?: string;
     branch?: string;
     userId?: string;
+    userCollegeId?: string;
   },
   dbTx?: DB
 ) => {
@@ -224,6 +227,21 @@ export const findMany = async (
     eq(posts.isShadowBanned, false),
   ];
 
+  if (options?.userCollegeId) {
+    whereConditions.push(
+      or(
+        eq(posts.isPrivate, false),
+        and(
+          eq(posts.isPrivate, true),
+          eq(users.collegeId, options.userCollegeId)
+        )
+      )!
+    );
+  } else {
+    // Unauthenticated users only see public posts
+    whereConditions.push(eq(posts.isPrivate, false));
+  }
+
   if (options?.topic) {
     whereConditions.push(eq(posts.topic, options.topic as any));
   }
@@ -245,6 +263,7 @@ export const findMany = async (
       title: posts.title,
       content: posts.content,
       topic: posts.topic,
+      isPrivate: posts.isPrivate,
       views: posts.views,
       createdAt: posts.createdAt,
       updatedAt: posts.updatedAt,
@@ -278,6 +297,7 @@ export const findMany = async (
     title: row.title,
     content: row.content,
     topic: row.topic,
+    isPrivate: row.isPrivate,
     views: row.views,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -309,6 +329,7 @@ export const countAll = async (
     topic?: string;
     collegeId?: string;
     branch?: string;
+    userCollegeId?: string;
   },
   dbTx?: DB
 ) => {
@@ -318,6 +339,21 @@ export const countAll = async (
     eq(posts.isBanned, false),
     eq(posts.isShadowBanned, false),
   ];
+
+  if (filters?.userCollegeId) {
+    whereConditions.push(
+      or(
+        eq(posts.isPrivate, false),
+        and(
+          eq(posts.isPrivate, true),
+          eq(users.collegeId, filters.userCollegeId)
+        )
+      )!
+    );
+  } else {
+    // Unauthenticated users only see public posts
+    whereConditions.push(eq(posts.isPrivate, false));
+  }
 
   if (filters?.topic) {
     whereConditions.push(eq(posts.topic, filters.topic as any));

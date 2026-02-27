@@ -19,14 +19,15 @@ const postCacheKeys = {
     topic?: string,
     collegeId?: string,
     branch?: string,
-    userId?: string
+    userId?: string,
+    userCollegeId?: string
   ) => {
     const version = (await cache.get<number>(`posts:list:version`, { bypassL1: true })) || 1;
-    return `post:many:v${version}:${page}:${limit}:${sortBy}:${sortOrder}:${topic || 'all'}:${collegeId || 'all'}:${branch || 'all'}:${userId || 'anonymous'}`;
+    return `post:many:v${version}:${page}:${limit}:${sortBy}:${sortOrder}:${topic || 'all'}:${collegeId || 'all'}:${branch || 'all'}:${userId || 'anonymous'}:${userCollegeId || 'none'}`;
   },
 
-  count: (topic?: string, collegeId?: string, branch?: string) =>
-    `post:count:${topic || 'all'}:${collegeId || 'all'}:${branch || 'all'}`,
+  count: (topic?: string, collegeId?: string, branch?: string, userCollegeId?: string) =>
+    `post:count:${topic || 'all'}:${collegeId || 'all'}:${branch || 'all'}:${userCollegeId || 'none'}`,
 };
 
 export default postCacheKeys;

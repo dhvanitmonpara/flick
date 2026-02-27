@@ -75,6 +75,7 @@ function CollegePage() {
                 username="Unknown"
                 title={post.title}
                 topic={post.topic}
+                isPrivate={post.isPrivate}
                 bookmarked={post.bookmarked ?? false}
                 branch="Unknown"
                 viewsCount={post.views}
@@ -97,6 +98,7 @@ function CollegePage() {
               avatar={getAvatarUrl(postedBy)}
               college={getCollegeName(postedBy)}
               topic={post.topic}
+              isPrivate={post.isPrivate}
               username={postedBy.username}
               userVote={post.userVote ?? null}
               title={post.title}

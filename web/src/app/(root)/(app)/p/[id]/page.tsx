@@ -124,6 +124,7 @@ function PostPage() {
           username={getUsername(currentPost.postedBy)}
           removedPostOnAction={() => navigate("/")}
           topic={currentPost.topic}
+          isPrivate={currentPost.isPrivate}
           userVote={currentPost.userVote ?? null}
           title={currentPost.title}
           branch={isUser(currentPost.postedBy) ? currentPost.postedBy.branch : "Unknown Branch"}

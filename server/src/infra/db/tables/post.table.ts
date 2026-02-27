@@ -8,6 +8,7 @@ export const posts = pgTable("posts", {
   content: text("content").notNull(),
   postedBy: uuid("postedBy").references(() => platformUser.id),
   topic: topicEnum("topic").notNull(),
+  isPrivate: boolean("isPrivate").default(false).notNull(),
   isBanned: boolean("isBanned").default(false),
   isShadowBanned: boolean("isShadowBanned").default(false),
   views: integer("views").default(0),

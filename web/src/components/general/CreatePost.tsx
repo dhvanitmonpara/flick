@@ -23,6 +23,7 @@ import { Loader2 } from "lucide-react";
 import usePostStore from "@/store/postStore";
 import { TermsForm } from "./TermsForm";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Switch } from "../ui/switch";
 import { PostTopic } from "@/types/postTopics";
 import { postApi } from "@/services/api/post";
 import { userApi } from "@/services/api/user";
@@ -31,32 +32,33 @@ const postSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters.").max(100, "Title must be at most 100 characters."),
   content: z.string().min(10, "Content must be at least 10 characters.").max(2000, "Content must be at most 2000 characters."),
   topic: z.enum(PostTopic),
+  isPrivate: z.boolean().default(false),
 });
 
 type PostFormValues = z.infer<typeof postSchema>;
 
-function CreatePost({ className }: { className?: string }) {
+function CreatePost({ className, children, defaultData }: { className?: string, children?: React.ReactNode, defaultData?: { title: string, content: string, isPrivate?: boolean } }) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className={`flex items-center cursor-pointer space-x-3 px-4 py-4 rounded-md w-full justify-start text-lg font-normal dark:bg-transparent bg-zinc-100 text-zinc-800 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/40 ${className}`}>
+        {children || <Button className={`flex items-center cursor-pointer space-x-3 px-4 py-4 rounded-md w-full justify-start text-lg font-normal dark:bg-transparent bg-zinc-100 text-zinc-800 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/40 ${className}`}>
           <FaPlus />
           <span>create</span>
-        </Button>
+        </Button>}
       </DialogTrigger>
       <DialogContent className="dark:bg-zinc-900 dark:border-zinc-800">
         <DialogHeader>
           <DialogTitle>Create Post</DialogTitle>
         </DialogHeader>
-        <CreatePostForm setOpen={setOpen} />
+        <CreatePostForm setOpen={setOpen} defaultData={defaultData} />
       </DialogContent>
     </Dialog>
   );
 }
 
-export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.Dispatch<React.SetStateAction<boolean>>, defaultData?: { title: string, content: string }, id?: string }) => {
+export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.Dispatch<React.SetStateAction<boolean>>, defaultData?: { title: string, content: string, isPrivate?: boolean }, id?: string }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showTerms, setShowTerms] = useState(false);
@@ -66,13 +68,14 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
   const updatePost = usePostStore(state => state.updatePost)
   const { handleError } = useErrorHandler()
 
-  const isUpdating = !!defaultData
+  const isUpdating = !!defaultData;
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postSchema),
-    defaultValues: defaultData ?? {
+    defaultValues: defaultData ? { ...defaultData, isPrivate: false } : {
       title: "",
       content: "",
+      isPrivate: false,
     },
   });
 
@@ -232,6 +235,30 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
                 </FormItem>
               );
             }}
+          />
+
+          <FormField
+            control={form.control}
+            name="isPrivate"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border dark:border-zinc-800 p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base text-zinc-800 dark:text-zinc-200">
+                    College-Only Post
+                  </FormLabel>
+                  <div className="text-sm text-zinc-500 dark:text-zinc-400">
+                    Only users from your verified college email domain will see this.
+                  </div>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={loading}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
           />
 
           <Button disabled={loading || Boolean(error)} type="submit" className="w-full">

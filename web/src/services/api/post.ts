@@ -23,12 +23,12 @@ export const postApi = {
   incrementView: async (postId: string) => {
     return http.post(`/posts/${postId}/view`, {});
   },
-  create: async (payload: { title: string; content: string; topic: string }) => {
+  create: async (payload: { title: string; content: string; topic: string; isPrivate?: boolean }) => {
     return http.post("/posts", payload, {
       headers: { "Content-Type": "application/json" },
     });
   },
-  update: async (postId: string, payload: { title: string; content: string; topic: string }) => {
+  update: async (postId: string, payload: { title: string; content: string; topic: string; isPrivate?: boolean }) => {
     return http.patch(`/posts/${postId}`, payload, {
       headers: { "Content-Type": "application/json" },
     });

@@ -15,6 +15,7 @@ import { TPostTopic } from "@/types/postTopics";
 import useProfileStore from "@/store/profileStore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import parseTopic from "@/utils/parse-topic";
 
 interface PostProps {
   avatar: string,
@@ -34,9 +35,10 @@ interface PostProps {
   bookmarked: boolean
   removedPostOnAction?: (id: string) => void
   topic: TPostTopic
+  isPrivate?: boolean
 }
 
-function Post({ avatar, userVote, avatarFallback, id, createdAt, college, title, content, upvoteCount, downvoteCount, commentsCount, viewsCount, username, branch, topic, bookmarked, removedPostOnAction }: PostProps) {
+function Post({ avatar, userVote, avatarFallback, id, createdAt, college, title, content, upvoteCount, downvoteCount, commentsCount, viewsCount, username, branch, topic, bookmarked, removedPostOnAction, isPrivate }: PostProps) {
   const profile = useProfileStore(state => state.profile)
   const navigate = useRouter().push
 
@@ -59,7 +61,7 @@ function Post({ avatar, userVote, avatarFallback, id, createdAt, college, title,
           </Avatar>
           <div className="space-y-1">
             <h2 className="flex items-center space-x-0.5 font-semibold text-zinc-900 dark:text-zinc-100">
-              <Link onClick={(e) => handleLinkClick(e, `/branch/${branch}`)} className="hover:underline" href={`/branch/${branch}`}>{branch}</Link>
+              <Link onClick={(e) => handleLinkClick(e, `/?branch=${branch}`)} className="hover:underline" href={`/?branch=${branch}`}>{branch}</Link>
               <BsDot size={14} />
               <span className="text-xs text-zinc-600 dark:text-zinc-400">{createdAt}</span>
             </h2>
@@ -68,7 +70,15 @@ function Post({ avatar, userVote, avatarFallback, id, createdAt, college, title,
               <BsDot size={16} />
               <Link onClick={(e) => handleLinkClick(e, `/user/${username}`)} className="hover:underline" href={`/user/${username}`}>{username}</Link>
               <BsDot size={16} />
-              <Link onClick={(e) => handleLinkClick(e, `/topic/${topic}`)} className="hover:underline" href={`/topic/${topic}`}>{topic}</Link>
+              <Link onClick={(e) => handleLinkClick(e, `/?topic=${parseTopic(topic)}`)} className="hover:underline" href={`/?topic=${parseTopic(topic)}`}>{topic}</Link>
+              {isPrivate && (
+                <>
+                  <BsDot size={16} />
+                  <span className="flex items-center gap-1 font-semibold text-zinc-700 dark:text-zinc-300">
+                    🔒 College Only
+                  </span>
+                </>
+              )}
             </p>
           </div>
         </div>

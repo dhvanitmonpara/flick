@@ -16,6 +16,7 @@ export interface IPost {
   views: number;
   commentsCount?: number;
   topic: TPostTopic;
+  isPrivate?: boolean;
   createdAt: string;
   updatedAt: string;
 }

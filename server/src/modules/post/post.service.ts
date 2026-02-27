@@ -9,6 +9,7 @@ class PostService {
     title: string;
     content: string;
     topic: string;
+    isPrivate?: boolean;
     postedBy: string;
   }) {
     logger.info("Creating post", {
@@ -21,6 +22,7 @@ class PostService {
       title: postData.title.trim(),
       content: postData.content.trim(),
       topic: postData.topic as any,
+      isPrivate: postData.isPrivate ?? false,
       postedBy: postData.postedBy,
     });
 
@@ -42,10 +44,10 @@ class PostService {
     return postWithDetails || newPost;
   }
 
-  async getPostById(id: string, userId?: string) {
-    logger.info("Fetching post by ID", { postId: id, userId });
+  async getPostById(id: string, user?: { id: string; collegeId: string }) {
+    logger.info("Fetching post by ID", { postId: id, userId: user?.id });
 
-    const post = await PostRepo.CachedRead.findByIdWithDetails(id, userId);
+    const post = await PostRepo.CachedRead.findByIdWithDetails(id, user?.id);
     if (!post) {
       logger.warn("Post not found", { postId: id });
       throw HttpError.notFound("Post not found", {
@@ -53,6 +55,21 @@ class PostService {
         meta: { source: "PostService.getPostById" },
         errors: [{ field: "id", message: "Post not found" }],
       });
+    }
+
+    if (post.isPrivate) {
+      if (!user) {
+        throw HttpError.unauthorized("Please log in to view this college-only post.", {
+          code: "POST_VIEW_UNAUTHORIZED",
+          meta: { source: "PostService.getPostById" },
+        });
+      }
+      if (user.collegeId !== post.postedBy?.college?.id) {
+        throw HttpError.forbidden("You do not have access to view this college-only post.", {
+          code: "POST_VIEW_FORBIDDEN",
+          meta: { source: "PostService.getPostById" },
+        });
+      }
     }
 
     logger.info("Post retrieved successfully", { postId: id, title: post.title });
@@ -68,6 +85,7 @@ class PostService {
     collegeId?: string;
     branch?: string;
     userId?: string;
+    userCollegeId?: string;
   }) {
     const postsResult = await PostRepo.CachedRead.findMany(options);
     const posts = Array.isArray(postsResult) ? postsResult : [];
@@ -75,6 +93,7 @@ class PostService {
       topic: options?.topic,
       collegeId: options?.collegeId,
       branch: options?.branch,
+      userCollegeId: options?.userCollegeId,
     });
 
     const page = options?.page || 1;
@@ -110,6 +129,7 @@ class PostService {
       title?: string;
       content?: string;
       topic?: string;
+      isPrivate?: boolean;
     }
   ) {
     logger.info("Updating post", { postId: id, userId, updates: Object.keys(updates) });
@@ -148,6 +168,10 @@ class PostService {
     if (updates.topic) {
       cleanUpdates.topic = updates.topic;
       beforeUpdates.topic = existingPost.topic
+    }
+    if (updates.isPrivate !== undefined) {
+      cleanUpdates.isPrivate = updates.isPrivate;
+      beforeUpdates.isPrivate = existingPost.isPrivate;
     }
 
     const updatedPost = await PostRepo.Write.updateById(id, cleanUpdates);
@@ -212,6 +236,7 @@ class PostService {
     sortBy?: "createdAt" | "updatedAt" | "views";
     sortOrder?: "asc" | "desc";
     userId?: string;
+    userCollegeId?: string;
   }) {
     return this.getPosts({
       ...options,
@@ -225,6 +250,7 @@ class PostService {
     sortBy?: "createdAt" | "updatedAt" | "views";
     sortOrder?: "asc" | "desc";
     userId?: string;
+    userCollegeId?: string;
   }) {
     return this.getPosts({
       ...options,
