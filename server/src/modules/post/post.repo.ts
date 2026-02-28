@@ -25,6 +25,7 @@ const PostRepo = {
         branch?: string;
         userId?: string;
         userCollegeId?: string;
+        authorId?: string;
       },
       dbTx?: DB
     ) => {
@@ -37,9 +38,10 @@ const PostRepo = {
       const branch = options?.branch;
       const userId = options?.userId;
       const userCollegeId = options?.userCollegeId;
+      const authorId = options?.authorId;
 
       return cached(
-        await postCacheKeys.many(page, limit, sortBy, sortOrder, topic, collegeId, branch, userId, userCollegeId),
+        await postCacheKeys.many(page, limit, sortBy, sortOrder, topic, collegeId, branch, userId, userCollegeId, authorId),
         () => PostAdapter.findMany(options, dbTx)
       );
     },
@@ -50,9 +52,10 @@ const PostRepo = {
         collegeId?: string;
         branch?: string;
         userCollegeId?: string;
+        authorId?: string;
       },
       dbTx?: DB
-    ) => cached(postCacheKeys.count(filters?.topic, filters?.collegeId, filters?.branch, filters?.userCollegeId), () => PostAdapter.countAll(filters, dbTx)),
+    ) => cached(postCacheKeys.count(filters?.topic, filters?.collegeId, filters?.branch, filters?.userCollegeId, filters?.authorId), () => PostAdapter.countAll(filters, dbTx)),
   },
 
   Read: {
@@ -71,6 +74,7 @@ const PostRepo = {
         branch?: string;
         userId?: string;
         userCollegeId?: string;
+        authorId?: string;
       },
       dbTx?: DB
     ) => PostAdapter.findMany(options, dbTx),
@@ -81,6 +85,7 @@ const PostRepo = {
         collegeId?: string;
         branch?: string;
         userCollegeId?: string;
+        authorId?: string;
       },
       dbTx?: DB
     ) => PostAdapter.countAll(filters, dbTx),

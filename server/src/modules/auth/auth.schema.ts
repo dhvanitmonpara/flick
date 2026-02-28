@@ -20,13 +20,16 @@ export const tempTokenSchema = z.object({
 });
 
 export const initializeUserSchema = z.object({
-  branch: z
-    .string("Branch is required")
-    .min(1, "Branch must be at least 1 characters long"),
   email: EmailSchema,
   password: z
     .string("Password is required")
     .min(6, "Password must be at least 6 characters"),
+});
+
+export const onboardingSchema = z.object({
+  branch: z
+    .string("Branch is required")
+    .min(1, "Branch must be at least 1 characters long"),
 });
 
 export const registrationSchema = z.object({

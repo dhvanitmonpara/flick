@@ -13,6 +13,7 @@ router.route("/:id").get(postController.getPostById);
 router.route("/:id/view").post(postController.incrementPostViews);
 router.route("/college/:collegeId").get(postController.getPostsByCollege);
 router.route("/branch/:branch").get(postController.getPostsByBranch);
+router.route("/user/:userId").get(postController.getPostsByUser);
 
 router.use(checkUserContext);
 

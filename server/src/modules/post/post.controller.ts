@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { Controller, HttpResponse } from "@/core/http";
+import { Controller, HttpError, HttpResponse } from "@/core/http";
 import postService from "./post.service";
 import * as postSchemas from "./post.schema";
 
@@ -118,6 +118,29 @@ class PostController {
     });
 
     return HttpResponse.ok("Posts retrieved successfully by branch", result);
+  }
+
+  static async getPostsByUser(req: Request) {
+    const userId = req.params.userId;
+    if (!userId) {
+      throw HttpError.badRequest("User ID is required");
+    }
+
+    const { page, limit, sortBy, sortOrder } = postSchemas.GetPostsQuerySchema.parse(req.query)
+
+    const currentUserId = req.user?.id;
+    const userCollegeId = req.user?.collegeId;
+
+    const result = await postService.getPostsByAuthor(userId, {
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+      userId: currentUserId,
+      userCollegeId,
+    });
+
+    return HttpResponse.ok("Posts retrieved successfully by user", result);
   }
 }
 

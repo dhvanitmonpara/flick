@@ -20,14 +20,15 @@ const postCacheKeys = {
     collegeId?: string,
     branch?: string,
     userId?: string,
-    userCollegeId?: string
+    userCollegeId?: string,
+    authorId?: string
   ) => {
     const version = (await cache.get<number>(`posts:list:version`, { bypassL1: true })) || 1;
-    return `post:many:v${version}:${page}:${limit}:${sortBy}:${sortOrder}:${topic || 'all'}:${collegeId || 'all'}:${branch || 'all'}:${userId || 'anonymous'}:${userCollegeId || 'none'}`;
+    return `post:many:v${version}:${page}:${limit}:${sortBy}:${sortOrder}:${topic || 'all'}:${collegeId || 'all'}:${branch || 'all'}:${userId || 'anonymous'}:${userCollegeId || 'none'}:${authorId || 'none'}`;
   },
 
-  count: (topic?: string, collegeId?: string, branch?: string, userCollegeId?: string) =>
-    `post:count:${topic || 'all'}:${collegeId || 'all'}:${branch || 'all'}:${userCollegeId || 'none'}`,
+  count: (topic?: string, collegeId?: string, branch?: string, userCollegeId?: string, authorId?: string) =>
+    `post:count:${topic || 'all'}:${collegeId || 'all'}:${branch || 'all'}:${userCollegeId || 'none'}:${authorId || 'none'}`,
 };
 
 export default postCacheKeys;

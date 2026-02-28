@@ -165,6 +165,7 @@ export const findMany = async (
     branch?: string;
     userId?: string;
     userCollegeId?: string;
+    authorId?: string;
   },
   dbTx?: DB
 ) => {
@@ -254,6 +255,10 @@ export const findMany = async (
     whereConditions.push(eq(users.branch, options.branch));
   }
 
+  if (options?.authorId) {
+    whereConditions.push(eq(posts.postedBy, options.authorId));
+  }
+
   const orderBy = sortOrder === "asc" ? asc(posts[sortBy]) : desc(posts[sortBy]);
 
   const results = await client
@@ -330,6 +335,7 @@ export const countAll = async (
     collegeId?: string;
     branch?: string;
     userCollegeId?: string;
+    authorId?: string;
   },
   dbTx?: DB
 ) => {
@@ -365,6 +371,10 @@ export const countAll = async (
 
   if (filters?.branch) {
     whereConditions.push(eq(users.branch, filters.branch));
+  }
+
+  if (filters?.authorId) {
+    whereConditions.push(eq(posts.postedBy, filters.authorId));
   }
 
   const result = await client

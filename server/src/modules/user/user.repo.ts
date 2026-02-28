@@ -34,6 +34,7 @@ const UserRepo = {
     create: userAdapter.create,
     updateById: userAdapter.updateById,
     updateKarma: userAdapter.updateKarma,
+    delete: userAdapter.deleteById,
   }
 }
 

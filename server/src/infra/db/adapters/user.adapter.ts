@@ -184,6 +184,17 @@ export const create = async (
   return created;
 };
 
+export const deleteById = async (userId: string, dbTx?: DB) => {
+  const client = dbTx ?? db;
+
+  const [deleted] = await client
+    .delete(users)
+    .where(eq(users.id, userId))
+    .returning();
+
+  return deleted ?? null;
+};
+
 export const updateKarma = async (
   karmaChange: number,
   userId: string,

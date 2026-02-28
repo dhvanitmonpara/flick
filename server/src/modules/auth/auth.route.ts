@@ -1,6 +1,7 @@
 import { Router } from "express";
 import AuthController from "@/modules/auth/auth.controller";
-import { authenticate, ensureRatelimit, requireRole } from "@/core/middlewares";
+import { ensureRatelimit, injectUser, requireRole, requireUser } from "@/core/middlewares";
+import { authenticated } from "@/core/middlewares/pipelines";
 
 const router = Router();
 
@@ -18,12 +19,16 @@ router.post("/password/forgot", AuthController.forgotPassword);
 router.post("/password/reset", AuthController.resetPassword);
 
 // Protected routes
-router.use(authenticate);
+router.use(authenticated);
 
+router.post("/onboarding/complete", injectUser, requireUser, AuthController.completeOnboarding);
 router.post("/logout", AuthController.logoutUser);
 router.post("/logout-all", AuthController.logoutAllDevices);
 router.delete("/account", AuthController.deleteAccount);
-router.get("/admins", requireRole("admin", "superadmin"), AuthController.getAllAdmins);
-router.get("/users", requireRole("admin", "superadmin"), AuthController.getAllUsersForAdmin);
+
+router.use(requireRole("admin"))
+
+router.get("/admins", AuthController.getAllAdmins);
+router.get("/users", AuthController.getAllUsersForAdmin);
 
 export default router;

@@ -17,6 +17,7 @@ import crypto from "node:crypto";
 import { PendingUser } from "./auth.types";
 import { env } from "@/config/env";
 import UserRepo from "../user/user.repo";
+import { isConstraintViolation } from "@/lib/pg/errors/constraint-violantion";
 
 class AuthService {
   getPendingUser = async (signupId: string, options?: { bypassL1?: boolean }) => {
@@ -31,7 +32,6 @@ class AuthService {
 
   initializeRegistration = async (
     email: string,
-    branch: string,
     res: Response
   ) => {
     const existingUser = await AuthRepo.CachedRead.findByEmail(email);
@@ -45,21 +45,7 @@ class AuthService {
       });
     }
 
-    this.validateStudentEmail(email);
-
-    const college = await CollegeRepo.CachedRead.findByEmailDomain(email.split("@")[1]);
-
-    if (!college) {
-      logger.error("College not found", {
-        source: "authService.initializeRegistration"
-      })
-      throw HttpError.notFound("College not found", {
-        code: "COLLEGE_NOT_FOUND",
-        meta: { source: "initialize_registration" },
-      });
-    };
-
-    this.checkDisposableMail(email)
+    const college = await this.ensureEmailVerified(email);
 
     const encryptedEmail = CryptoTools.email.encrypt(email.toLowerCase());
     // const signupId = crypto.randomBytes(32).toString("hex");
@@ -70,7 +56,6 @@ class AuthService {
     const cacheSuccess = await cache.set(
       `pending:${signupId}`,
       {
-        branch,
         collegeId: college.id,
         email: encryptedEmail,
         verified: false
@@ -153,7 +138,7 @@ class AuthService {
   finishRegistration = async (req: Request, password: string, res: Response) => {
     const signupId = req.cookies.pending_signup;
     const stored = await this.getPendingUser(signupId, { bypassL1: true });
-    const { email, branch, collegeId, verified } = stored;
+    const { email, verified, collegeId } = stored;
 
     if (!verified) {
       throw HttpError.forbidden("User not verified");
@@ -175,26 +160,89 @@ class AuthService {
     const parsed = await response.json();
     const createdUser = parsed.user;
 
-    const createdProfile = await UserRepo.Write.create({
+    const profile = await UserRepo.Write.create({
       username,
       collegeId,
-      branch,
+      branch: null,
       authId: createdUser.id,
+      status: "ONBOARDING",
     });
 
     if (res && response.headers) forwardSetCookieHeaders(response.headers, res);
     await cache.del(`pending:${signupId}`);
+    res.clearCookie("pending_signup", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      path: "/",
+      domain: env.COOKIE_DOMAIN
+    });
 
     await recordAudit({
-      action: "user:created:account",
-      entityType: "user",
+      action: "auth:created:account",
+      entityType: "auth",
       entityId: createdUser.id,
       after: { id: createdUser.id },
       metadata: { registrationMethod: "email" },
     });
 
-    return { user: createdUser, profile: createdProfile, session: parsed.session };
+    return { user: createdUser, profile, session: parsed.session };
   };
+
+  completeOnboarding = async (req: Request, branch: string) => {
+    const userId = req.user.id;
+
+    const existingProfile = await UserRepo.Read.findByAuthId(userId, {});
+    if (!existingProfile) {
+      throw HttpError.internal("Profile missing for authenticated user");
+    }
+    if (existingProfile.status === "ACTIVE") {
+      throw HttpError.forbidden("User already onboarded");
+    }
+
+    // TODO: Check if branch is valid
+
+    try {
+      const profile = await UserRepo.Write.updateById(userId, {
+        branch,
+        status: "ACTIVE",
+      });
+
+      await recordAudit({
+        action: "user:finished:onboarding",
+        entityType: "user",
+        entityId: userId,
+        after: { id: profile.id },
+      });
+
+      return profile;
+    } catch (error) {
+      if (isConstraintViolation(error)) {
+        return await UserRepo.Read.findByAuthId(userId, {});
+      }
+      throw error;
+    }
+  };
+
+  ensureEmailVerified = async (email: string) => {
+    this.validateStudentEmail(email);
+
+    const college = await CollegeRepo.CachedRead.findByEmailDomain(email.split("@")[1]);
+
+    if (!college) {
+      logger.error("College not found", {
+        source: "authService.initializeRegistration"
+      })
+      throw HttpError.notFound("College not found", {
+        code: "COLLEGE_NOT_FOUND",
+        meta: { source: "initialize_registration" },
+      });
+    };
+
+    this.checkDisposableMail(email)
+
+    return college;
+  }
 
   loginAuth = async (email: string, password: string, res: Response) => {
     const response = await auth.api.signInEmail({
@@ -241,6 +289,12 @@ class AuthService {
       asResponse: true,
       returnHeaders: true,
     });
+
+    const profile = await UserRepo.Read.findByAuthId(req.auth?.id, {});
+
+    if (profile) {
+      await UserRepo.Write.delete(profile.id);
+    }
 
     forwardSetCookieHeaders(response.headers, res);
 

@@ -1,10 +1,12 @@
 import { Request } from "express";
-import AuthRepo from "@/modules/auth/auth.repo";
 import recordAudit from "@/lib/record-audit";
 import logger from "@/core/logger";
 import { auth } from "@/infra/auth/auth";
 import parseHeaders from "@/lib/better-auth/parse-headers";
+import authService from "../auth.service";
 import UserRepo from "@/modules/user/user.repo";
+import { nanoid } from "nanoid";
+import { HttpError } from "@/core/http";
 
 class OAuthService {
   handleGoogleOAuth = async (code: string, req: Request) => {
@@ -15,22 +17,39 @@ class OAuthService {
     // Check existing user
 
     const headers = parseHeaders(req.headers)
-
     const session = await auth.api.getSession({ headers });
 
-    await UserRepo.Write.create({
-      authId: session.user.id,
-      username: session.user.username,
-      collegeId: session.user.collegeId,
-    });
-
-    if (session) {
-      await recordAudit({
-        action: "user:created:account",
-        entityType: "user",
-        entityId: session.user.id,
+    if (!session) {
+      logger.error("Session not found", {
+        source: "OAuthService.handleGoogleOAuth"
+      })
+      throw HttpError.unauthorized("Unauthorized request", {
+        code: "UNAUTHORIZED",
+        meta: { source: "handle_google_oauth" },
       });
     }
+
+    const college = await authService.ensureEmailVerified(session.user.email);
+
+    const username = nanoid(12);
+
+    const profile = await UserRepo.Write.create({
+      username,
+      collegeId: college.id,
+      branch: null,
+      authId: session.user.id,
+      status: "ONBOARDING",
+    });
+
+    await recordAudit({
+      action: "auth:created:account",
+      entityType: "auth",
+      entityId: session.user.id,
+      after: { id: session.user.id },
+      metadata: { registrationMethod: "google" },
+    });
+
+    return profile;
   };
 }
 

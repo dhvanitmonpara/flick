@@ -10,8 +10,8 @@ export const identity = authenticate
 export const authenticated = compose(
   authenticate,
   requireAuth,
-
 )
+
 export const withRequiredUserContext = compose(
   authenticate,
   requireAuth,

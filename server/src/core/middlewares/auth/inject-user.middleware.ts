@@ -9,7 +9,7 @@ const injectUser = async (req: Request, _: Response, next: NextFunction) => {
 
   const user = await UserRepo.CachedRead.findByAuthId(req.auth.id, {});
 
-  if (!user) {
+  if (!user || user.status === "ONBOARDING") {
     return next();
   }
 

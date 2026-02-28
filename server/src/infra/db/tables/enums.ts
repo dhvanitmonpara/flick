@@ -23,6 +23,11 @@ export const notificationType = pgEnum("notification_type", [
   "posted",
 ]);
 
+export const userStatusEnum = pgEnum("user_status", [
+  "ONBOARDING",
+  "ACTIVE",
+]);
+
 export const topicEnum = pgEnum("topic_enum", [
   "Ask Flick", // AMA-style Q&A
   "Serious Discussion", // Longform thought, critical debate

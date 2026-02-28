@@ -31,6 +31,15 @@ class UserController {
 
     return HttpResponse.ok("Terms accepted successfully");
   }
+
+  static async updateUserProfile(req: Request) {
+    const userId = req.user.id;
+    const { branch } = userSchemas.UpdateProfileSchema.parse(req.body);
+
+    const updatedUser = await userService.updateUserProfile(userId, { branch });
+
+    return HttpResponse.ok("Profile updated successfully", toPublicUser(updatedUser));
+  }
 }
 
 export default UserController;

@@ -36,3 +36,7 @@ export const googleCallbackSchema = z.object({
 export const searchQuerySchema = z.object({
   query: z.string("Query is required"),
 });
+
+export const UpdateProfileSchema = z.object({
+  branch: z.string().min(1, "Branch must be at least 1 characters long"),
+});

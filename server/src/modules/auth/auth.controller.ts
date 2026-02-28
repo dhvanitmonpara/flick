@@ -102,9 +102,9 @@ class AuthController {
   }
 
   static async initializeUser(req: Request, res: Response) {
-    const { email, branch } = authSchemas.initializeUserSchema.parse(req.body);
+    const { email } = authSchemas.initializeUserSchema.parse(req.body);
 
-    const result = await authService.initializeRegistration(email, branch, res);
+    const result = await authService.initializeRegistration(email, res);
 
     return HttpResponse.created(
       "User initialized successfully and OTP sent",
@@ -118,6 +118,12 @@ class AuthController {
     const data = await authService.finishRegistration(req, password, res);
 
     return HttpResponse.created("Form submitted successfully!", data);
+  }
+
+  static async completeOnboarding(req: Request) {
+    const { branch } = authSchemas.onboardingSchema.parse(req.body);
+    const data = await authService.completeOnboarding(req, branch);
+    return HttpResponse.ok("Onboarding completed successfully!", data);
   }
 
   static async deleteAccount(req: Request, res: Response) {

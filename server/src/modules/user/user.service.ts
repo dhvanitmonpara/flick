@@ -55,6 +55,31 @@ class UserService {
 
     return true;
   };
+
+  updateUserProfile = async (userId: string, updates: { branch: string }) => {
+    logger.info("Updating user profile", { userId, updates });
+
+    // We already check if user exists in the request middleware, but we can do a sanity check
+    const existingUser = await UserRepo.CachedRead.findById(userId, {});
+    if (!existingUser) {
+      throw HttpError.notFound("User not found");
+    }
+
+    const updatedUser = await UserRepo.Write.updateById(userId, { branch: updates.branch });
+
+    // Since we're modifying the DB directly, we should invalidate or trigger cache updates if necessary
+    // Assuming cached responses will expire or are handled similarly to other places
+
+    recordAudit({
+      action: "other:action",
+      entityId: userId,
+      entityType: "user",
+      before: { branch: existingUser.branch },
+      after: { branch: updates.branch }
+    });
+
+    return updatedUser;
+  }
 }
 
 export default new UserService();

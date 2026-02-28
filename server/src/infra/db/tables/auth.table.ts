@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -9,6 +9,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { colleges } from "./college.table";
+import { userStatusEnum } from "./enums";
 
 export const auth = pgTable("auth", {
   id: text("id").primaryKey(),
@@ -28,20 +29,47 @@ export const auth = pgTable("auth", {
   banExpires: timestamp("ban_expires"),
 });
 
-export const platformUser = pgTable("platform_user", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => /* @__PURE__ */ new Date())
-    .notNull(),
-  authId: text("auth_id").notNull().unique().references(() => auth.id, { onDelete: "cascade" }),
-  username: text("username").notNull().unique(),
-  collegeId: uuid("college_id").notNull().references(() => colleges.id, { onDelete: "cascade" }),
-  branch: text("branch").notNull(),
-  karma: integer("karma").default(0),
-  isAcceptedTerms: boolean("is_accepted_terms").default(false).notNull(),
-});
+export const platformUser = pgTable(
+  "platform_user",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+
+    authId: text("auth_id")
+      .notNull()
+      .unique()
+      .references(() => auth.id, { onDelete: "cascade" }),
+
+    username: text("username").notNull().unique(),
+
+    collegeId: uuid("college_id")
+      .notNull()
+      .references(() => colleges.id, { onDelete: "cascade" }),
+
+    branch: text("branch"),
+
+    karma: integer("karma").default(0),
+
+    isAcceptedTerms: boolean("is_accepted_terms")
+      .default(false)
+      .notNull(),
+
+    status: userStatusEnum("status")
+      .default("ONBOARDING")
+      .notNull(),
+  },
+  (table) => [
+    sql`(
+        (${table.status} = 'ONBOARDING' AND ${table.branch} IS NULL)
+        OR
+        (${table.status} <> 'ONBOARDING' AND ${table.branch} IS NOT NULL)
+      )`
+  ]
+);
 
 export const session = pgTable(
   "session",

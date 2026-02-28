@@ -15,6 +15,7 @@ router.use(injectUser);
 router.use(requireUser);
 
 router.get("/me", UserController.getUserProfile);
+router.patch("/me", UserController.updateUserProfile);
 router.post("/accept-terms", UserController.acceptTerms);
 
 export default router;

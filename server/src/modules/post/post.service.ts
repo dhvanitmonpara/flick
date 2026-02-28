@@ -88,6 +88,7 @@ class PostService {
     branch?: string;
     userId?: string;
     userCollegeId?: string;
+    authorId?: string;
   }) {
     const postsResult = await PostRepo.CachedRead.findMany(options);
     const posts = Array.isArray(postsResult) ? postsResult : [];
@@ -96,6 +97,7 @@ class PostService {
       collegeId: options?.collegeId,
       branch: options?.branch,
       userCollegeId: options?.userCollegeId,
+      authorId: options?.authorId,
     });
 
     const page = options?.page || 1;
@@ -261,6 +263,21 @@ class PostService {
       ...options,
       branch,
     });
+  }
+
+  async getPostsByAuthor(authorId: string, options?: {
+    page?: number;
+    limit?: number;
+    sortBy?: "createdAt" | "updatedAt" | "views";
+    sortOrder?: "asc" | "desc";
+    userId?: string;
+    userCollegeId?: string;
+  }) {
+    const queryOpts = {
+      ...options,
+      authorId,
+    };
+    return this.getPosts(queryOpts);
   }
 }
 
