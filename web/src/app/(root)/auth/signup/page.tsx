@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { authApi } from "@/services/api/auth"
+import { authClient } from "@/lib/auth-client"
 import { ocrApi } from "@/services/api/ocr"
 import { AxiosError } from "axios"
 import { toastError } from "@/utils/toast-error"
@@ -50,7 +51,13 @@ function SignUpPage() {
   const [isPasswordShowing, setIsPasswordShowing] = useState(false);
   const [isConfirmPasswordShowing, setIsConfirmPasswordShowing] = useState(false);
 
+  const { data: session, isPending } = authClient.useSession()
   const navigate = useRouter().push
+
+  if (!isPending && session) {
+    navigate('/')
+    return null
+  }
 
   const {
     register,

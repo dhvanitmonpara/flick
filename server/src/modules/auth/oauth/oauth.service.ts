@@ -4,6 +4,7 @@ import recordAudit from "@/lib/record-audit";
 import logger from "@/core/logger";
 import { auth } from "@/infra/auth/auth";
 import parseHeaders from "@/lib/better-auth/parse-headers";
+import UserRepo from "@/modules/user/user.repo";
 
 class OAuthService {
   handleGoogleOAuth = async (code: string, req: Request) => {
@@ -17,26 +18,18 @@ class OAuthService {
 
     const session = await auth.api.getSession({ headers });
 
-    const existingUser = await AuthRepo.CachedRead.findByEmail(session.user.email)
+    await UserRepo.Write.create({
+      authId: session.user.id,
+      username: session.user.username,
+      collegeId: session.user.collegeId,
+    });
 
-    if (!existingUser) {
-      await AuthRepo.Write.create({
-        email: session.user.email,
-        username: session.user.name.trim().toLowerCase().replace(" ", ""),
-        authType: "oauth",
-        password: null,
-        roles: ["user"],
-        isBlocked: false,
-        suspension: null
+    if (session) {
+      await recordAudit({
+        action: "user:created:account",
+        entityType: "user",
+        entityId: session.user.id,
       });
-
-      if (session) {
-        await recordAudit({
-          action: "user:created:account",
-          entityType: "user",
-          entityId: session.user.id,
-        });
-      }
     }
   };
 }

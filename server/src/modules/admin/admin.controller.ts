@@ -69,6 +69,7 @@ class AdminController {
 
   static async uploadCollegeProfile(req: Request) {
     const file = (req as Request & { file?: Express.Multer.File }).file;
+    const id = adminSchemas.CollegeIdSchema.parse(req.params).id;
 
     if (!file) {
       throw HttpError.badRequest("Profile image file is required");
@@ -78,9 +79,9 @@ class AdminController {
       throw HttpError.badRequest("Only image uploads are allowed");
     }
 
-    const url = await uploadImageToCloudinary(file);
+    const image = await uploadImageToCloudinary(file, id);
 
-    return HttpResponse.ok("College profile uploaded successfully", { url });
+    return HttpResponse.ok("College profile uploaded successfully", image);
   }
 }
 

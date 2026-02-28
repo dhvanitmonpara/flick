@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { authClient } from "@/lib/auth-client"
+import { env } from "@/config/env"
 
 const signInSchema = z.object({
   email: z.email("Email is invalid"),
@@ -27,7 +28,14 @@ type SignInFormData = z.infer<typeof signInSchema>
 function SignInPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isPasswordShowing, setIsPasswordShowing] = useState(false);
+
+  const { data: session, isPending } = authClient.useSession()
   const navigate = useRouter().push
+
+  if (!isPending && session) {
+    navigate('/')
+    return null
+  }
 
   const {
     register,
@@ -36,6 +44,8 @@ function SignInPage() {
   } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
   })
+
+
 
   const onSubmit = async (data: SignInFormData) => {
     setIsSubmitting(true)
@@ -67,6 +77,9 @@ function SignInPage() {
       setIsSubmitting(false)
     }
   }
+
+  console.log("SERVER URI:", env.NEXT_PUBLIC_SERVER_URI)
+  console.log("FINAL BASE URL:", (env.NEXT_PUBLIC_SERVER_URI || "http://localhost:8000") + "/api/auth/")
 
   return (
     <div className="max-w-md w-full mx-auto px-6 py-8 border dark:border-zinc-800 rounded-lg shadow-lg">

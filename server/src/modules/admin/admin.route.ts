@@ -19,7 +19,7 @@ router.get("/manage/reports", AdminController.getReports);
 router.get("/colleges/get/all", AdminController.getAllColleges);
 router.post("/colleges/create", AdminController.createCollege);
 router.patch("/colleges/update/:id", AdminController.updateCollege);
-router.post("/colleges/upload/profile", uploadCollegeProfile.single("profile"), AdminController.uploadCollegeProfile);
+router.post("/colleges/upload/profile/:id", uploadCollegeProfile.single("profile"), AdminController.uploadCollegeProfile);
 router.get("/manage/logs", AdminController.getLogs);
 router.get("/manage/feedback/all", AdminController.getAllFeedbacks);
 

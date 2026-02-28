@@ -70,7 +70,7 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
     setUploadingProfile(true);
     try {
       const res = await http.post<{ url: string }>(
-        "/colleges/upload/profile",
+        `/colleges/upload/profile/${id}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
