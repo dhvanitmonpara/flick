@@ -12,13 +12,20 @@ import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { College } from "@/types/College";
 import { http } from "@/services/http";
+import { Label } from "@/components/ui/label";
 
 const availableCities = ["Ahmedabad"] as const;
 const availableStates = ["Gujarat"] as const;
 
 const collegeSchema = z.object({
   name: z.string().min(3, { message: "Name must be at least 3 characters" }),
-  profile: z.string().url({ message: "Invalid URL" }),
+  profile: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || z.string().url().safeParse(value).success, {
+      message: "Invalid URL",
+    }),
   emailDomain: z.string().min(3, { message: "Email domain must be at least 3 characters" }),
   city: z.enum(availableCities),
   state: z.enum(availableStates),
@@ -33,6 +40,7 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
   setCollege: React.Dispatch<React.SetStateAction<College[]>>
 }) {
   const [loading, setLoading] = useState(false);
+  const [uploadingProfile, setUploadingProfile] = useState(false);
   const [error, setError] = useState("");
 
   const isUpdating = !!defaultData
@@ -55,16 +63,61 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
 
   });
 
+  const uploadProfileImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append("profile", file);
+
+    setUploadingProfile(true);
+    try {
+      const res = await http.post<{ url: string }>(
+        "/colleges/upload/profile",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      const uploadedUrl = (res.data as { url?: string } | undefined)?.url;
+      if (!uploadedUrl) {
+        throw new Error("Failed to upload image");
+      }
+
+      form.setValue("profile", uploadedUrl, { shouldDirty: true, shouldValidate: true });
+      toast.success("Profile image uploaded");
+    } catch (uploadError) {
+      console.error(uploadError);
+      toast.error("Failed to upload profile image");
+    } finally {
+      setUploadingProfile(false);
+    }
+  };
+
+  const handleProfileFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      event.target.value = "";
+      return;
+    }
+
+    await uploadProfileImage(file);
+    event.target.value = "";
+  };
+
   const onSubmit = async (data: CollegeFormValues) => {
     try {
       setLoading(true);
 
+      const payload = {
+        ...data,
+        profile: data.profile?.trim() || undefined,
+      };
+
       let res = null
 
       if (isUpdating) {
-        res = await http.patch(`/colleges/update/${id}`, data)
+        res = await http.patch(`/colleges/update/${id}`, payload)
       } else {
-        res = await http.post(`/colleges/create`, data);
+        res = await http.post(`/colleges/create`, payload);
       }
 
       if (res.status !== (isUpdating ? 200 : 201)) throw new Error(`Failed to ${isUpdating ? "update" : "create"} college`);
@@ -135,12 +188,31 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
         <FormField
           control={form.control}
           name="profile"
-          disabled={loading}
+          disabled={loading || uploadingProfile}
           render={({ field }) => (
             <FormItem>
+              <div className="space-y-2">
+                <Label htmlFor="profileImage">Profile Image</Label>
+                <Input
+                  id="profileImage"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfileFileChange}
+                  className="border-zinc-700 bg-zinc-700 focus:border-zinc-200 focus-visible:ring-zinc-200 file:text-zinc-100"
+                  disabled={loading || uploadingProfile}
+                />
+                {uploadingProfile && (
+                  <p className="text-xs text-zinc-400">Uploading image...</p>
+                )}
+              </div>
               <FormControl>
-                <Input className="border-zinc-700 bg-zinc-700 focus:border-zinc-200 focus-visible:ring-zinc-200" type="url" placeholder="Enter College URL" {...field} />
+                <Input className="border-zinc-700 bg-zinc-700 focus:border-zinc-200 focus-visible:ring-zinc-200" type="url" placeholder="Or paste image URL" {...field} />
               </FormControl>
+              {field.value && (
+                <div className="rounded-md border border-zinc-700 bg-zinc-800 p-2">
+                  <img src={field.value} alt="College profile preview" className="h-28 w-full rounded object-cover" />
+                </div>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -197,7 +269,7 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
           )}
         />
 
-        <Button disabled={loading || Boolean(error)} type="submit" className="w-full bg-zinc-200 hover:bg-zinc-300 text-zinc-900 disabled:bg-zinc-500">
+        <Button disabled={loading || uploadingProfile || Boolean(error)} type="submit" className="w-full bg-zinc-200 hover:bg-zinc-300 text-zinc-900 disabled:bg-zinc-500">
           {loading ? (
             <>
               <Loader2 className="animate-spin" /> {isUpdating ? "Updating..." : "Creating..."}

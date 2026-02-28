@@ -75,14 +75,21 @@ function Post({ avatar, userVote, avatarFallback, id, createdAt, college, title,
                 <>
                   <BsDot size={16} />
                   <span className="flex items-center gap-1 font-semibold text-zinc-700 dark:text-zinc-300">
-                    🔒 College Only
+                    College Only
                   </span>
                 </>
               )}
             </p>
           </div>
         </div>
-        <PostDropdown removePostOnAction={removedPostOnAction} bookmarked={bookmarked} id={id} type="post" key={id} editableData={profile.username === username ? { title, content } : null} />
+        <PostDropdown
+          removePostOnAction={removedPostOnAction}
+          bookmarked={bookmarked}
+          id={id}
+          type="post"
+          key={id}
+          editableData={profile.username === username ? { title, content, topic, isPrivate } : null}
+        />
       </CardHeader>
       <CardContent>
         <h2 className="text-xl font-semibold">{title}</h2>

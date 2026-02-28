@@ -134,6 +134,8 @@ class CommentService {
     } else {
       await cache.incr(commentCacheKeys.postCommentsVersionKey(existingComment.postId));
     }
+    await cache.incr(postCacheKeys.postVersionKey(existingComment.postId));
+    await cache.incr(postCacheKeys.postsListVersionKey());
 
     return updatedComment;
   }

@@ -33,6 +33,7 @@ export const CreateCollegeSchema = z.object({
   emailDomain: z.string().min(3, "Valid email domain is required (e.g. '@college.edu')"),
   city: z.string().min(2, "City is required"),
   state: z.string().min(2, "State is required"),
+  profile: z.url("Profile must be a valid URL").optional(),
 });
 
 export type CreateCollegeType = z.infer<typeof CreateCollegeSchema>;
@@ -42,6 +43,7 @@ export const UpdateCollegeSchema = z.object({
   emailDomain: z.string().min(3, "Valid email domain is required (e.g. '@college.edu')").optional(),
   city: z.string().min(2, "City is required").optional(),
   state: z.string().min(2, "State is required").optional(),
+  profile: z.url("Profile must be a valid URL").optional(),
 });
 
 export type UpdateCollegeType = z.infer<typeof UpdateCollegeSchema>;

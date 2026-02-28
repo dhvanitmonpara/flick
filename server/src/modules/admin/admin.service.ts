@@ -1,5 +1,7 @@
+import cache from "@/infra/services/cache";
 import AdminRepo from "./admin.repo";
 import logger from "@/core/logger";
+import collegeCacheKeys from "@/modules/college/college.cache-keys";
 
 class AdminService {
   async getDashboardOverview() {
@@ -48,7 +50,7 @@ class AdminService {
     return feedbacks;
   }
 
-  async createCollege(data: { name: string; emailDomain: string; city: string; state: string }) {
+  async createCollege(data: { name: string; emailDomain: string; city: string; state: string; profile?: string }) {
     logger.info("Creating new college", { name: data.name });
     const newCollege = await AdminRepo.Write.createCollege(data);
 
@@ -66,16 +68,12 @@ class AdminService {
     return newCollege;
   }
 
-  async updateCollege(id: string, updates: Partial<{ name: string; emailDomain: string; city: string; state: string }>) {
+  async updateCollege(id: string, updates: Partial<{ name: string; emailDomain: string; city: string; state: string; profile: string }>) {
     logger.info("Updating college", { id, updates });
     const updatedCollege = await AdminRepo.Write.updateCollege(id, updates);
 
     if (updatedCollege) {
-      // Invalidate the frontend's college cache
-      const { default: cache } = await import("@/infra/services/cache");
-      const { default: collegeCacheKeys } = await import("@/modules/college/college.cache-keys");
-
-      await cache.del(collegeCacheKeys.all()); // clear "college:all:all:all"
+      await cache.del(collegeCacheKeys.all());
       if (updatedCollege.city) await cache.del(collegeCacheKeys.all({ city: updatedCollege.city }));
       if (updatedCollege.state) await cache.del(collegeCacheKeys.all({ state: updatedCollege.state }));
       if (updatedCollege.city || updatedCollege.state) await cache.del(collegeCacheKeys.all({ city: updatedCollege.city, state: updatedCollege.state }));

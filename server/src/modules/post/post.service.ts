@@ -3,6 +3,8 @@ import PostRepo from "./post.repo";
 import recordAudit from "@/lib/record-audit";
 import { observabilityContext } from "../audit/audit-context";
 import logger from "@/core/logger";
+import cache from "@/infra/services/cache";
+import postCacheKeys from "./post.cache-keys";
 
 class PostService {
   async createPost(postData: {
@@ -185,6 +187,9 @@ class PostService {
       before: beforeUpdates,
       after: { ...cleanUpdates },
     });
+
+    await cache.incr(postCacheKeys.postVersionKey(updatedPost.id));
+    await cache.incr(postCacheKeys.postsListVersionKey());
 
     return updatedPost;
   }

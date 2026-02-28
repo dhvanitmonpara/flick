@@ -11,7 +11,13 @@ function DashboardTab({
   return (
     <NavLink
       to={to}
-    className={({isActive}) => (`${isActive ? "font-semibold text-green-500" : "text-zinc-400 hover:text-zinc-50"} text-lg px-4 py-2 w-full rounded-md flex space-x-2 justify-start items-center`)}
+      className={({ isActive }) =>
+        `group relative w-full rounded-xl px-3 py-2.5 flex items-center gap-3 text-sm transition-all ${
+          isActive
+            ? "bg-zinc-700/80 text-zinc-50 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+            : "text-zinc-400 hover:bg-zinc-800/80 hover:text-zinc-100"
+        }`
+      }
     >
       {children}
     </NavLink>

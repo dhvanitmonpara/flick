@@ -177,9 +177,6 @@ function FeedPage() {
   return (
     <Suspense fallback={
       <section className="w-full max-h-screen overflow-y-auto no-scrollbar py-6 divide-y divide-zinc-300/60 dark:divide-zinc-700/50">
-        <div className="p-4 text-center text-lg font-medium">
-          Initializing feed...
-        </div>
         {[...Array(10)].map((_, index) => (
           <SkeletonCard key={index} />
         ))}

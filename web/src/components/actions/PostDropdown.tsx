@@ -36,6 +36,7 @@ import { postApi } from "@/services/api/post";
 import { commentApi } from "@/services/api/comment";
 import { bookmarkApi } from "@/services/api/bookmark";
 import { reportApi } from "@/services/api/report";
+import { PostTopic } from "@/types/postTopics";
 
 type DialogType = "DELETE" | "REPORT" | "EDIT" | "SAVE" | null;
 
@@ -59,7 +60,7 @@ const reportSchema = z.object({
 
 type ReportFormValues = z.infer<typeof reportSchema>;
 
-function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark = true, bookmarked = false }: { type: ("post" | "comment"), id: string, editableData?: { title: string, content: string } | null, removePostOnAction?: (id: string) => void, showBookmark?: boolean, bookmarked?: boolean }) {
+function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark = true, bookmarked = false }: { type: ("post" | "comment"), id: string, editableData?: { title?: string, content: string, topic?: PostTopic, isPrivate?: boolean } | null, removePostOnAction?: (id: string) => void, showBookmark?: boolean, bookmarked?: boolean }) {
   const [dialogType, setDialogType] = useState<DialogType>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -266,7 +267,12 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
                 ? <CreatePostForm
                   id={id}
                   setOpen={setOpen}
-                  defaultData={{ title: editableData?.title || "", content: editableData?.content || "" }}
+                  defaultData={{
+                    title: editableData?.title || "",
+                    content: editableData?.content || "",
+                    topic: editableData?.topic,
+                    isPrivate: editableData?.isPrivate,
+                  }}
                 />
                 : <CreateComment
                   commentId={id}

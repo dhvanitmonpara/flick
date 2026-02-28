@@ -29,6 +29,10 @@ const envSchema = z.object({
   HMAC_SECRET: z.string().min(32),
   ADMIN_EMAIL: z.string(),
   ADMIN_PASSWORD: z.string(),
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
+  CLOUDINARY_UPLOAD_FOLDER: z.string().optional().default("flick/colleges"),
 });
 
 export const env = envSchema.parse(process.env);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,7 +37,14 @@ const postSchema = z.object({
 
 type PostFormValues = z.infer<typeof postSchema>;
 
-function CreatePost({ className, children, defaultData }: { className?: string, children?: React.ReactNode, defaultData?: { title: string, content: string, isPrivate?: boolean } }) {
+type PostDefaultData = {
+  title: string;
+  content: string;
+  topic?: PostFormValues["topic"];
+  isPrivate?: boolean;
+};
+
+function CreatePost({ className, children, defaultData }: { className?: string, children?: React.ReactNode, defaultData?: PostDefaultData }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -58,7 +65,7 @@ function CreatePost({ className, children, defaultData }: { className?: string, 
   );
 }
 
-export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.Dispatch<React.SetStateAction<boolean>>, defaultData?: { title: string, content: string, isPrivate?: boolean }, id?: string }) => {
+export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.Dispatch<React.SetStateAction<boolean>>, defaultData?: PostDefaultData, id?: string }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showTerms, setShowTerms] = useState(false);
@@ -72,12 +79,32 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postSchema),
-    defaultValues: defaultData ? { ...defaultData, isPrivate: false } : {
+    defaultValues: defaultData ? {
+      title: defaultData.title,
+      content: defaultData.content,
+      topic: defaultData.topic ?? PostTopic[0],
+      isPrivate: defaultData.isPrivate ?? false,
+    } : {
       title: "",
       content: "",
+      topic: PostTopic[0],
       isPrivate: false,
     },
   });
+
+  useEffect(() => {
+    form.reset(defaultData ? {
+      title: defaultData.title,
+      content: defaultData.content,
+      topic: defaultData.topic ?? PostTopic[0],
+      isPrivate: defaultData.isPrivate ?? false,
+    } : {
+      title: "",
+      content: "",
+      topic: PostTopic[0],
+      isPrivate: false,
+    });
+  }, [defaultData, id, form]);
 
   const onSubmit = async (data: PostFormValues) => {
     try {
@@ -174,7 +201,7 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
                     <Select
                       required
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <SelectTrigger className="dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
                         <SelectValue placeholder="Select a topic" />

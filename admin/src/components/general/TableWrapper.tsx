@@ -6,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { cn } from "@/lib/utils";
 
 export type ColumnDefinition<T> = {
   key: keyof T | string;
@@ -39,17 +40,25 @@ export function TableWrapper<T>({
   rowClassName = "",
 }: TableWrapperProps<T>) {
   return (
-    <div className="w-full overflow-x-auto">
-      <Table className={tableClassName}>
+    <div className="w-full overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-800/20">
+      <Table className={cn("min-w-full", tableClassName)}>
         <TableHeader>
-          <TableRow className="border-zinc-400">
+          <TableRow className="border-zinc-800 bg-zinc-900/90 hover:bg-zinc-800/80">
             {columns.map((col, i) => (
-              <TableHead key={i} className={`text-zinc-300 ${col.className || ""}`}>
+              <TableHead
+                key={i}
+                className={cn(
+                  "h-11 px-4 text-xs font-semibold uppercase tracking-wide text-zinc-400",
+                  col.className
+                )}
+              >
                 {col.label}
               </TableHead>
             ))}
             {renderActions && (
-              <TableHead className="text-right text-zinc-300">Actions</TableHead>
+              <TableHead className="h-11 px-4 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                Actions
+              </TableHead>
             )}
           </TableRow>
         </TableHeader>
@@ -58,7 +67,10 @@ export function TableWrapper<T>({
           {data.map((row, rowIndex) => (
             <TableRow
               key={rowIndex}
-              className={`hover:bg-zinc-800 group border-zinc-800 ${rowClassName}`}
+              className={cn(
+                "group border-zinc-800/90 hover:bg-zinc-800/60 data-[state=selected]:bg-zinc-800/70",
+                rowClassName
+              )}
             >
               {columns.map((col, colIndex) => {
                 const key = col.key as string;
@@ -68,14 +80,14 @@ export function TableWrapper<T>({
                   : (row as Record<string, unknown>)[key];
 
                 return (
-                  <TableCell key={colIndex} className={col.className}>
+                  <TableCell key={colIndex} className={cn("px-4 py-3 text-zinc-200", col.className)}>
                     {col.render ? col.render(row) : String(value)}
                   </TableCell>
                 );
               })}
 
               {renderActions && (
-                <TableCell className="text-right">
+                <TableCell className="w-[120px] px-4 py-3 text-right">
                   {renderActions(row)}
                 </TableCell>
               )}

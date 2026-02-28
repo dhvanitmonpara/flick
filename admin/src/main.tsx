@@ -11,7 +11,7 @@ import AdminVerificationPage from './pages/AdminVerificationPage'
 import AuthLayout from './layouts/AuthLayout'
 import ReportsPage from './pages/ReportsPage'
 import CollegePage from './pages/CollegePage'
-import UserPage from './components/general/UserPage'
+import UserPage from './pages/UserPage'
 import LogPage from './pages/LogPage'
 import FeedbackPage from './pages/FeedbackPage'
 

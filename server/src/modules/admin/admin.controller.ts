@@ -1,7 +1,8 @@
 import type { Request } from "express";
-import { HttpResponse, Controller } from "@/core/http";
+import { HttpResponse, Controller, HttpError } from "@/core/http";
 import adminService from "./admin.service";
 import * as adminSchemas from "./admin.schema";
+import { uploadImageToCloudinary } from "@/infra/services/media/cloudinary.service";
 
 @Controller()
 class AdminController {
@@ -60,11 +61,26 @@ class AdminController {
     const updatedCollege = await adminService.updateCollege(id, updates);
 
     if (!updatedCollege) {
-      const { HttpError } = await import("@/core/http");
       throw HttpError.notFound("College not found");
     }
 
     return HttpResponse.ok("College updated successfully", updatedCollege);
+  }
+
+  static async uploadCollegeProfile(req: Request) {
+    const file = (req as Request & { file?: Express.Multer.File }).file;
+
+    if (!file) {
+      throw HttpError.badRequest("Profile image file is required");
+    }
+
+    if (!file.mimetype.startsWith("image/")) {
+      throw HttpError.badRequest("Only image uploads are allowed");
+    }
+
+    const url = await uploadImageToCloudinary(file);
+
+    return HttpResponse.ok("College profile uploaded successfully", { url });
   }
 }
 
