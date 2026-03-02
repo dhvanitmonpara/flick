@@ -309,13 +309,9 @@ class AuthService {
       await cache.del(`user:authId:${userId}`);
     }
 
-    // Delete the auth row first — this CASCADE deletes `session`, `account`,
-    // and `twoFactor` records in Postgres, making login impossible.
-    await db.delete(authTable).where(eq(authTable.id, userId));
-
     // Attempt to formally sign out to get session-clear cookie headers.
-    // This may fail if the session was already wiped by the cascade above,
-    // so we swallow errors and still clear cookies manually.
+    // Doing this before deleting the auth row ensures the session exists
+    // and better-auth can cleanly revoke it and send clearing cookies.
     let authResponse: Response | undefined;
     try {
       authResponse = await auth.api.signOut({
@@ -324,16 +320,20 @@ class AuthService {
         returnHeaders: true,
       }) as unknown as Response;
     } catch {
-      // Session already gone — that's fine
+      // Swallowing errors just in case
     }
 
     if (authResponse) {
       forwardSetCookieHeaders((authResponse as unknown as globalThis.Response).headers, res);
     } else {
-      // Manually clear the better-auth session cookies
+      // Manually clear the better-auth session cookies as fallback
       res.clearCookie("better-auth.session_token", { path: "/" });
       res.clearCookie("better-auth.session_data", { path: "/" });
     }
+
+    // Delete the auth row after session revoked — this CASCADE deletes `session`, `account`,
+    // and `twoFactor` records in Postgres, ensuring no dangling records.
+    await db.delete(authTable).where(eq(authTable.id, userId));
 
     await recordAudit({
       action: "other:action",

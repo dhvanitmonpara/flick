@@ -19,8 +19,10 @@ const handleGoogleOAuthRedirect = async (e: React.FormEvent<HTMLFormElement>) =>
 
 export const openAuthWindow = (authUrl: string) => {
   window.removeEventListener('storage', handleStorageEvent);
-
   window.addEventListener('storage', handleStorageEvent);
+
+  window.removeEventListener('message', handleMessageEvent);
+  window.addEventListener('message', handleMessageEvent);
 
   localStorage.removeItem('oauth_login_success');
 
@@ -38,6 +40,24 @@ const handleStorageEvent = (e: StorageEvent) => {
   if (e.key === 'oauth_login_success' && e.newValue === 'true') {
     window.removeEventListener('storage', handleStorageEvent);
     localStorage.removeItem('oauth_login_success');
+
+    if (oauthPopup && !oauthPopup.closed) {
+      try {
+        oauthPopup.close();
+      } catch (err) {
+        console.error("Failed to close popup:", err);
+      }
+    }
+
+    window.location.href = '/';
+  }
+};
+
+const handleMessageEvent = (e: MessageEvent) => {
+  if (e.origin !== window.location.origin) return;
+
+  if (e.data === 'oauth-success') {
+    window.removeEventListener('message', handleMessageEvent);
 
     if (oauthPopup && !oauthPopup.closed) {
       try {

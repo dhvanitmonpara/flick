@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { authApi } from '@/services/api/auth';
 import { toast } from 'sonner';
 import { SignInButton } from './AuthCard';
+import { authClient } from '@/lib/auth-client';
 
 const getCollegeProfile = (user: User | string | null) => isUser(user) && isCollege(user.college) ? user.college.profile : "Unknown College";
 
@@ -21,6 +22,7 @@ function UserProfile() {
   const handleLogout = async () => {
     try {
       await authApi.session.logout()
+      await authClient.signOut()
       removeProfile()
       toast.success("Logged out successfully")
       navigate("/")
