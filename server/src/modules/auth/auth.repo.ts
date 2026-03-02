@@ -28,6 +28,7 @@ const AuthRepo = {
   Write: {
     create: authAdapter.create,
     update: authAdapter.update,
+    deleteById: authAdapter.deleteById,
   }
 }
 

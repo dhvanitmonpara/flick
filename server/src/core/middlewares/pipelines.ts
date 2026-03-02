@@ -3,7 +3,7 @@ import { requireRole } from "./auth/require-roles.middleware";
 import { authenticate } from "./auth/authenticate.middleware";
 import injectUser from "./auth/inject-user.middleware";
 import requireAuth from "./auth/require-auth.middleware";
-import requireUser from "./auth/require-user.middleware";
+import { requireOnboardedUser } from "./auth/require-user.middleware";
 
 export const identity = authenticate
 
@@ -16,7 +16,7 @@ export const withRequiredUserContext = compose(
   authenticate,
   requireAuth,
   injectUser,
-  requireUser,
+  requireOnboardedUser,
 )
 
 export const withOptionalUserContext = compose(
@@ -26,7 +26,7 @@ export const withOptionalUserContext = compose(
 
 export const checkUserContext = compose(
   requireAuth,
-  requireUser,
+  requireOnboardedUser,
 )
 
 export const adminOnly = compose(

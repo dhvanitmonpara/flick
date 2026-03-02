@@ -20,9 +20,6 @@ export const registrationSchema = z.object({
 });
 
 export const initializeUserSchema = registrationSchema.extend({
-  branch: z
-    .string("Branch is required")
-    .min(1, "Branch must be at least 1 characters long"),
   email: EmailSchema,
   password: z
     .string("Password is required")

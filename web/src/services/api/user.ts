@@ -10,4 +10,7 @@ export const userApi = {
   acceptTerms: async () => {
     return http.post("/users/accept-terms", {});
   },
+  updateProfile: async (data: { branch: string }) => {
+    return http.patch("/users/me", data);
+  }
 };

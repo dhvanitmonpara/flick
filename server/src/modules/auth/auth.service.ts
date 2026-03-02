@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { HttpError } from "@/core/http";
+import { eq } from "drizzle-orm";
 import cache, { redis } from "@/infra/services/cache/index";
 import AuthRepo from "@/modules/auth/auth.repo";
 import oauthService from "@/modules/auth/oauth/oauth.service";
@@ -18,6 +19,9 @@ import { PendingUser } from "./auth.types";
 import { env } from "@/config/env";
 import UserRepo from "../user/user.repo";
 import { isConstraintViolation } from "@/lib/pg/errors/constraint-violantion";
+import { notifications } from "@/infra/db/tables/notification.table";
+import { auth as authTable } from "@/infra/db/tables/auth.table";
+import db from "@/infra/db";
 
 class AuthService {
   getPendingUser = async (signupId: string, options?: { bypassL1?: boolean }) => {
@@ -192,12 +196,13 @@ class AuthService {
   completeOnboarding = async (req: Request, branch: string) => {
     const userId = req.user.id;
 
-    const existingProfile = await UserRepo.Read.findByAuthId(userId, {});
+    const existingProfile = await UserRepo.CachedRead.findById(userId, {});
     if (!existingProfile) {
       throw HttpError.internal("Profile missing for authenticated user");
     }
     if (existingProfile.status === "ACTIVE") {
-      throw HttpError.forbidden("User already onboarded");
+      await cache.del(`user:id:${userId}`);
+      throw HttpError.forbidden("User already onboarded", { code: "USER_ALREADY_ONBOARDED" });
     }
 
     // TODO: Check if branch is valid
@@ -207,6 +212,8 @@ class AuthService {
         branch,
         status: "ACTIVE",
       });
+
+      await cache.del(`user:authId:${req.auth.id}`);
 
       await recordAudit({
         action: "user:finished:onboarding",
@@ -218,7 +225,7 @@ class AuthService {
       return profile;
     } catch (error) {
       if (isConstraintViolation(error)) {
-        return await UserRepo.Read.findByAuthId(userId, {});
+        return await UserRepo.Read.findById(userId, {});
       }
       throw error;
     }
@@ -282,26 +289,56 @@ class AuthService {
     payload: { password?: string; token?: string; callbackURL?: string },
   ) => {
     const headers = parseHeaders(req.headers);
+    const userId = req.auth?.id;
 
-    const response = await auth.api.deleteUser({
-      headers,
-      body: payload,
-      asResponse: true,
-      returnHeaders: true,
-    });
-
-    const profile = await UserRepo.Read.findByAuthId(req.auth?.id, {});
-
-    if (profile) {
-      await UserRepo.Write.delete(profile.id);
+    if (!userId) {
+      throw HttpError.unauthorized("Unauthorized request");
     }
 
-    forwardSetCookieHeaders(response.headers, res);
+    const profile = await UserRepo.Read.findByAuthId(userId, {});
+
+    if (profile) {
+      // Manually clean up notifications where user is receiver
+      await db.delete(notifications).where(eq(notifications.receiverId, profile.id));
+
+      await UserRepo.Write.delete(profile.id);
+
+      // Clear cache for the user aggressively
+      await cache.del(`user:id:${profile.id}`);
+      await cache.del(`user:username:${profile.username}`);
+      await cache.del(`user:authId:${userId}`);
+    }
+
+    // Delete the auth row first — this CASCADE deletes `session`, `account`,
+    // and `twoFactor` records in Postgres, making login impossible.
+    await db.delete(authTable).where(eq(authTable.id, userId));
+
+    // Attempt to formally sign out to get session-clear cookie headers.
+    // This may fail if the session was already wiped by the cascade above,
+    // so we swallow errors and still clear cookies manually.
+    let authResponse: Response | undefined;
+    try {
+      authResponse = await auth.api.signOut({
+        headers,
+        asResponse: true,
+        returnHeaders: true,
+      }) as unknown as Response;
+    } catch {
+      // Session already gone — that's fine
+    }
+
+    if (authResponse) {
+      forwardSetCookieHeaders((authResponse as unknown as globalThis.Response).headers, res);
+    } else {
+      // Manually clear the better-auth session cookies
+      res.clearCookie("better-auth.session_token", { path: "/" });
+      res.clearCookie("better-auth.session_data", { path: "/" });
+    }
 
     await recordAudit({
       action: "other:action",
       entityType: "auth",
-      entityId: req.auth?.id ?? "unknown",
+      entityId: userId,
       metadata: { source: "authService.deleteAccount" },
     });
 

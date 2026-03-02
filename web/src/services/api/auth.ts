@@ -27,10 +27,9 @@ export const authApi = {
     },
   },
   oauth: {
-    setup: async (email: string, branch: string) => {
+    setup: async (email: string) => {
       const oauthResponse: AxiosResponse = await http.post("/auth/registration/initialize", {
         email,
-        branch,
         password: "oauth-flow-placeholder",
       });
       return oauthResponse.status === 201;
@@ -45,14 +44,26 @@ export const authApi = {
       );
       return { success: response.status === 201, error: response.data?.error };
     },
-    initialize: async (email: string, password: string, branch: string) => {
+    initialize: async (email: string, password: string) => {
       const response = await http.post(
         "/auth/registration/initialize",
-        { email, password, branch },
+        { email, password },
         { headers: { "Content-Type": "application/json" } },
       );
       return { success: response.status === 201, error: response.data?.error };
     },
+  },
+  onboarding: {
+    complete: async (branch: string) => {
+      const response = await http.post("/auth/onboarding/complete", { branch });
+      return { success: response.status === 200, data: response.data };
+    }
+  },
+  account: {
+    delete: async () => {
+      const response = await http.delete("/auth/account");
+      return { success: response.status === 200, data: response.data };
+    }
   },
   session: {
     login: async (email: string, password: string) => {
@@ -62,6 +73,10 @@ export const authApi = {
     refresh: async () => {
       const refreshResponse: AxiosResponse = await http.post("/auth/refresh");
       return refreshResponse.status === 200;
+    },
+    logout: async () => {
+      const logoutResponse: AxiosResponse = await http.post("/auth/logout");
+      return logoutResponse.status === 200;
     },
     logoutAll: async () => {
       const logoutResponse: AxiosResponse = await http.post("/auth/logout-all");

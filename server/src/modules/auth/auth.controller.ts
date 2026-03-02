@@ -29,7 +29,7 @@ class AuthController {
 
   static async refreshAccessToken(req: Request) {
     const incomingRefreshToken =
-      req.cookies.refreshToken || req.body.refreshToken;
+      req.cookies.refreshToken || req.body?.refreshToken;
 
     if (!incomingRefreshToken)
       throw HttpError.unauthorized("Unauthorized request", {

@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@/lib/zod-resolver"
 import { Input } from "@/components/ui/input"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { isAxiosError } from "axios"
@@ -16,7 +16,9 @@ import { Separator } from "@/components/ui/separator"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { authClient } from "@/lib/auth-client"
-import { env } from "@/config/env"
+import { userApi } from "@/services/api/user"
+import useProfileStore from "@/store/profileStore"
+import { handleOnboardingError } from "@/utils/onboarding-error-handler"
 
 const signInSchema = z.object({
   email: z.email("Email is invalid"),
@@ -28,14 +30,11 @@ type SignInFormData = z.infer<typeof signInSchema>
 function SignInPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isPasswordShowing, setIsPasswordShowing] = useState(false);
+  const [isValidatingSession, setIsValidatingSession] = useState(true)
 
   const { data: session, isPending } = authClient.useSession()
+  const removeProfile = useProfileStore((state) => state.removeProfile);
   const navigate = useRouter().push
-
-  if (!isPending && session) {
-    navigate('/')
-    return null
-  }
 
   const {
     register,
@@ -45,7 +44,46 @@ function SignInPage() {
     resolver: zodResolver(signInSchema),
   })
 
+  useEffect(() => {
+    if (isPending) {
+      return
+    }
 
+    const validateSession = async () => {
+      if (!session) {
+        setIsValidatingSession(false)
+        return
+      }
+
+      try {
+        const user = await userApi.getMe()
+        if (user.status === 200) {
+          navigate("/")
+          return
+        }
+      } catch (error: unknown) {
+        const handled = await handleOnboardingError(error, navigate, authClient, removeProfile)
+        if (handled) return
+
+        toast.error("Error validating session, Try again")
+      }
+
+      try {
+        await authClient.signOut()
+      } finally {
+        setIsValidatingSession(false)
+      }
+    }
+
+    validateSession()
+  }, [isPending, navigate, session])
+
+  if (isPending || isValidatingSession) {
+    return <div className="flex justify-center items-center flex-col space-y-2">
+      <Loader2 className="animate-spin" />
+      <p>Validating session...</p>
+    </div>
+  }
 
   const onSubmit = async (data: SignInFormData) => {
     setIsSubmitting(true)
@@ -77,9 +115,6 @@ function SignInPage() {
       setIsSubmitting(false)
     }
   }
-
-  console.log("SERVER URI:", env.NEXT_PUBLIC_SERVER_URI)
-  console.log("FINAL BASE URL:", (env.NEXT_PUBLIC_SERVER_URI || "http://localhost:8000") + "/api/auth/")
 
   return (
     <div className="max-w-md w-full mx-auto px-6 py-8 border dark:border-zinc-800 rounded-lg shadow-lg">

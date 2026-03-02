@@ -2,18 +2,33 @@ import useProfileStore from '@/store/profileStore'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { User } from '@/types/User';
 import { isCollege, isUser } from '@/utils/helpers';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '../ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem, DropdownMenuSeparator } from '../ui/dropdown-menu';
 import { FaUser } from 'react-icons/fa';
 import { MdFeedback } from "react-icons/md";
-import { IoBookmarkSharp, IoSettingsSharp } from 'react-icons/io5'
+import { IoBookmarkSharp, IoSettingsSharp, IoLogOutOutline } from 'react-icons/io5'
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { authApi } from '@/services/api/auth';
+import { toast } from 'sonner';
+import { SignInButton } from './AuthCard';
 
 const getCollegeProfile = (user: User | string | null) => isUser(user) && isCollege(user.college) ? user.college.profile : "Unknown College";
 
 function UserProfile() {
   const profile = useProfileStore(state => state.profile)
+  const removeProfile = useProfileStore(state => state.removeProfile)
   const navigate = useRouter().push
+
+  const handleLogout = async () => {
+    try {
+      await authApi.session.logout()
+      removeProfile()
+      toast.success("Logged out successfully")
+      navigate("/")
+    } catch (error) {
+      toast.error("Failed to logout")
+    }
+  }
+
   return (
     <>
       {profile?.id
@@ -41,9 +56,14 @@ function UserProfile() {
               <IoSettingsSharp size={14} />
               <span>Settings</span>
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className='flex items-center space-x-1 px-1 text-red-500 focus:text-red-500'>
+              <IoLogOutOutline size={14} />
+              <span>Logout</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        : <Link className="flex justify-center items-center bg-zinc-800 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-300 px-3 py-1 rounded-sm transition-colors" href="/auth/signin">Sign in</Link>
+        : <SignInButton />
       }
     </>
   )

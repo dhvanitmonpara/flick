@@ -6,7 +6,7 @@ export const posts = pgTable("posts", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  postedBy: uuid("postedBy").references(() => platformUser.id),
+  postedBy: uuid("postedBy").references(() => platformUser.id, { onDelete: "cascade" }),
   topic: topicEnum("topic").notNull(),
   isPrivate: boolean("isPrivate").default(false).notNull(),
   isBanned: boolean("isBanned").default(false),

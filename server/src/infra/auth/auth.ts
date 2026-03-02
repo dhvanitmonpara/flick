@@ -13,6 +13,18 @@ export const auth = betterAuth({
   }),
   user: {
     modelName: "auth",
+    deleteUser: {
+      enabled: true,
+      sendDeleteAccountVerification: async ({ user, url, token }) => {
+        // Send delete account verification
+      },
+      afterDelete: async ({ id }) => {
+        // const profile = await UserRepo.CachedRead.findByAuthId(id, {});
+        // if (profile) {
+        //   await UserRepo.Write.delete(profile.id);
+        // }
+      },
+    },
   },
   emailAndPassword: {
     enabled: true,

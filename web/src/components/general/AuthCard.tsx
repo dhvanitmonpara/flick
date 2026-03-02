@@ -5,34 +5,49 @@ import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-// Components
 import ThemeToggler from "./ThemeToggler";
 import UserProfile from "./UserProfile";
 import NotificationButton from "./NotificationButton";
 import { Button } from "../ui/button";
 
-// Utilities & State
 import useProfileStore from "@/store/profileStore";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { userApi } from "@/services/api/user";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
+import { handleOnboardingError } from "@/utils/onboarding-error-handler";
 
 interface AuthCardProps {
   className?: string;
 }
 
+export const SignInButton = () => {
+  const router = useRouter();
+  return (
+    <Button
+      onClick={() => router.push("/auth/signin")}
+      className="rounded-full px-6 transition-transform hover:scale-105 active:scale-95"
+    >
+      Sign In
+    </Button>
+  );
+};
+
 export default function AuthCard({ className }: AuthCardProps) {
   const [fetching, setFetching] = useState(true);
+  const profile = useProfileStore((state) => state.profile);
   const setProfile = useProfileStore((state) => state.setProfile);
+  const removeProfile = useProfileStore((state) => state.removeProfile);
   const { handleError } = useErrorHandler();
-  const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
+
+  const navigate = useRouter().push;
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         if (!session?.user) {
+          removeProfile();
           setFetching(false);
           return;
         }
@@ -45,7 +60,10 @@ export default function AuthCard({ className }: AuthCardProps) {
         }
 
         setProfile(user.data);
-      } catch (error) {
+      } catch (error: unknown) {
+        const handled = await handleOnboardingError(error, navigate, authClient, removeProfile)
+        if (handled) return
+
         handleError(
           error as AxiosError | Error,
           "Something went wrong while fetching user",
@@ -61,21 +79,19 @@ export default function AuthCard({ className }: AuthCardProps) {
     if (!isPending) {
       fetchUser();
     }
-  }, [handleError, setProfile, isPending, session]);
+  }, [handleError, isPending, navigate, removeProfile, session, setProfile]);
 
-  // Abstracting the conditional rendering keeps the main return statement clean
   const renderContent = () => {
     if (isPending || fetching) {
       return (
         <div className="flex items-center gap-4">
-          {/* Two skeletons look better here to mimic the space of the Notification + Profile buttons */}
           <div className="h-10 w-10 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-700" />
           <div className="h-10 w-10 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-700" />
         </div>
       );
     }
 
-    if (session?.user) {
+    if (session?.user && profile?.id) {
       return (
         <>
           <NotificationButton />
@@ -85,12 +101,7 @@ export default function AuthCard({ className }: AuthCardProps) {
     }
 
     return (
-      <Button
-        onClick={() => router.push("/auth/signin")}
-        className="rounded-full px-6 transition-transform hover:scale-105 active:scale-95"
-      >
-        Sign In
-      </Button>
+      <SignInButton />
     );
   };
 

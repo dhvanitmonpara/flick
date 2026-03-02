@@ -19,6 +19,8 @@ class OAuthService {
     const headers = parseHeaders(req.headers)
     const session = await auth.api.getSession({ headers });
 
+    console.log(session)
+
     if (!session) {
       logger.error("Session not found", {
         source: "OAuthService.handleGoogleOAuth"
@@ -28,6 +30,14 @@ class OAuthService {
         meta: { source: "handle_google_oauth" },
       });
     }
+
+    const existingProfile = await UserRepo.CachedRead.findByAuthId(session.user.id, {});
+    if (existingProfile) {
+      console.log("profile exists")
+      return existingProfile;
+    }
+
+    console.log("profile doesnt exist, creating one")
 
     const college = await authService.ensureEmailVerified(session.user.email);
 
@@ -40,6 +50,8 @@ class OAuthService {
       authId: session.user.id,
       status: "ONBOARDING",
     });
+
+    console.log(profile)
 
     await recordAudit({
       action: "auth:created:account",

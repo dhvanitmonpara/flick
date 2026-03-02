@@ -1,6 +1,6 @@
 "use client"
 
-import { useForm, Controller } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@/lib/zod-resolver"
 import { Input } from "@/components/ui/input"
@@ -9,15 +9,7 @@ import { Loader2 } from "lucide-react"
 import { IoMdEye, IoMdEyeOff } from "react-icons/io"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import FileInput from "@/components/FileInput"
-import { branch } from "@/constants/branch"
 import { FaGoogle } from "react-icons/fa"
 import { handleGoogleOAuthRedirect } from "@/utils/googleOAuthRedirect"
 import { Separator } from "@/components/ui/separator"
@@ -26,12 +18,10 @@ import Link from "next/link"
 import { authApi } from "@/services/api/auth"
 import { authClient } from "@/lib/auth-client"
 import { ocrApi } from "@/services/api/ocr"
-import { AxiosError } from "axios"
 import { toastError } from "@/utils/toast-error"
 
 const signUpSchema = z.object({
   email: z.email("Email is invalid"),
-  branch: branch,
   password: z.string()
     .min(8, "Password must be at least 8 characters")
     .regex(/[a-z]/, "Password must contain at least one lowercase letter")
@@ -67,24 +57,20 @@ function SignUpPage() {
     formState: { errors },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: {
-      branch: "CSE"
-    }
   })
 
   const onSubmit = async (data: SignUpFormData) => {
     setIsSubmitting(true)
     try {
 
-      if (!data.email || !data.password || !data.branch) {
+      if (!data.email || !data.password) {
         toast.error("Please fill all the fields")
         return
       }
 
       const response = await authApi.register.initialize(
         data.email,
-        data.password,
-        branch.parse(data.branch)
+        data.password
       )
 
       if (!response.success) {
@@ -118,9 +104,8 @@ function SignUpPage() {
               toast.info("Please upload a valid college id card")
               return
             }
-            const { email, branch } = result.data;
+            const { email } = result.data;
             if (email) setValue("email", email);
-            if (branch) setValue("branch", branch);
           }}
           name="studentId"
           required={false}
@@ -179,31 +164,10 @@ function SignUpPage() {
         </div>
         {errors.confirmPassword && <p className="text-red-500 text-sm mt-1!">{String(errors.confirmPassword?.message)}</p>}
 
-        <Controller
-          control={control}
-          name="branch"
-          render={({ field }) => (
-            <Select
-              disabled={isSubmitting}
-              onValueChange={field.onChange}
-              defaultValue={field.value}
-              value={field.value}
-            >
-              <SelectTrigger className="bg-zinc-200 dark:bg-zinc-800 focus:border-zinc-900 focus-visible:ring-zinc-900 dark:focus:border-zinc-100 dark:focus-visible:ring-zinc-100">
-                <SelectValue placeholder="Branch" />
-              </SelectTrigger>
-              <SelectContent className="bg-zinc-200 dark:bg-zinc-800">
-                {branch.options.map((branchValue) => (
-                  <SelectItem className="focus:bg-zinc-300 dark:focus:bg-zinc-700" key={branchValue} value={branchValue}>{branchValue}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-        {errors.branch && <p className="text-red-500 text-sm mt-1!">{String(errors.branch?.message)}</p>}
+
         <Button
           type="submit"
-          disabled={isSubmitting || (errors?.email && errors.email !== undefined) || (errors?.password && errors.password !== undefined) || (errors?.confirmPassword && errors.confirmPassword !== undefined) || (errors?.branch && errors.branch !== undefined)}
+          disabled={isSubmitting || (errors?.email && errors.email !== undefined) || (errors?.password && errors.password !== undefined) || (errors?.confirmPassword && errors.confirmPassword !== undefined)}
           className={`w-full py-2 font-semibold rounded-md dark:text-zinc-900 bg-zinc-800 dark:bg-zinc-200 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors ${isSubmitting && "bg-zinc-500 cursor-wait"}`}
         >
           {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait</> : "Create an Account"}

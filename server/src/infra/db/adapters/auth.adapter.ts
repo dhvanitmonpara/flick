@@ -1,7 +1,7 @@
 import { and, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import db from "@/infra/db";
 import type { DB } from "@/infra/db/types";
-import { auth, platformUser } from "@/infra/db/tables/auth.table";
+import { auth, platformUser, session, account, twoFactor, verification } from "@/infra/db/tables/auth.table";
 
 export const findById = async (authId: string, dbTx?: DB) => {
   const client = dbTx ?? db;
@@ -42,6 +42,33 @@ export const update = async (
     .where(eq(auth.id, authId))
     .returning();
   return updated;
+};
+export const deleteById = async (
+  authId: string,
+  dbTx?: DB
+) => {
+  try {
+    const client = dbTx ?? db;
+
+    const user = await client.query.auth.findFirst({
+      where: eq(auth.id, authId),
+    });
+
+    if (user?.email) {
+      await client.delete(verification).where(eq(verification.identifier, user.email));
+    }
+
+    const [deleted] = await client
+      .delete(auth)
+      .where(eq(auth.id, authId))
+      .returning();
+    return deleted;
+  } catch (error) {
+    console.log("failed to delete orphan row")
+    console.log(error)
+    console.log("---")
+    return error
+  }
 };
 
 export type SearchUsersOptions = {

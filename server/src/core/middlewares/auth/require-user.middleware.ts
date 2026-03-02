@@ -6,11 +6,19 @@ const requireUser = async (req: Request, _: Response, next: NextFunction) => {
     throw HttpError.notFound("User not found");
   }
 
+  next();
+}
+
+const requireOnboardedUser = async (req: Request, _: Response, next: NextFunction) => {
+  if (!req.user) {
+    throw HttpError.notFound("User not found");
+  }
+
   if (req.user.status === "ONBOARDING") {
-    throw HttpError.forbidden("User not onboarded");
+    throw HttpError.forbidden("User not onboarded", { code: "USER_NOT_ONBOARDED" });
   }
 
   next();
 }
 
-export default requireUser;
+export { requireUser, requireOnboardedUser };

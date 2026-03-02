@@ -45,4 +45,7 @@ export const postApi = {
       },
     });
   },
+  getByUser: async (userId: string, params?: PostQuery) => {
+    return http.get(`/posts/user/${userId}`, { params });
+  },
 };

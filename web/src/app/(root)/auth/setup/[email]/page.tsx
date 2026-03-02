@@ -50,7 +50,7 @@ function SetupUserPage() {
   }, [setupUser])
 
   return (
-    <div className="w-96 h-96">
+    <div className="w-96 h-96 flex justify-center items-center flex-col space-y-2">
       <h3>Setting up user</h3>
       {isLoading && <Loader2 className="animate-spin text-zinc-900 dark:text-zinc-100" />}
     </div>

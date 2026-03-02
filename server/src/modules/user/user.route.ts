@@ -1,6 +1,6 @@
 import { Router } from "express";
 import UserController from "@/modules/user/user.controller";
-import { ensureRatelimit, injectUser, requireUser } from "@/core/middlewares";
+import { ensureRatelimit, injectUser, requireOnboardedUser } from "@/core/middlewares";
 import { authenticated } from "@/core/middlewares/pipelines";
 
 const router = Router();
@@ -12,10 +12,11 @@ router.get("/id/:userId", UserController.getUserProfileById);
 router.get("/search/:query", UserController.searchUsers);
 
 router.use(injectUser);
-router.use(requireUser);
+router.use(requireOnboardedUser);
 
-router.get("/me", UserController.getUserProfile);
-router.patch("/me", UserController.updateUserProfile);
+router.route("/me")
+  .get(UserController.getUserProfile)
+  .patch(UserController.updateUserProfile);
 router.post("/accept-terms", UserController.acceptTerms);
 
 export default router;
