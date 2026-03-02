@@ -311,7 +311,7 @@ class AuthService {
 
     // Attempt to formally sign out to get session-clear cookie headers.
     // Doing this before deleting the auth row ensures the session exists
-    // and better-auth can cleanly revoke it and send clearing cookies.
+    // and better-auth can cleanly `revoke it and send clearing cookies.
     let authResponse: Response | undefined;
     try {
       authResponse = await auth.api.signOut({

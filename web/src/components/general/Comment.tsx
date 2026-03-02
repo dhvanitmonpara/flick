@@ -15,9 +15,13 @@ import { formatDate, isCollege, isUser } from "@/utils/helpers";
 import type { Comment as CommentEntity } from "@/types/Comment";
 import { useState } from "react";
 import { IoMdArrowDropdown, IoMdArrowDropup } from "react-icons/io";
+import useProfileStore from "@/store/profileStore";
 
 function Comment({ comment, className, depth = 0 }: { comment: CommentEntity, className?: string, depth?: number }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const profile = useProfileStore(state => state.profile);
+  const commenterId = isUser(comment.commentedBy) ? comment.commentedBy.id : comment.commentedBy;
+  const isOwnComment = commenterId === profile.id;
   return (
     <>
       <Card className={`dark:bg-transparent bg-transparent border-0 shadow-none rounded-none ${className}`}>
@@ -42,7 +46,7 @@ function Comment({ comment, className, depth = 0 }: { comment: CommentEntity, cl
               </p>
             </div>
           </div>
-          <PostDropdown showBookmark={false} id={comment.id} type="comment" key={comment.id} editableData={{ title: "", content: comment.content }} />
+          <PostDropdown showBookmark={false} id={comment.id} type="comment" key={comment.id} editableData={isOwnComment ? { title: "", content: comment.content } : null} />
         </CardHeader>
         <CardContent>
           <p className="text-zinc-600 dark:text-zinc-400 pt-1">{comment.content}</p>

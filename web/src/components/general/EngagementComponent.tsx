@@ -9,6 +9,7 @@ import CommentButton from "../actions/CommentButton";
 import { toast } from "sonner";
 import { Separator } from "../ui/separator";
 import { voteApi } from "@/services/api/vote";
+import useProfileStore from "@/store/profileStore";
 
 type EngagementType = 'upvotes' | 'downvotes' | 'comments' | 'views' | "share";
 
@@ -41,6 +42,7 @@ const EngagementComponent = ({
 
   const [upvoted, setUpvoted] = useState(userVote === 'upvote');
   const [downvoted, setDownvoted] = useState(userVote === 'downvote');
+  const isLoggedIn = Boolean(useProfileStore(state => state.profile.id))
 
   const { handleError } = useErrorHandler()
 
@@ -170,7 +172,7 @@ const EngagementComponent = ({
         )}
       </div>
 
-      {show.includes('comments') && (
+      {show.includes('comments') && isLoggedIn && (
         <CommentButton parentCommentId={targetType === "comment" ? id : null}>
           <button
             onClick={(e) => { e.stopPropagation(); }}

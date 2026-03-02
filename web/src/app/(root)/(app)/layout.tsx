@@ -42,6 +42,7 @@ function Sidebar() {
   const [showAllTopics, setShowAllTopics] = useState(false);
 
   const theme = useProfileStore(state => state.theme)
+  const isLoggedIn = Boolean(useProfileStore(state => state.profile.id))
 
   return (
     <>
@@ -103,7 +104,7 @@ function Sidebar() {
         <div className="h-24"></div>
       </div>
       <div className="fixed w-[270px] bottom-0 p-4 space-y-2 bg-zinc-100 dark:bg-zinc-900">
-        <CreatePost className="" />
+        {isLoggedIn && <CreatePost className="" />}
         <AuthCard className="bg-zinc-200 dark:bg-zinc-800 rounded-md" />
       </div>
     </>

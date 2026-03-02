@@ -16,6 +16,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { postApi } from "@/services/api/post";
 import { commentApi } from "@/services/api/comment";
+import useProfileStore from "@/store/profileStore";
 
 const getAvatarUrl = (user: UserEntity | string | null) => isUser(user) && isCollege(user.college) ? user.college.profile : "";
 const getCollegeName = (user: UserEntity | string | null) => isUser(user) && isCollege(user.college) ? user.college.name : "Unknown College";
@@ -35,6 +36,7 @@ function PostPage() {
 
   const { id } = useParams();
   const posts = usePostStore(state => state.posts)
+  const isLoggedIn = Boolean(useProfileStore(state => state.profile.id))
   const navigate = useRouter().push;
 
   const incrementView = useCallback(async () => {
@@ -137,9 +139,11 @@ function PostPage() {
           commentsCount={currentPost.commentsCount ?? comments?.length ?? 0}
         />
       }
-      <div className="px-4">
-        <CreateComment />
-      </div>
+      {isLoggedIn && (
+        <div className="px-4">
+          <CreateComment />
+        </div>
+      )}
       <div className="divide-y! divide-zinc-300/60 dark:divide-zinc-700/50">
         {loading
           ? <>

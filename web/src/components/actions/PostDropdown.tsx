@@ -64,6 +64,8 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
   const [dialogType, setDialogType] = useState<DialogType>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const isOwner = Boolean(editableData);
+  const isOwnPost = type === "post" && Boolean(editableData);
 
   const { handleError } = useErrorHandler()
   const removePost = usePostStore(state => state.removePost)
@@ -114,7 +116,8 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
         res = await bookmarkApi.create(id)
       }
 
-      if (res.status !== 201) throw new Error(`Failed to ${marked ? "unsave" : "save"} post`)
+      const expectedStatus = marked ? 200 : 201;
+      if (res.status !== expectedStatus) throw new Error(`Failed to ${marked ? "unsave" : "save"} post`)
       toast.success(`Successfully ${marked ? "unsave" : "save"} post`)
       if (removePostOnAction && marked && location.pathname.includes("bookmarks")) {
         removePostOnAction(id)
@@ -158,26 +161,28 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
       <DropdownMenu>
         <DropdownMenuTrigger className="rounded-full p-2 text-lg transition-colors hover:bg-zinc-300/60 dark:hover:bg-zinc-700/60"><HiDotsHorizontal /></DropdownMenuTrigger>
         <DropdownMenuContent>
-          {!location.pathname.includes("profile") && <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openDialog("REPORT") }}>
-            <TbMessageReport />
-            <span>Report</span>
-          </DropdownMenuItem>}
+          {!isOwnPost && (
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openDialog("REPORT") }}>
+              <TbMessageReport />
+              <span>Report</span>
+            </DropdownMenuItem>
+          )}
           {editableData && <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openDialog("EDIT") }}>
             <RiEdit2Fill />
             <span>Edit</span>
           </DropdownMenuItem>}
-          {!location.pathname.includes("profile")
-            && <>
-              {showBookmark && <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleBookmark(bookmarked) }}>
-                {bookmarked ? <FaBookmark /> : <FaRegBookmark />}
-                <span>{bookmarked ? "Unsave" : "Save"}</span>
-              </DropdownMenuItem>}
-            </>
-          }
-          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openDialog("DELETE") }} className="hover:bg-red-400/50! dark:hover:bg-red-600/40!">
-            <RiDeleteBin6Fill />
-            <span>Delete</span>
-          </DropdownMenuItem>
+          {showBookmark && type === "post" && !isOwnPost && (
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleBookmark(bookmarked) }}>
+              {bookmarked ? <FaBookmark /> : <FaRegBookmark />}
+              <span>{bookmarked ? "Unsave" : "Save"}</span>
+            </DropdownMenuItem>
+          )}
+          {isOwner && (
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openDialog("DELETE") }} className="hover:bg-red-400/50! dark:hover:bg-red-600/40!">
+              <RiDeleteBin6Fill />
+              <span>Delete</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

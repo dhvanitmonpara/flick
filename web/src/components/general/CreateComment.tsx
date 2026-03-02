@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import useCommentStore from "@/store/commentStore";
 import { highlightBannedWords, validatePost } from "@/utils/moderator";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import { AxiosError } from "axios";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -16,7 +16,6 @@ import { z } from "zod";
 import { TermsForm } from "./TermsForm";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { DialogDescription } from "@radix-ui/react-dialog";
-import { FaX } from "react-icons/fa6";
 import { useParams } from "next/navigation";
 import { userApi } from "@/services/api/user";
 import { commentApi } from "@/services/api/comment";
@@ -49,6 +48,8 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
       content: "",
     },
   });
+
+  const content = form.watch("content")
 
   useEffect(() => {
     if (defaultData) {
@@ -143,7 +144,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
                             else setWarningOpen(true);
                           }
                         }}
-                        placeholder="Post comment..."
+                        placeholder="Craft a comment..."
                         disabled={loading}
                         maxLength={2000}
                         rows={1}
@@ -183,8 +184,8 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
             }}
           />
 
-          {isWriting && <Button onClick={e => e.stopPropagation()} disabled={loading || Boolean(error)} type="submit" className="w-full">
-            {loading ? <><Loader2 className="animate-spin" /> {isUpdating ? "Updating..." : "Posting..."}</> : (isUpdating ? "Update" : "Post")}
+          {isWriting && <Button onClick={e => e.stopPropagation()} disabled={loading || Boolean(error) || !content?.trim()} type="submit" className="w-full">
+            {loading ? <><Loader2 className="animate-spin" /> {isUpdating ? "Updating..." : "Commenting..."}</> : (isUpdating ? "Update" : "Comment")}
           </Button>}
           {error && <p className="text-red-500 text-sm">{error}</p>}
         </form>

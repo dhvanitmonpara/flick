@@ -13,6 +13,7 @@ import { postApi } from "@/services/api/post"
 import { FileText, Search, AlertCircle } from "lucide-react"
 import unparseTopic from "@/utils/unparse-topic"
 import CreatePost from "@/components/general/CreatePost"
+import useProfileStore from "@/store/profileStore"
 
 function Feed() {
 
@@ -21,6 +22,7 @@ function Feed() {
   const { handleError } = useErrorHandler()
   const posts = usePostStore(state => state.posts)
   const setPosts = usePostStore(state => state.setPosts)
+  const isLoggedIn = Boolean(useProfileStore(state => state.profile.id))
 
   const searchParams = useSearchParams()
 
@@ -159,13 +161,15 @@ function Feed() {
             >
               Clear filters
             </button>
-            <CreatePost>
-              <button
-                className="inline-flex cursor-pointer items-center justify-center h-9 px-4 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
-              >
-                Craft a new one
-              </button>
-            </CreatePost>
+            {isLoggedIn && (
+              <CreatePost>
+                <button
+                  className="inline-flex cursor-pointer items-center justify-center h-9 px-4 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
+                >
+                  Craft a new one
+                </button>
+              </CreatePost>
+            )}
           </div>
         </div>
       )}
