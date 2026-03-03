@@ -151,28 +151,54 @@ class AuthService {
     const username = nanoid(12);
     const decryptedEmail = CryptoTools.email.decrypt(email)
 
-    const response = await auth.api.signUpEmail({
-      body: {
-        email: decryptedEmail,
-        password,
-        name: username,
-      },
-      asResponse: true,
-      returnHeaders: true,
-    });
+    const existingAuth = await AuthRepo.Read.findByEmail(decryptedEmail);
+    
+    let createdUser;
+    let isNewAuth = false;
 
-    const parsed = await response.json();
-    const createdUser = parsed.user;
+    if (existingAuth) {
+      createdUser = existingAuth;
+    } else {
+      const response = await auth.api.signUpEmail({
+        body: {
+          email: decryptedEmail,
+          password,
+          name: username,
+        },
+        asResponse: true,
+        returnHeaders: true,
+      });
 
-    const profile = await UserRepo.Write.create({
-      username,
-      collegeId,
-      branch: null,
-      authId: createdUser.id,
-      status: "ONBOARDING",
-    });
+      const parsed = await response.json();
+      createdUser = parsed.user;
+      isNewAuth = true;
 
-    if (res && response.headers) forwardSetCookieHeaders(response.headers, res);
+      if (res && response.headers) forwardSetCookieHeaders(response.headers, res);
+    }
+
+    let profile = await UserRepo.Read.findByAuthId(createdUser.id, {});
+    
+    if (!profile) {
+      try {
+        profile = await UserRepo.Write.create({
+          username,
+          collegeId,
+          branch: null,
+          authId: createdUser.id,
+          status: "ONBOARDING",
+        });
+      } catch (error) {
+        if (isConstraintViolation(error)) {
+          profile = await UserRepo.Read.findByAuthId(createdUser.id, {});
+          if (!profile) {
+            throw HttpError.internal("Failed to create user profile. Please try again.");
+          }
+        } else {
+          throw error;
+        }
+      }
+    }
+
     await cache.del(`pending:${signupId}`);
     res.clearCookie("pending_signup", {
       httpOnly: true,
@@ -182,26 +208,30 @@ class AuthService {
       domain: env.COOKIE_DOMAIN
     });
 
-    await recordAudit({
-      action: "auth:created:account",
-      entityType: "auth",
-      entityId: createdUser.id,
-      after: { id: createdUser.id },
-      metadata: { registrationMethod: "email" },
-    });
+    if (isNewAuth) {
+      await recordAudit({
+        action: "auth:created:account",
+        entityType: "auth",
+        entityId: createdUser.id,
+        after: { id: createdUser.id },
+        metadata: { registrationMethod: "email" },
+      });
+    }
 
-    return { user: createdUser, profile, session: parsed.session };
+    return { user: createdUser, profile };
   };
 
   completeOnboarding = async (req: Request, branch: string) => {
     const userId = req.user.id;
 
-    const existingProfile = await UserRepo.CachedRead.findById(userId, {});
+    await cache.del(`user:id:${userId}`);
+    await cache.del(`user:authId:${req.auth.id}`);
+
+    const existingProfile = await UserRepo.Read.findById(userId, {});
     if (!existingProfile) {
       throw HttpError.internal("Profile missing for authenticated user");
     }
     if (existingProfile.status === "ACTIVE") {
-      await cache.del(`user:id:${userId}`);
       throw HttpError.forbidden("User already onboarded", { code: "USER_ALREADY_ONBOARDED" });
     }
 
@@ -213,6 +243,7 @@ class AuthService {
         status: "ACTIVE",
       });
 
+      await cache.del(`user:id:${userId}`);
       await cache.del(`user:authId:${req.auth.id}`);
 
       await recordAudit({
@@ -298,20 +329,12 @@ class AuthService {
     const profile = await UserRepo.Read.findByAuthId(userId, {});
 
     if (profile) {
-      // Manually clean up notifications where user is receiver
       await db.delete(notifications).where(eq(notifications.receiverId, profile.id));
-
-      await UserRepo.Write.delete(profile.id);
-
-      // Clear cache for the user aggressively
       await cache.del(`user:id:${profile.id}`);
       await cache.del(`user:username:${profile.username}`);
       await cache.del(`user:authId:${userId}`);
     }
 
-    // Attempt to formally sign out to get session-clear cookie headers.
-    // Doing this before deleting the auth row ensures the session exists
-    // and better-auth can cleanly `revoke it and send clearing cookies.
     let authResponse: Response | undefined;
     try {
       authResponse = await auth.api.signOut({
@@ -326,13 +349,10 @@ class AuthService {
     if (authResponse) {
       forwardSetCookieHeaders((authResponse as unknown as globalThis.Response).headers, res);
     } else {
-      // Manually clear the better-auth session cookies as fallback
       res.clearCookie("better-auth.session_token", { path: "/" });
       res.clearCookie("better-auth.session_data", { path: "/" });
     }
 
-    // Delete the auth row after session revoked — this CASCADE deletes `session`, `account`,
-    // and `twoFactor` records in Postgres, ensuring no dangling records.
     await db.delete(authTable).where(eq(authTable.id, userId));
 
     await recordAudit({

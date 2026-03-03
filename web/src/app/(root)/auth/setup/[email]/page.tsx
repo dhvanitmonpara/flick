@@ -4,6 +4,7 @@ import { authApi } from "@/services/api/auth";
 import { Loader2 } from "lucide-react"
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react"
+import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 
 function SetupUserPage() {
@@ -30,6 +31,19 @@ function SetupUserPage() {
       const { success, error } = await authApi.register.register(password)
       if (success) {
         sessionStorage.removeItem("pending_signup_password")
+
+        // Auto-login the user
+        const { error: signInError } = await authClient.signIn.email({
+          email: decodeURIComponent(email as string),
+          password,
+        });
+
+        if (signInError) {
+          toast.error("Account created, but automatic login failed. Please log in.");
+          navigate("/auth/signin");
+          return;
+        }
+
         toast.success("User setup successfully")
         setIsLoading(false)
         navigate("/")

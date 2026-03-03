@@ -1,14 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { HttpError } from "@/core/http";
 
-const requireUser = async (req: Request, _: Response, next: NextFunction) => {
-  if (!req.user) {
-    throw HttpError.notFound("User not found");
-  }
-
-  next();
-}
-
 const requireOnboardedUser = async (req: Request, _: Response, next: NextFunction) => {
   if (!req.user) {
     throw HttpError.notFound("User not found");
@@ -21,4 +13,4 @@ const requireOnboardedUser = async (req: Request, _: Response, next: NextFunctio
   next();
 }
 
-export { requireUser, requireOnboardedUser };
+export { requireOnboardedUser };

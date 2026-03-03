@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react";
+import { Loader2 } from "lucide-react";
 import {
   InputOTP,
   InputOTPGroup,
@@ -22,6 +23,7 @@ const OtpVerificationPage = () => {
   const [timeLeft, setTimeLeft] = useState(OTP_EXPIRE_TIME);
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [isOtpInvalid, setIsOtpInvalid] = useState(false);
 
@@ -52,22 +54,26 @@ const OtpVerificationPage = () => {
   const sendOtp = useCallback(async () => {
     if (!email) navigate(onFailedRedirect)
     try {
+      setIsResending(true);
       const isMailSent = await authApi.otp.send(decodedEmail);
 
       if (isMailSent) {
         setTimeLeft(OTP_EXPIRE_TIME);
+        toast.success("OTP sent successfully!");
       }
     } catch (error) {
       console.error("Error sending OTP:", error);
+      toast.error("Failed to resend OTP");
+    } finally {
+      setIsResending(false);
     }
-  }, [email, navigate, onFailedRedirect])
+  }, [email, navigate, onFailedRedirect, decodedEmail])
 
   const handleResendOTP = () => {
     if (attempts >= MAX_ATTEMPTS) {
       toast.error("You have exceeded the maximum number of attempts.");
       return;
     }
-    setTimeLeft(OTP_EXPIRE_TIME);
     sendOtp();
   };
 
@@ -114,7 +120,7 @@ const OtpVerificationPage = () => {
 
     const timer = setTimeout(() => {
       verify();
-    }, 800);
+    }, 300);
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -138,6 +144,11 @@ const OtpVerificationPage = () => {
           {timeLeft > 0 ? (
             <span>
               in <b>{timeLeft}</b> seconds
+            </span>
+          ) : isResending ? (
+            <span className="text-blue-500 inline-flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Resending...
             </span>
           ) : (
             <span
@@ -176,8 +187,9 @@ const OtpVerificationPage = () => {
         <Button
           type="submit"
           disabled={isLoading || otp.length !== 6 || !email || isOtpInvalid}
-          className={`w-full py-2 font-semibold rounded-md dark:text-zinc-900 bg-zinc-800 dark:bg-zinc-200 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors disabled:bg-zinc-500 disabled:cursor-wait"}`}
+          className="w-full py-2 font-semibold rounded-md dark:text-zinc-900 bg-zinc-800 dark:bg-zinc-200 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors disabled:bg-zinc-500 disabled:cursor-wait flex justify-center items-center gap-2"
         >
+          {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
           {isLoading ? "Verifying..." : "Verify Account"}
         </Button>
       </form>

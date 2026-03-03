@@ -19,6 +19,7 @@ import { branch } from "@/constants/branch"
 import { authApi } from "@/services/api/auth"
 import { toastError } from "@/utils/toast-error"
 import { AxiosError } from "axios"
+import useProfileStore from "@/store/profileStore"
 
 const onboardingSchema = z.object({
   branch: branch,
@@ -29,6 +30,7 @@ type OnboardingFormData = z.infer<typeof onboardingSchema>
 function OnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
+  const setProfile = useProfileStore((state) => state.setProfile)
 
   const {
     handleSubmit,
@@ -45,7 +47,8 @@ function OnboardingPage() {
     setIsSubmitting(true)
     try {
       const response = await authApi.onboarding.complete(branch.parse(data.branch))
-      if (response.success) {
+      if (response.success && response.data) {
+        setProfile(response.data as any)
         toast.success("Onboarding complete!")
         router.push("/")
       } else {

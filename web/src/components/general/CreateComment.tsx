@@ -19,7 +19,7 @@ import { DialogDescription } from "@radix-ui/react-dialog";
 import { useParams } from "next/navigation";
 import { userApi } from "@/services/api/user";
 import { commentApi } from "@/services/api/comment";
-import { IoMdClose } from "react-icons/io";
+import { cn } from "@/lib/utils";
 
 const commentSchema = z.object({
   content: z.string().min(3, "Content must be at least 3 characters.").max(2000, "Content must be at most 2000 characters."),
@@ -121,7 +121,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 border-none relative">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 border-none">
           <FormField
             control={form.control}
             name="content"
@@ -144,7 +144,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
                             else setWarningOpen(true);
                           }
                         }}
-                        placeholder="Craft a comment..."
+                        placeholder="Write a comment..."
                         disabled={loading}
                         maxLength={2000}
                         rows={1}
@@ -157,14 +157,13 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
                           setError("");
                           field.onChange(e);
                         }}
-                        className={`${isWriting ? "min-h-40" : "h-10"} p-3 text-lg transition-all bg-zinc-100 dark:bg-zinc-800 ${hasBanned ? "border-red-500" : ""}`}
+                        className={cn(
+                          "p-3 text-lg transition-all duration-200 bg-zinc-100 dark:bg-zinc-800 resize-none overflow-hidden",
+                          isWriting
+                            ? "min-h-40 h-auto rounded-lg"
+                            : "h-11.5 min-h-0 rounded-2xl"
+                        )}
                       />
-                      {isWriting && <button className="absolute top-2 right-2 p-2 rounded-md bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 cursor-pointer" onClick={() => {
-                        if (!field.value) handleEscape()
-                        else setWarningOpen(true);
-                      }}>
-                        <IoMdClose />
-                      </button>}
                       {field.value && (
                         <div className="mt-2 text-sm">
                           <span className="font-semibold">Preview:</span>
@@ -184,9 +183,25 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
             }}
           />
 
-          {isWriting && <Button onClick={e => e.stopPropagation()} disabled={loading || Boolean(error) || !content?.trim()} type="submit" className="w-full">
-            {loading ? <><Loader2 className="animate-spin" /> {isUpdating ? "Updating..." : "Commenting..."}</> : (isUpdating ? "Update" : "Comment")}
-          </Button>}
+          {isWriting && (
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  if (!content?.trim()) handleEscape();
+                  else setWarningOpen(true);
+                }}
+                disabled={loading}
+                className="min-w-24"
+              >
+                {content?.trim() ? "Discard" : "Cancel"}
+              </Button>
+              <Button onClick={e => e.stopPropagation()} disabled={loading || Boolean(error) || !content?.trim()} type="submit" className="flex-1">
+                {loading ? <><Loader2 className="animate-spin" /> {isUpdating ? "Updating..." : "Commenting..."}</> : (isUpdating ? "Update" : "Comment")}
+              </Button>
+            </div>
+          )}
           {error && <p className="text-red-500 text-sm">{error}</p>}
         </form>
       </Form>
