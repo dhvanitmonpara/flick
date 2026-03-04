@@ -2,12 +2,23 @@ import { Request } from "express";
 import { Controller, HttpError, HttpResponse } from "@/core/http";
 import postService from "./post.service";
 import * as postSchemas from "./post.schema";
+import { validateContent } from "@/infra/services/moderator";
 
 @Controller()
 class PostController {
   static async createPost(req: Request) {
     const { title, content, topic, isPrivate } = postSchemas.CreatePostSchema.parse(req.body);
     const userId = req.user.id;
+
+    const validationResult = await validateContent(content);
+
+    if (!validationResult.allowed) {
+      throw HttpError.badRequest("Post content is not allowed", {
+        code: "POST_CONTENT_NOT_ALLOWED",
+        meta: { source: "PostController.createPost" },
+        errors: validationResult.reasons?.map((reason) => ({ field: "content", message: reason })),
+      });
+    }
 
     const newPost = await postService.createPost({
       title,

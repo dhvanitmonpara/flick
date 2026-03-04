@@ -1,0 +1,1 @@
+export type ValidationResult = { allowed: boolean; reasons?: string[] }
