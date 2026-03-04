@@ -1,6 +1,6 @@
 import { Router } from "express";
 import commentController from "./comment.controller";
-import { ensureRatelimit } from "@/core/middlewares";
+import { ensureRatelimit, requireTerms } from "@/core/middlewares";
 import { checkUserContext, withOptionalUserContext } from "@/core/middlewares/pipelines";
 
 const router = Router();
@@ -13,8 +13,8 @@ router.route("/post/:postId").get(commentController.getCommentsByPostId);
 
 router.use(checkUserContext);
 
-router.route("/post/:postId").post(commentController.createComment);
-router.route("/:commentId").patch(commentController.updateComment);
+router.route("/post/:postId").post(requireTerms, commentController.createComment);
+router.route("/:commentId").patch(requireTerms, commentController.updateComment);
 router.route("/:commentId").delete(commentController.deleteComment);
 
 export default router;

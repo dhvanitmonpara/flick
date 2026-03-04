@@ -9,5 +9,6 @@ export { registerRequestLogging } from "./request-logging.middleware"
 export { default as injectUser } from "./auth/inject-user.middleware";
 export { requireOnboardedUser } from "./auth/require-user.middleware";
 export { default as requireAuth } from "./auth/require-auth.middleware";
+export { default as requireTerms } from "./auth/require-terms.middleware";
 
 export * as pipelines from "./pipelines";

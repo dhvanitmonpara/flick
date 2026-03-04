@@ -542,28 +542,8 @@ class AuthService {
       throw HttpError.forbidden("Invalid OTP");
     }
 
-    // Create a session directly in the DB
-    const sessionToken = crypto.randomBytes(32).toString("hex");
-    const sessionId = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-    await db.insert(session).values({
-      id: sessionId,
-      token: sessionToken,
-      userId: authUser.id,
-      expiresAt,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    res.cookie("better-auth.session_token", sessionToken, {
-      httpOnly: true,
-      secure: env.NODE_ENV === "production",
-      sameSite: "lax",
-      expires: expiresAt,
-      path: "/",
-      domain: env.COOKIE_DOMAIN,
-    });
+    // Reuse session creation helper
+    await this.createSessionAndSetCookie(authUser, res);
 
     await recordAudit({
       action: "user:logged:in:self",
@@ -574,8 +554,6 @@ class AuthService {
 
     return { success: true, user: authUser };
   };
-
-  // ── Password management (set / change) ─────────────────────────────────────
 
   hasPassword = async (authId: string): Promise<boolean> => {
     const [row] = await db
@@ -639,8 +617,33 @@ class AuthService {
   };
 
   sendOtp = otpService.sendOtp;
-  verifyOtp = otpService.verifyOtp
-  handleGoogleOAuth = oauthService.handleGoogleOAuth
+  verifyOtp = otpService.verifyOtp;
+  handleGoogleOAuth = oauthService.handleGoogleOAuth;
+
+  private async createSessionAndSetCookie(authUser: any, res: Response) {
+    const sessionToken = crypto.randomBytes(32).toString("hex");
+    const sessionId = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    await db.insert(session).values({
+      id: sessionId,
+      token: sessionToken,
+      userId: authUser.id,
+      expiresAt,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    res.cookie("better-auth.session_token", sessionToken, {
+      httpOnly: true,
+      secure: env.NODE_ENV === "production",
+      sameSite: "lax",
+      expires: expiresAt,
+      path: "/",
+      domain: env.COOKIE_DOMAIN,
+    });
+  }
+
 }
 
 export default new AuthService();
