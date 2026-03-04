@@ -78,3 +78,19 @@ export const adminListQuerySchema = z.object({
     .min(0, "Offset must be at least 0")
     .optional(),
 });
+
+export const loginOtpSchema = z.object({
+  email: EmailSchema,
+});
+
+export const verifyLoginOtpSchema = z.object({
+  email: EmailSchema,
+  otp: z.string("OTP is required"),
+});
+
+export const setPasswordSchema = z.object({
+  newPassword: z
+    .string("New password is required")
+    .min(6, "Password must be at least 6 characters"),
+  currentPassword: z.string().optional(),
+});

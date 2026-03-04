@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -37,6 +37,17 @@ function SettingsPage() {
   const [isOtpInvalid, setIsOtpInvalid] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
 
+  // Password management state
+  const [hasPassword, setHasPassword] = useState<boolean | null>(null);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [isPasswordFormVisible, setIsPasswordFormVisible] = useState(false);
+
   const { data: session } = authClient.useSession();
   const profile = useProfileStore((state) => state.profile);
   const removeProfile = useProfileStore((state) => state.removeProfile);
@@ -48,6 +59,13 @@ function SettingsPage() {
     profile?.username && session?.user?.email &&
     confirmUsername === profile.username.substring(0, 6) &&
     confirmEmail === session.user.email;
+
+  // Fetch password status on mount
+  useEffect(() => {
+    authApi.password.status()
+      .then((data) => setHasPassword(data.hasPassword))
+      .catch(() => setHasPassword(null));
+  }, []);
 
   const handleSendOtp = useCallback(async () => {
     if (!session?.user?.email || !session?.user?.id) return;
@@ -115,18 +133,179 @@ function SettingsPage() {
     return () => clearTimeout(timer);
   }, [otp, attempts, step]);
 
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    if (hasPassword && !currentPassword) {
+      toast.error("Please enter your current password");
+      return;
+    }
+
+    setIsSavingPassword(true);
+    try {
+      const result = await authApi.password.set(
+        newPassword,
+        hasPassword ? currentPassword : undefined,
+      );
+      if (result.success) {
+        toast.success(hasPassword ? "Password changed successfully!" : "Password set successfully!");
+        setHasPassword(true);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setIsPasswordFormVisible(false);
+      }
+    } catch (error: any) {
+      if (error?.response?.status === 400 || error?.response?.status === 401) {
+        toast.error(error?.response?.data?.message || "Incorrect current password");
+      } else {
+        toastError(error, "Failed to save password");
+      }
+    } finally {
+      setIsSavingPassword(false);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto py-10 px-4">
       <h1 className="text-3xl font-bold mb-8">Settings</h1>
 
       <div className="space-y-8">
-        {/* Placeholder for other settings sections */}
+        {/* Account Preferences */}
         <section>
           <h2 className="text-xl font-semibold mb-4">Account Preferences</h2>
           <p className="text-zinc-500 mb-4 text-sm">Update your account settings here.</p>
           <div className="p-4 border dark:border-zinc-800 rounded-lg">
             <p className="text-sm">More settings coming soon.</p>
           </div>
+        </section>
+
+        {/* Security / Password */}
+        <section className="pt-8 border-t dark:border-zinc-800">
+          <h2 className="text-xl font-semibold mb-1">Security</h2>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+            {hasPassword === null
+              ? "Loading…"
+              : hasPassword
+                ? "Change your current password."
+                : "You signed up via Google. Set a password to also log in with email."}
+          </p>
+
+          {hasPassword !== null && (
+            <div className="p-4 border dark:border-zinc-800 rounded-lg space-y-4">
+              {!isPasswordFormVisible ? (
+                <Button
+                  onClick={() => setIsPasswordFormVisible(true)}
+                  variant="outline"
+                >
+                  {hasPassword ? "Change Password" : "Set Password"}
+                </Button>
+              ) : (
+                <form
+                  onSubmit={handlePasswordSubmit}
+                  className="space-y-4"
+                >
+                  {/* Current password — only shown if user already has one */}
+                  {hasPassword && (
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">Current Password</label>
+                      <div className="relative">
+                        <Input
+                          type={showCurrentPass ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          disabled={isSavingPassword}
+                          required
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500"
+                          onClick={() => setShowCurrentPass((v) => !v)}
+                        >
+                          {showCurrentPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">
+                      {hasPassword ? "New Password" : "Password"}
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type={showNewPass ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        disabled={isSavingPassword}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500"
+                        onClick={() => setShowNewPass((v) => !v)}
+                      >
+                        {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Confirm Password</label>
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPass ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        disabled={isSavingPassword}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500"
+                        onClick={() => setShowConfirmPass((v) => !v)}
+                      >
+                        {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                    <Button type="submit" disabled={isSavingPassword} className="w-full sm:w-auto">
+                      {isSavingPassword ? (
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</>
+                      ) : "Save Password"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        setIsPasswordFormVisible(false);
+                        setCurrentPassword("");
+                        setNewPassword("");
+                        setConfirmPassword("");
+                      }}
+                      className="w-full sm:w-auto"
+                      disabled={isSavingPassword}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Danger Zone */}
@@ -144,7 +323,6 @@ function SettingsPage() {
               <Dialog open={isModalOpen} onOpenChange={(open) => {
                 setIsModalOpen(open);
                 if (!open) {
-                  // Reset state on close
                   setStep("confirm");
                   setConfirmUsername("");
                   setConfirmEmail("");

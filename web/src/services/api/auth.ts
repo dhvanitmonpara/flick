@@ -19,6 +19,24 @@ export const authApi = {
       const verifyResponse: AxiosResponse = await http.post("/auth/otp/verify", { otp, pending_signup: authId }, { headers: { "Content-Type": "application/json" } });
       return verifyResponse.status === 200;
     },
+    sendLogin: async (email: string) => {
+      const response: AxiosResponse = await http.post("/auth/otp/login/send", { email });
+      return response.status === 200;
+    },
+    verifyLogin: async (email: string, otp: string) => {
+      const response: AxiosResponse = await http.post("/auth/otp/login/verify", { email, otp });
+      return response.status === 200;
+    },
+  },
+  password: {
+    status: async (): Promise<{ hasPassword: boolean }> => {
+      const response: AxiosResponse = await http.get("/auth/password/status");
+      return { hasPassword: !!(response.data as any)?.hasPassword };
+    },
+    set: async (newPassword: string, currentPassword?: string) => {
+      const response: AxiosResponse = await http.post("/auth/password/set", { newPassword, currentPassword });
+      return { success: response.status === 200 };
+    },
   },
   resetPassword: {
     finalize: async (newPassword: string, token?: string) => {

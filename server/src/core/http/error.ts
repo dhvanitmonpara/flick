@@ -96,6 +96,13 @@ class HttpError extends Error {
     return this.create(404, "NOT_FOUND", message, options);
   }
 
+  static tooManyRequests(
+    message = "Too many requests",
+    options?: HttpErrorOptions
+  ) {
+    return this.create(429, "TOO_MANY_REQUESTS", message, options);
+  }
+
   static internal(
     message = "Internal server error",
     options?: HttpErrorOptions

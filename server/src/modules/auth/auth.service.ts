@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { HttpError } from "@/core/http";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import cache, { redis } from "@/infra/services/cache/index";
 import AuthRepo from "@/modules/auth/auth.repo";
 import oauthService from "@/modules/auth/oauth/oauth.service";
@@ -20,8 +20,9 @@ import { env } from "@/config/env";
 import UserRepo from "../user/user.repo";
 import { isConstraintViolation } from "@/lib/pg/errors/constraint-violantion";
 import { notifications } from "@/infra/db/tables/notification.table";
-import { auth as authTable, verification as verificationTable } from "@/infra/db/tables/auth.table";
+import { auth as authTable, verification as verificationTable, session, account } from "@/infra/db/tables/auth.table";
 import db from "@/infra/db";
+import mailService from "@/infra/services/mail";
 
 class AuthService {
   getPendingUser = async (signupId: string, options?: { bypassL1?: boolean }) => {
@@ -465,6 +466,175 @@ class AuthService {
 
     if (isDisposableEmailDomain(domain)) {
       throw HttpError.badRequest("Disposable emails not allowed");
+    }
+  };
+
+  sendLoginOtp = async (email: string) => {
+    const existing = await AuthRepo.Read.findByEmail(email);
+
+    const cooldownKey = `login_otp_cooldown:${email}`;
+    const inCooldown = await cache.get(cooldownKey);
+    if (inCooldown) {
+      throw HttpError.tooManyRequests("Please wait a minute before requesting another OTP.");
+    }
+    await cache.set(cooldownKey, true, 60);
+
+    const cacheKey = `login_otp:${email}`;
+    const attemptsKey = `login_otp_attempts:${email}`;
+    const attempts = ((await cache.get(attemptsKey)) as number) || 0;
+    if (attempts >= 5) {
+      throw HttpError.forbidden("Too many OTP attempts. Try later.");
+    }
+
+    if (!existing) {
+      const dummyOtp = (Math.floor(Math.random() * 900000) + 100000).toString();
+      const hashed = await CryptoTools.otp.hash(dummyOtp);
+      await cache.set(cacheKey, hashed, 900);
+      return { success: true };
+    }
+
+    const data = await import("@/infra/services/mail").then((m) =>
+      m.default.send(email, "OTP", { username: email, projectName: "Flick" })
+    );
+
+    if (data.status === "error" || !data?.otp) {
+      throw HttpError.internal("OTP send failed");
+    }
+
+    const hashed = await CryptoTools.otp.hash(data.otp);
+    await cache.set(cacheKey, hashed, 900);
+
+    return { success: true };
+  };
+
+  verifyLoginOtpAndSignIn = async (email: string, otp: string, res: Response) => {
+    const CryptoTools = (await import("@/lib/crypto-tools")).default;
+    const cacheKey = `login_otp:${email}`;
+    const attemptsKey = `login_otp_attempts:${email}`;
+
+    const attempts = ((await cache.get(attemptsKey)) as number) || 0;
+    if (attempts >= 5) {
+      throw HttpError.forbidden("Too many OTP attempts. Try later.");
+    }
+
+    const cached = await cache.get<string>(cacheKey);
+    if (!cached) {
+      throw HttpError.forbidden("OTP expired or not found. Request a new one.");
+    }
+
+    const isMatch = await CryptoTools.otp.compare(otp, cached);
+    if (!isMatch) {
+      const newAttempts = attempts + 1;
+      await cache.set(attemptsKey, newAttempts, 900);
+      if (newAttempts >= 5) {
+        await cache.del(cacheKey);
+        throw HttpError.forbidden("Too many OTP attempts. Try later.");
+      }
+      throw HttpError.forbidden("Invalid OTP");
+    }
+
+    await cache.del(cacheKey);
+    await cache.del(attemptsKey);
+
+    // Find the auth user
+    const authUser = await AuthRepo.Read.findByEmail(email);
+    if (!authUser) {
+      throw HttpError.forbidden("Invalid OTP");
+    }
+
+    // Create a session directly in the DB
+    const sessionToken = crypto.randomBytes(32).toString("hex");
+    const sessionId = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    await db.insert(session).values({
+      id: sessionId,
+      token: sessionToken,
+      userId: authUser.id,
+      expiresAt,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    res.cookie("better-auth.session_token", sessionToken, {
+      httpOnly: true,
+      secure: env.NODE_ENV === "production",
+      sameSite: "lax",
+      expires: expiresAt,
+      path: "/",
+      domain: env.COOKIE_DOMAIN,
+    });
+
+    await recordAudit({
+      action: "user:logged:in:self",
+      entityType: "auth",
+      entityId: authUser.id,
+      metadata: { method: "otp" },
+    });
+
+    return { success: true, user: authUser };
+  };
+
+  // ── Password management (set / change) ─────────────────────────────────────
+
+  hasPassword = async (authId: string): Promise<boolean> => {
+    const [row] = await db
+      .select({ password: account.password })
+      .from(account)
+      .where(and(eq(account.userId, authId), eq(account.providerId, "credential")))
+      .limit(1);
+    return !!row?.password;
+  };
+
+  setOrChangePassword = async (
+    req: Request,
+    newPassword: string,
+    currentPassword?: string,
+  ) => {
+    const headers = parseHeaders(req.headers);
+    const sessionData = await auth.api.getSession({ headers });
+    if (!sessionData) {
+      throw HttpError.unauthorized("Unauthorized request");
+    }
+    const authId = sessionData.user.id;
+
+    const alreadyHasPassword = await this.hasPassword(authId);
+
+    if (alreadyHasPassword) {
+      if (!currentPassword) {
+        throw HttpError.badRequest("Current password is required to change password");
+      }
+
+      const result = await auth.api.changePassword({
+        body: { newPassword, currentPassword, revokeOtherSessions: false },
+        headers,
+      });
+
+      await recordAudit({
+        action: "user:forgot:password",
+        entityType: "auth",
+        entityId: authId,
+        metadata: { action: "change_password" },
+      });
+
+      return { success: true, changed: true, result };
+    } else {
+      // OAuth-only user — set password for the first time via setPassword endpoint
+      const result = await auth.api.setPassword({
+        body: { newPassword },
+        headers,
+      });
+
+      await db.update(authTable).set({ emailVerified: true }).where(eq(authTable.id, authId));
+
+      await recordAudit({
+        action: "user:forgot:password",
+        entityType: "auth",
+        entityId: authId,
+        metadata: { action: "set_password" },
+      });
+
+      return { success: true, changed: false, result };
     }
   };
 

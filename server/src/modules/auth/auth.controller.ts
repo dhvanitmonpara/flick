@@ -171,6 +171,34 @@ class AuthController {
 
     return HttpResponse.ok("Users fetched successfully", result);
   }
+
+  static async sendLoginOtp(req: Request) {
+    const { email } = authSchemas.loginOtpSchema.parse(req.body);
+    const result = await authService.sendLoginOtp(email);
+    return HttpResponse.ok("OTP sent successfully", result);
+  }
+
+  static async verifyLoginOtp(req: Request, res: Response) {
+    const { email, otp } = authSchemas.verifyLoginOtpSchema.parse(req.body);
+    const result = await authService.verifyLoginOtpAndSignIn(email, otp, res);
+    return HttpResponse.ok("Logged in successfully", { userId: result.user.id });
+  }
+
+  static async getPasswordStatus(req: Request) {
+    const authId = req.auth?.id;
+    if (!authId) throw HttpError.unauthorized("Unauthorized request");
+    const hasPassword = await authService.hasPassword(authId);
+    return HttpResponse.ok("Password status fetched", { hasPassword });
+  }
+
+  static async setPassword(req: Request) {
+    const { newPassword, currentPassword } = authSchemas.setPasswordSchema.parse(req.body);
+    const result = await authService.setOrChangePassword(req, newPassword, currentPassword);
+    return HttpResponse.ok(
+      result.changed ? "Password changed successfully" : "Password set successfully",
+      { hasPassword: true },
+    );
+  }
 }
 
 export default AuthController;

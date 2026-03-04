@@ -17,6 +17,8 @@ router.post("/registration/finalize", AuthController.registerUser);
 router.get("/google/callback", AuthController.googleCallback);
 router.post("/password/forgot", AuthController.forgotPassword);
 router.post("/password/reset", AuthController.resetPassword);
+router.post("/otp/login/send", AuthController.sendLoginOtp);
+router.post("/otp/login/verify", AuthController.verifyLoginOtp);
 
 // Protected routes
 router.use(authenticated);
@@ -25,6 +27,8 @@ router.post("/onboarding/complete", injectUser, AuthController.completeOnboardin
 router.post("/logout", AuthController.logoutUser);
 router.post("/logout-all", AuthController.logoutAllDevices);
 router.delete("/account", AuthController.deleteAccount);
+router.get("/password/status", AuthController.getPasswordStatus);
+router.post("/password/set", AuthController.setPassword);
 
 router.use(requireRole("admin"))
 
