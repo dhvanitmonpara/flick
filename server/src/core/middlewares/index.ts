@@ -10,5 +10,6 @@ export { default as injectUser } from "./auth/inject-user.middleware";
 export { requireOnboardedUser } from "./auth/require-user.middleware";
 export { default as requireAuth } from "./auth/require-auth.middleware";
 export { default as requireTerms } from "./auth/require-terms.middleware";
+export { default as stopBannedUser } from "./auth/stop-banned-user.middleware";
 
 export * as pipelines from "./pipelines";
