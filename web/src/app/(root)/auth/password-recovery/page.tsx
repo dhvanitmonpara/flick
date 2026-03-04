@@ -47,8 +47,7 @@ function PasswordRecovery() {
     try {
       const resetUrl = `${window.location.origin}/auth/password-recovery/reset`;
 
-      // @ts-ignore - forgetPassword exists when emailAndPassword plugin is enabled but TS isn't inferring it here
-      const { error } = await authClient.forgetPassword({
+      const { error } = await authClient.requestPasswordReset({
         email: data.email,
         redirectTo: resetUrl
       })

@@ -4,6 +4,7 @@ import { betterAuth } from "better-auth"
 import { twoFactor, admin } from "better-auth/plugins"
 import { env } from "@/config/env";
 import * as schema from "@/infra/db/tables";
+import mailService from "@/infra/services/mail";
 
 export const auth = betterAuth({
   trustedOrigins: env.ACCESS_CONTROL_ORIGINS,
@@ -28,6 +29,10 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
+    sendResetPassword: async ({ user, url, token }) => {
+      await mailService.send(user.email, "RESET-PASSWORD", { url, projectName: "Flick" });
+    },
   },
   socialProviders: {
     google: {

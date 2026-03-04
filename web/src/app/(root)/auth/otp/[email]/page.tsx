@@ -1,18 +1,11 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react";
-import { Loader2 } from "lucide-react";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
 import { AxiosError } from "axios";
 import { toast } from 'sonner'
-import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from "next/navigation";
 import { authApi } from "@/services/api/auth";
+import { OtpVerification } from "@/components/general/OtpVerification";
 
 const OTP_EXPIRE_TIME = 60;
 const MAX_ATTEMPTS = 5;
@@ -127,73 +120,22 @@ const OtpVerificationPage = () => {
   }, [otp]);
 
   return (
-    <div className="max-w-md w-full mx-auto px-6 py-8 border dark:border-zinc-800 rounded-lg shadow-lg">
-      <h1 className="text-3xl font-semibold mb-6 text-center">Sign Up</h1>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (otp.length === 6 && !isLoading && !isOtpInvalid) {
-            verify();
-          }
-        }}
-        className="space-y-5 flex justify-center items-center flex-col"
-      >
-        <p className="text-sm text-foreground/60 text-center">
-          Enter the 6-digit code we emailed to <b>{decodedEmail}</b>. If you did not
-          receive it, you can request a new one{" "}
-          {timeLeft > 0 ? (
-            <span>
-              in <b>{timeLeft}</b> seconds
-            </span>
-          ) : isResending ? (
-            <span className="text-blue-500 inline-flex items-center gap-1">
-              <Loader2 className="w-3 h-3 animate-spin" />
-              Resending...
-            </span>
-          ) : (
-            <span
-              className="text-blue-500 hover:underline cursor-pointer"
-              onClick={handleResendOTP}
-            >
-              Resend OTP
-            </span>
-          )}
-          .
-        </p>
-        <InputOTP disabled={isLoading || timeLeft === 0 || attempts >= MAX_ATTEMPTS} maxLength={6} value={otp} onChange={handleOtpChange}>
-          <InputOTPGroup>
-            <InputOTPSlot autoFocus index={0} />
-            <InputOTPSlot index={1} />
-            <InputOTPSlot index={2} />
-          </InputOTPGroup>
-          <InputOTPSeparator />
-          <InputOTPGroup>
-            <InputOTPSlot index={3} />
-            <InputOTPSlot index={4} />
-            <InputOTPSlot index={5} />
-          </InputOTPGroup>
-        </InputOTP>
-        {attempts >= MAX_ATTEMPTS && (
-          <p className="text-sm text-red-500 text-center">
-            You have exceeded the maximum number of attempts. Please try again
-            later.
-          </p>
-        )}
-        {isOtpInvalid && (
-          <p className="text-sm text-red-500 text-center">
-            Invalid OTP. Please try again.
-          </p>
-        )}
-        <Button
-          type="submit"
-          disabled={isLoading || otp.length !== 6 || !email || isOtpInvalid}
-          className="w-full py-2 font-semibold rounded-md dark:text-zinc-900 bg-zinc-800 dark:bg-zinc-200 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors disabled:bg-zinc-500 disabled:cursor-wait flex justify-center items-center gap-2"
-        >
-          {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-          {isLoading ? "Verifying..." : "Verify Account"}
-        </Button>
-      </form>
-    </div>
+    <OtpVerification
+      email={decodedEmail}
+      otp={otp}
+      onOtpChange={handleOtpChange}
+      onVerify={verify}
+      onResend={handleResendOTP}
+      isLoading={isLoading}
+      isResending={isResending}
+      timeLeft={timeLeft}
+      attempts={attempts}
+      maxAttempts={MAX_ATTEMPTS}
+      isOtpInvalid={isOtpInvalid}
+      title="Sign Up"
+      submitButtonText="Verify Account"
+      submittingButtonText="Verifying..."
+    />
   );
 };
 

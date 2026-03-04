@@ -3,6 +3,7 @@ import FeedbackSentEmail from "./feedback/Send";
 import NewDeviceLoginEmail from "./new-device-login";
 import OtpVerificationEmail from "./otp";
 import WelcomeEmail from "./welcome";
+import ResetPasswordEmail from "./reset-password";
 
 import { render } from "@react-email/render";
 import { MailPayloadMap } from "../types/template.types";
@@ -71,6 +72,21 @@ export const mailTemplates: {
     return {
       subject: `New Device Login Detected`,
       text: `Device: ${d.device}\nLocation: ${d.location ?? "Unknown"}`,
+      html
+    };
+  },
+
+  "RESET-PASSWORD": async (d) => {
+    const html = await render(
+      ResetPasswordEmail({
+        url: d.url,
+        projectName: d.projectName
+      })
+    );
+
+    return {
+      subject: `Reset your ${d.projectName} password`,
+      text: `Reset your password at: ${d.url}`,
       html
     };
   }

@@ -152,7 +152,7 @@ class AuthService {
     const decryptedEmail = CryptoTools.email.decrypt(email)
 
     const existingAuth = await AuthRepo.Read.findByEmail(decryptedEmail);
-    
+
     let createdUser;
     let isNewAuth = false;
 
@@ -177,7 +177,7 @@ class AuthService {
     }
 
     let profile = await UserRepo.Read.findByAuthId(createdUser.id, {});
-    
+
     if (!profile) {
       try {
         profile = await UserRepo.Write.create({
@@ -385,7 +385,6 @@ class AuthService {
         newPassword,
         token,
       },
-      query: token ? { token } : undefined,
     });
 
     await recordAudit({

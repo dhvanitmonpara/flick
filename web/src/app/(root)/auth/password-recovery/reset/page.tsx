@@ -62,11 +62,7 @@ function ResetPassword() {
     try {
       const { error } = await authClient.resetPassword({
         newPassword: data.password,
-        fetchOptions: {
-          query: {
-            token: token
-          }
-        }
+        token: token,
       })
 
       if (error) {

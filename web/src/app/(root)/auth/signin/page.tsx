@@ -150,9 +150,19 @@ function SignInPage() {
             {isPasswordShowing ? <IoMdEyeOff /> : <IoMdEye />}
           </div>
         </div>
-        {errors.password && (
-          <p className="text-sm text-red-500 mt-1">{String(errors.password?.message)}</p>
-        )}
+        <div className="flex justify-between items-center mt-1">
+          {errors.password ? (
+            <p className="text-sm text-red-500">{String(errors.password?.message)}</p>
+          ) : (
+            <div />
+          )}
+          <Link
+            href="/auth/password-recovery"
+            className={`text-sm hover:underline text-blue-600 dark:text-blue-500 ${isSubmitting && "pointer-events-none cursor-not-allowed text-blue-600/50 dark:text-blue-500/50"}`}
+          >
+            Forgot password?
+          </Link>
+        </div>
 
         <Button
           type="submit"

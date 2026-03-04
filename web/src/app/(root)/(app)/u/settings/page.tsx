@@ -1,43 +1,119 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { authApi } from "@/services/api/auth";
 import useProfileStore from "@/store/profileStore";
 import { toastError } from "@/utils/toast-error";
+import { OtpVerification } from "@/components/general/OtpVerification";
+import { authClient } from "@/lib/auth-client";
 
 function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [step, setStep] = useState<"confirm" | "otp">("confirm");
+
+  // Confirmation state
+  const [confirmUsername, setConfirmUsername] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
+
+  // OTP state
+  const [otp, setOtp] = useState("");
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [isResending, setIsResending] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [isOtpInvalid, setIsOtpInvalid] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const { data: session } = authClient.useSession();
+  const profile = useProfileStore((state) => state.profile);
   const removeProfile = useProfileStore((state) => state.removeProfile);
 
-  const handleDeleteAccount = async () => {
-    setIsDeleting(true);
+  const OTP_EXPIRE_TIME = 60;
+  const MAX_ATTEMPTS = 5;
+
+  const isConfirmationValid =
+    profile?.username && session?.user?.email &&
+    confirmUsername === profile.username.substring(0, 6) &&
+    confirmEmail === session.user.email;
+
+  const handleSendOtp = useCallback(async () => {
+    if (!session?.user?.email || !session?.user?.id) return;
     try {
+      setIsResending(true);
+      const isSent = await authApi.otp.sendForDeletion(session.user.email, session.user.id);
+      if (isSent) {
+        setTimeLeft(OTP_EXPIRE_TIME);
+        toast.success("OTP sent to your email");
+        setStep("otp");
+      }
+    } catch (error) {
+      toastError(error, "Failed to send OTP");
+    } finally {
+      setIsResending(false);
+    }
+  }, [session?.user?.email, session?.user?.id]);
+
+  useEffect(() => {
+    if (timeLeft > 0 && step === "otp") {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [timeLeft, step]);
+
+  const verifyOtpAndDelete = async () => {
+    if (!session?.user?.id) return;
+    try {
+      setIsVerifying(true);
+
+      const isVerified = await authApi.otp.verifyOnly(otp, session.user.id);
+      if (!isVerified) {
+        toast.error("Invalid OTP");
+        return;
+      }
+
+      setIsDeleting(true);
       const response = await authApi.account.delete();
       if (response.success) {
         removeProfile();
         toast.success("Account deleted successfully!");
         window.location.replace("/auth/signup");
       }
-    } catch (error: unknown) {
-      toastError(error, "Failed to delete account");
+    } catch (error: any) {
+      if (error?.response?.status === 400) {
+        toast.warning("Wrong OTP, try again");
+        setIsOtpInvalid(true);
+        setAttempts((prev) => prev + 1);
+      } else {
+        toastError(error, "Failed to verify OTP or delete account");
+      }
     } finally {
+      setIsVerifying(false);
       setIsDeleting(false);
     }
   };
+
+  useEffect(() => {
+    if (otp.length !== 6 || attempts >= MAX_ATTEMPTS || step !== "otp") return;
+
+    const timer = setTimeout(() => {
+      verifyOtpAndDelete();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [otp, attempts, step]);
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-4">
@@ -65,35 +141,91 @@ function SettingsPage() {
                 </p>
               </div>
 
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" disabled={isDeleting}>
-                    {isDeleting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deleting...</> : "Delete Account"}
+              <Dialog open={isModalOpen} onOpenChange={(open) => {
+                setIsModalOpen(open);
+                if (!open) {
+                  // Reset state on close
+                  setStep("confirm");
+                  setConfirmUsername("");
+                  setConfirmEmail("");
+                  setOtp("");
+                  setIsOtpInvalid(false);
+                  setAttempts(0);
+                }
+              }}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive">
+                    Delete Account
                   </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete your
-                      account and remove all your data from our servers.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                        e.preventDefault();
-                        handleDeleteAccount();
-                      }}
-                      className="bg-red-600 focus:ring-red-600 hover:bg-red-700 text-white"
-                      disabled={isDeleting}
-                    >
-                      {isDeleting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deleting...</> : "Yes, delete my account"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  {step === "confirm" ? (
+                    <>
+                      <DialogHeader>
+                        <DialogTitle className="text-red-600">Delete Account Confirmation</DialogTitle>
+                        <DialogDescription>
+                          This action is permanent. Please type the first 6 characters of your username (<b>{profile?.username?.substring(0, 6)}</b>) and your full email to confirm.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-red-900/90 dark:text-red-400">Username (first 6 chars)</label>
+                          <Input
+                            value={confirmUsername}
+                            onChange={(e) => setConfirmUsername(e.target.value)}
+                            placeholder={profile?.username?.substring(0, 6)}
+                            className="focus-visible:ring-red-500/50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-red-900/90 dark:text-red-400">Email Address</label>
+                          <Input
+                            value={confirmEmail}
+                            onChange={(e) => setConfirmEmail(e.target.value)}
+                            placeholder={session?.user?.email || ""}
+                            className="focus-visible:ring-red-500/50"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                        <Button
+                          variant="destructive"
+                          disabled={!isConfirmationValid || isResending}
+                          onClick={handleSendOtp}
+                        >
+                          {isResending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                          Send Verification Code
+                        </Button>
+                      </DialogFooter>
+                    </>
+                  ) : (
+                    <div className="py-2 pb-0 -mx-6 -my-4 sm:-mx-6 shadow-none border-none">
+                      <OtpVerification
+                        className="border-none shadow-none max-w-full px-6 bg-transparent"
+                        isDanger={true}
+                        email={session?.user?.email || ""}
+                        otp={otp}
+                        onOtpChange={(val) => {
+                          setOtp(val);
+                          setIsOtpInvalid(false);
+                        }}
+                        onVerify={verifyOtpAndDelete}
+                        onResend={handleSendOtp}
+                        isLoading={isVerifying || isDeleting}
+                        isResending={isResending}
+                        timeLeft={timeLeft}
+                        attempts={attempts}
+                        maxAttempts={MAX_ATTEMPTS}
+                        isOtpInvalid={isOtpInvalid}
+                        title="Verify Deletion"
+                        submitButtonText="Yes, delete my account"
+                        submittingButtonText="Deleting..."
+                      />
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </section>

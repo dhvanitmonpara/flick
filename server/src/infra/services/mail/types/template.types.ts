@@ -26,10 +26,16 @@ interface NewDeviceLoginDetails {
   projectName: string;
 }
 
+interface ResetPasswordDetails {
+  url: string;
+  projectName: string;
+}
+
 export type MailPayloadMap = {
   OTP: OTPDetails;
   WELCOME: WelcomeDetails;
   "FEEDBACK-RECEIVED": FeedbackReceivedDetails;
   "FEEDBACK-SENT": FeedbackSentDetails;
   "NEW-DEVICE-LOGIN": NewDeviceLoginDetails;
+  "RESET-PASSWORD": ResetPasswordDetails;
 };

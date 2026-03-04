@@ -11,6 +11,14 @@ export const authApi = {
       const verifyResponse: AxiosResponse = await http.post("/auth/registration/verify-otp", { otp }, { headers: { "Content-Type": "application/json" } });
       return verifyResponse.status === 200;
     },
+    sendForDeletion: async (email: string, authId: string) => {
+      const mailResponse: AxiosResponse = await http.post("/auth/otp/send", { email, pending_signup: authId });
+      return mailResponse.status === 200;
+    },
+    verifyOnly: async (otp: string, authId: string) => {
+      const verifyResponse: AxiosResponse = await http.post("/auth/otp/verify", { otp, pending_signup: authId }, { headers: { "Content-Type": "application/json" } });
+      return verifyResponse.status === 200;
+    },
   },
   resetPassword: {
     finalize: async (newPassword: string, token?: string) => {
