@@ -1,10 +1,12 @@
 import db from "@/infra/db";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { betterAuth } from "better-auth"
 import { twoFactor, admin } from "better-auth/plugins"
 import { env } from "@/config/env";
 import * as schema from "@/infra/db/tables";
 import mailService from "@/infra/services/mail";
+import { auth as authTable } from "@/infra/db/tables/auth.table";
+import { eq } from "drizzle-orm";
 
 export const auth = betterAuth({
   trustedOrigins: env.ACCESS_CONTROL_ORIGINS,
@@ -32,6 +34,13 @@ export const auth = betterAuth({
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url, token }) => {
       await mailService.send(user.email, "RESET-PASSWORD", { url, projectName: "Flick" });
+    },
+    onPasswordReset: async ({ user }) => {
+      // Auto-verify the email on successful password reset.
+      // This lets locked-out unverified users regain access by proving inbox ownership.
+      if (!user.emailVerified) {
+        await db.update(authTable).set({ emailVerified: true }).where(eq(authTable.id, user.id));
+      }
     },
   },
   socialProviders: {

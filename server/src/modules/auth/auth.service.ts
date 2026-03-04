@@ -20,7 +20,7 @@ import { env } from "@/config/env";
 import UserRepo from "../user/user.repo";
 import { isConstraintViolation } from "@/lib/pg/errors/constraint-violantion";
 import { notifications } from "@/infra/db/tables/notification.table";
-import { auth as authTable } from "@/infra/db/tables/auth.table";
+import { auth as authTable, verification as verificationTable } from "@/infra/db/tables/auth.table";
 import db from "@/infra/db";
 
 class AuthService {
@@ -172,6 +172,9 @@ class AuthService {
       const parsed = await response.json();
       createdUser = parsed.user;
       isNewAuth = true;
+
+      await db.update(authTable).set({ emailVerified: true }).where(eq(authTable.id, createdUser.id));
+      createdUser.emailVerified = true;
 
       if (res && response.headers) forwardSetCookieHeaders(response.headers, res);
     }
@@ -380,12 +383,29 @@ class AuthService {
   };
 
   resetPassword = async (newPassword: string, token?: string) => {
+    let targetUserId: string | null = null;
+    if (token) {
+      const [dbResetToken] = await db
+        .select()
+        .from(verificationTable)
+        .where(eq(verificationTable.identifier, `reset-password:${token}`))
+        .limit(1);
+
+      if (dbResetToken) {
+        targetUserId = dbResetToken.value;
+      }
+    }
+
     const result = await auth.api.resetPassword({
       body: {
         newPassword,
         token,
       },
     });
+
+    if (targetUserId) {
+      await db.update(authTable).set({ emailVerified: true }).where(eq(authTable.id, targetUserId));
+    }
 
     await recordAudit({
       action: "user:initialized:forgot-password",
