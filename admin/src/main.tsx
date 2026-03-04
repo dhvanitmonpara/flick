@@ -7,13 +7,13 @@ import AdminLayout from './layouts/AdminLayout'
 import OverviewPage from './pages/OverviewPage'
 import SignInPage from './pages/SignInPage'
 import PostsPage from './pages/PostsPage'
-import AdminVerificationPage from './pages/AdminVerificationPage'
 import AuthLayout from './layouts/AuthLayout'
 import ReportsPage from './pages/ReportsPage'
 import CollegePage from './pages/CollegePage'
 import UserPage from './pages/UserPage'
 import LogPage from './pages/LogPage'
 import FeedbackPage from './pages/FeedbackPage'
+import BannedWordsPage from './pages/BannedWordsPage'
 
 // router
 const router = createBrowserRouter([
@@ -62,6 +62,10 @@ const router = createBrowserRouter([
         element: <OverviewPage />,
       },
       {
+        path: "banned-words",
+        element: <BannedWordsPage />,
+      },
+      {
         path: "*",
         element: <NotFoundPage />,
       }
@@ -74,10 +78,6 @@ const router = createBrowserRouter([
       {
         path: "signin",
         element: <SignInPage />,
-      },
-      {
-        path: "verify/:email",
-        element: <AdminVerificationPage />,
       },
     ]
   },

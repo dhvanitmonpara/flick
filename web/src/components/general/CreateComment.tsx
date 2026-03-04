@@ -5,7 +5,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import { Textarea } from "@/components/ui/textarea";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import useCommentStore from "@/store/commentStore";
-import { highlightBannedWords, validatePost } from "@/utils/moderator";
+import { loadModerationConfig, validateText, censorText } from "@/utils/moderation";
 import { zodResolver } from "@/lib/zod-resolver";
 import { AxiosError } from "axios";
 import { Loader2 } from "lucide-react";
@@ -20,6 +20,7 @@ import { useParams } from "next/navigation";
 import { userApi } from "@/services/api/user";
 import { commentApi } from "@/services/api/comment";
 import { cn } from "@/lib/utils";
+import ModeratedText from "@/components/general/ModeratedText";
 
 const commentSchema = z.object({
   content: z.string().min(3, "Content must be at least 3 characters.").max(2000, "Content must be at most 2000 characters."),
@@ -52,6 +53,10 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
   const content = form.watch("content")
 
   useEffect(() => {
+    void loadModerationConfig();
+  }, []);
+
+  useEffect(() => {
     if (defaultData) {
       setIsWriting(true);
     }
@@ -72,13 +77,17 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
     try {
       setLoading(true);
       if (!postId) throw new Error("Post id not found")
+      await loadModerationConfig();
+
+      const censoredContent = censorText(data.content);
+      const payload = { ...data, content: censoredContent };
 
       let res = null
 
       if (isUpdating) {
-        res = await commentApi.update(commentId as string, data)
+        res = await commentApi.update(commentId as string, payload)
       } else {
-        res = await commentApi.create(postId, { ...data, parentCommentId: parentCommentId ?? null })
+        res = await commentApi.create(postId, { ...payload, parentCommentId: parentCommentId ?? null })
       }
 
       if (res.status !== (isUpdating ? 200 : 201)) throw new Error("Failed to create/update comment");
@@ -126,7 +135,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
             control={form.control}
             name="content"
             render={({ field }) => {
-              const banned = validatePost(field.value);
+              const banned = validateText(field.value);
               const hasBanned = !banned.allowed;
 
               return (
@@ -167,7 +176,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
                       {field.value && (
                         <div className="mt-2 text-sm">
                           <span className="font-semibold">Preview:</span>
-                          {highlightBannedWords(field.value)}
+                          <ModeratedText text={field.value} />
                         </div>
                       )}
                       {hasBanned && (

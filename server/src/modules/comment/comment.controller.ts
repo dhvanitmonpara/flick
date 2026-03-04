@@ -1,8 +1,7 @@
 import { Request } from "express";
-import { Controller, HttpResponse } from "@/core/http";
+import { Controller, HttpError, HttpResponse } from "@/core/http";
 import commentService from "./comment.service";
 import * as commentSchemas from "./comment.schema";
-import recordAudit from "@/lib/record-audit";
 
 @Controller()
 class CommentController {

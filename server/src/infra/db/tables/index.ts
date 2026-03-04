@@ -8,3 +8,4 @@ export { colleges } from "./college.table";
 export { contentReports } from "./content-report.table";
 export { platformUser as users, session, account, verification, twoFactor, auth } from "./auth.table";
 export { notifications } from "./notification.table";
+export { bannedWords } from "./banned-word.table";

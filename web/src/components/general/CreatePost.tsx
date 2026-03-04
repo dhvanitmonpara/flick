@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import useProfileStore from "@/store/profileStore";
-import { highlightBannedWords, validatePost } from "@/utils/moderator";
+import { loadModerationConfig, validateText, censorText } from "@/utils/moderation";
 import { Textarea } from "../ui/textarea";
 import { Loader2 } from "lucide-react";
 import usePostStore from "@/store/postStore";
@@ -27,6 +27,7 @@ import { Switch } from "../ui/switch";
 import { PostTopic } from "@/types/postTopics";
 import { postApi } from "@/services/api/post";
 import { userApi } from "@/services/api/user";
+import ModeratedText from "@/components/general/ModeratedText";
 
 const postSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters.").max(100, "Title must be at most 100 characters."),
@@ -93,6 +94,10 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
   });
 
   useEffect(() => {
+    void loadModerationConfig();
+  }, []);
+
+  useEffect(() => {
     form.reset(defaultData ? {
       title: defaultData.title,
       content: defaultData.content,
@@ -113,15 +118,16 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
       if (!profile?.id) throw new Error("User not found");
       if (isUpdating && !id) throw new Error("Post id not found")
 
-      const { allowed, reason } = validatePost(data.content);
-      if (!allowed) throw new Error(`Your post is not allowed it ${reason}`);
+      await loadModerationConfig();
+      const censoredContent = censorText(data.content);
+      const payload = { ...data, content: censoredContent };
 
       let res = null
 
       if (isUpdating) {
-        res = await postApi.update(id as string, data)
+        res = await postApi.update(id as string, payload)
       } else {
-        res = await postApi.create(data);
+        res = await postApi.create(payload);
       }
 
       if (res.status !== (isUpdating ? 200 : 201)) throw new Error(`Failed to ${isUpdating ? "update" : "create"} post`);
@@ -226,7 +232,7 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
             disabled={loading}
             name="content"
             render={({ field }) => {
-              const banned = validatePost(field.value);
+              const banned = validateText(field.value);
               const hasBanned = !banned.allowed;
 
               return (
@@ -248,7 +254,7 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
                       {field.value && (
                         <div className="mt-2 text-sm">
                           <span className="font-semibold">Preview:</span>
-                          {highlightBannedWords(field.value)}
+                          <ModeratedText text={field.value} />
                         </div>
                       )}
                       {hasBanned && (

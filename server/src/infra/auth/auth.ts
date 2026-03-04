@@ -1,7 +1,7 @@
 import db from "@/infra/db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { betterAuth } from "better-auth"
-import { twoFactor, admin } from "better-auth/plugins"
+import { admin, twoFactor } from "better-auth/plugins"
 import { env } from "@/config/env";
 import * as schema from "@/infra/db/tables";
 import mailService from "@/infra/services/mail";

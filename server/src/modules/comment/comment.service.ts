@@ -5,6 +5,7 @@ import logger from "@/core/logger";
 import cache from "@/infra/services/cache";
 import commentCacheKeys from "./comment.cache-keys";
 import postCacheKeys from "../post/post.cache-keys";
+import { moderationService } from "@/infra/services/moderator";
 
 class CommentService {
   async getCommentsByPostId(
@@ -57,6 +58,30 @@ class CommentService {
       parentCommentId: commentData.parentCommentId
     });
 
+    const moderationResult = await moderationService.moderateText({
+      text: commentData.content,
+      runValidator: true,
+    });
+    if (!moderationResult.allowed) {
+      const violation = moderationResult.violation;
+      if (!violation) {
+        throw HttpError.badRequest("Content violates moderation policy", {
+          code: "CONTENT_POLICY_VIOLATION",
+          meta: { source: "CommentService.createComment" },
+        });
+      }
+      throw HttpError.badRequest("Content violates moderation policy", {
+        code: violation.code,
+        meta: {
+          source: "CommentService.createComment",
+          matches: violation.matches,
+          reasons: violation.reasons,
+          moderationSource: violation.source,
+        },
+        errors: violation.reasons.map((reason) => ({ field: "content", message: reason })),
+      });
+    }
+
     const newComment = await CommentRepo.Write.create({
       content: commentData.content.trim(),
       postId: commentData.postId,
@@ -93,6 +118,30 @@ class CommentService {
 
   async updateComment(commentId: string, userId: string, content: string) {
     logger.info("Updating comment", { commentId, userId });
+
+    const moderationResult = await moderationService.moderateText({
+      text: content,
+      runValidator: true,
+    });
+    if (!moderationResult.allowed) {
+      const violation = moderationResult.violation;
+      if (!violation) {
+        throw HttpError.badRequest("Content violates moderation policy", {
+          code: "CONTENT_POLICY_VIOLATION",
+          meta: { source: "CommentService.updateComment" },
+        });
+      }
+      throw HttpError.badRequest("Content violates moderation policy", {
+        code: violation.code,
+        meta: {
+          source: "CommentService.updateComment",
+          matches: violation.matches,
+          reasons: violation.reasons,
+          moderationSource: violation.source,
+        },
+        errors: violation.reasons.map((reason) => ({ field: "content", message: reason })),
+      });
+    }
 
     // First check if comment exists and get author info
     const existingComment = await CommentRepo.CachedRead.findById(commentId);

@@ -51,3 +51,9 @@ export const voteEntityEnum = pgEnum("vote_entity_enum", [
   "post",
   "comment",
 ]);
+
+export const moderationSeverityEnum = pgEnum("moderation_severity_enum", [
+  "mild",
+  "moderate",
+  "severe",
+]);

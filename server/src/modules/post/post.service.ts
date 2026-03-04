@@ -5,8 +5,33 @@ import { observabilityContext } from "../audit/audit-context";
 import logger from "@/core/logger";
 import cache from "@/infra/services/cache";
 import postCacheKeys from "./post.cache-keys";
+import { moderationService } from "@/infra/services/moderator";
 
 class PostService {
+  private throwModerationViolation(
+    source: string,
+    result: Awaited<ReturnType<typeof moderationService.moderateText>>
+  ): never {
+    const violation = result.violation;
+    if (!violation) {
+      throw HttpError.badRequest("Content violates moderation policy", {
+        code: "CONTENT_POLICY_VIOLATION",
+        meta: { source },
+      });
+    }
+
+    throw HttpError.badRequest("Content violates moderation policy", {
+      code: violation.code,
+      meta: {
+        source,
+        matches: violation.matches,
+        reasons: violation.reasons,
+        moderationSource: violation.source,
+      },
+      errors: violation.reasons.map((reason) => ({ field: "content", message: reason })),
+    });
+  }
+
   async createPost(postData: {
     title: string;
     content: string;
@@ -19,6 +44,17 @@ class PostService {
       postedBy: postData.postedBy,
       title: postData.title
     });
+
+    const moderationContext = `${postData.title}\n${postData.content}`;
+    const moderationResult = await moderationService.moderateText({
+      text: postData.content,
+      contextText: moderationContext,
+      runValidator: true,
+    });
+
+    if (!moderationResult.allowed) {
+      this.throwModerationViolation("PostService.createPost", moderationResult);
+    }
 
     const newPost = await PostRepo.Write.create({
       title: postData.title.trim(),
@@ -176,6 +212,19 @@ class PostService {
     if (updates.isPrivate !== undefined) {
       cleanUpdates.isPrivate = updates.isPrivate;
       beforeUpdates.isPrivate = existingPost.isPrivate;
+    }
+
+    const moderationContext = [cleanUpdates.title, cleanUpdates.content].filter(Boolean).join("\n");
+    if (moderationContext.length > 0) {
+      const moderationResult = await moderationService.moderateText({
+        text: cleanUpdates.content ?? "",
+        contextText: moderationContext,
+        runValidator: Boolean(cleanUpdates.content?.trim()),
+      });
+
+      if (!moderationResult.allowed) {
+        this.throwModerationViolation("PostService.updatePost", moderationResult);
+      }
     }
 
     const updatedPost = await PostRepo.Write.updateById(id, cleanUpdates);

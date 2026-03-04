@@ -2,41 +2,47 @@ import { MdDashboard, MdFeedback, MdManageAccounts } from "react-icons/md";
 import { IoSettings } from "react-icons/io5";
 import { TbMessageReportFilled } from "react-icons/tb";
 import { FaGraduationCap, FaTable } from "react-icons/fa6";
+import { FaBan } from "react-icons/fa";
 
 export const tabs = [
   {
     name: 'Dashboard',
     path: '/',
-    icon: <MdDashboard/>
+    icon: <MdDashboard />
   },
   {
     name: 'Users',
     path: '/users',
-    icon: <MdManageAccounts/>
+    icon: <MdManageAccounts />
   },
   {
     name: 'Reports',
     path: '/reports',
-    icon: <TbMessageReportFilled/>
+    icon: <TbMessageReportFilled />
   },
   {
     name: 'Colleges',
     path: '/colleges',
-    icon: <FaGraduationCap/>
+    icon: <FaGraduationCap />
   },
   {
     name: 'Logs',
     path: '/logs',
-    icon: <FaTable/>
+    icon: <FaTable />
   },
   {
     name: 'Feedbacks',
     path: '/feedbacks',
-    icon: <MdFeedback/>
+    icon: <MdFeedback />
   },
   {
     name: 'Settings',
     path: '/settings',
-    icon: <IoSettings/>
+    icon: <IoSettings />
+  },
+  {
+    name: 'Banned Words',
+    path: '/banned-words',
+    icon: <FaBan />
   }
 ]

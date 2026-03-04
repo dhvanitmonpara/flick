@@ -52,14 +52,6 @@ function SignInPage() {
             }
           },
           onError: (ctx) => {
-            if (ctx.error.status === 403 || ctx.error.status === 401) {
-              // Better auth returns 403 or specific error for 2FA depending on configuration
-              // Just navigate to 2FA if error says something about 2FA or let the user try again
-              if (ctx.error.message?.toLowerCase().includes("two factor") || ctx.error.message?.includes("2fa") || ctx.error.status === 403) {
-                navigate(`/auth/verify/${data.email}`)
-                return
-              }
-            }
             toast.error(ctx.error.message || "Error signing in, Try again")
           }
         }

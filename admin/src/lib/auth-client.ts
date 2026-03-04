@@ -1,11 +1,10 @@
-import { adminClient, inferAdditionalFields, twoFactorClient } from "better-auth/client/plugins"
+import { adminClient, inferAdditionalFields } from "better-auth/client/plugins"
 import { createAuthClient } from "better-auth/react"
 
 export const authClient = createAuthClient({
   baseURL: (import.meta.env.VITE_SERVER_URI || "http://localhost:8000") + "/api/auth",
   plugins: [
     adminClient(),
-    twoFactorClient(),
     inferAdditionalFields()
   ]
 })

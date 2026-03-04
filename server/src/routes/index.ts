@@ -11,6 +11,7 @@ import moderationRouter from "@/modules/moderation/content/content-moderation.ro
 import userAdminRouter from "@/modules/moderation/user/user-moderation.route";
 import voteRouter from "@/modules/vote/vote.route";
 import adminRouter from "@/modules/admin/admin.route";
+import wordsModerationRouter from "@/modules/moderation/words/words-moderation.route";
 // import notificationRouter from "@/modules/notification/notification.routes";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "@/infra/auth/auth";
@@ -25,6 +26,7 @@ export const registerRoutes = (app: Application) => {
   app.use("/api/v1/comments", commentRouter);
   app.use("/api/v1/feedbacks", feedbackRouter);
   app.use("/api/v1/reports", reportsRouter);
+  app.use("/api/v1/moderation", wordsModerationRouter);
   app.use("/api/v1/moderation", moderationRouter);
   app.use("/api/v1/admin/users", userAdminRouter);
   // app.use("/api/v1/notifications", notificationRouter);
