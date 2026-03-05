@@ -26,6 +26,11 @@ export const tabs = [
     icon: <FaGraduationCap />
   },
   {
+    name: 'Banned Words',
+    path: '/banned-words',
+    icon: <FaBan />
+  },
+  {
     name: 'Logs',
     path: '/logs',
     icon: <FaTable />
@@ -39,10 +44,5 @@ export const tabs = [
     name: 'Settings',
     path: '/settings',
     icon: <IoSettings />
-  },
-  {
-    name: 'Banned Words',
-    path: '/banned-words',
-    icon: <FaBan />
   }
 ]
