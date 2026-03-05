@@ -41,6 +41,8 @@ const UserRepo = {
 
   Blocks: {
     getBlockedUsers: userAdapter.getBlockedUsers,
+    hasBlockRelation: userAdapter.hasBlockRelation,
+    getBlockedUserIdsInEitherDirection: userAdapter.getBlockedUserIdsInEitherDirection,
   }
 }
 

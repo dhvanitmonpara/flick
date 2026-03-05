@@ -1,11 +1,27 @@
 import { HttpError } from "@/core/http";
 import BookmarkRepo from "./bookmark.repo";
 import logger from "@/core/logger";
-import recordAudit from "@/lib/record-audit";
+import PostRepo from "../post/post.repo";
+import UserRepo from "../user/user.repo";
+import { assertNoBlockRelationBetweenUsers } from "../user/block.guard";
 
 class BookmarkService {
   async createBookmark(userId: string, postId: string) {
     logger.info("Creating bookmark", { userId, postId });
+
+    const post = await PostRepo.CachedRead.findById(postId);
+    if (!post) {
+      throw HttpError.notFound("Post not found", {
+        code: "POST_NOT_FOUND",
+        meta: { source: "BookmarkService.createBookmark" },
+      });
+    }
+
+    await assertNoBlockRelationBetweenUsers(
+      userId,
+      post.postedBy,
+      "BookmarkService.createBookmark"
+    );
     
     const existing = await BookmarkRepo.CachedRead.findBookmark(userId, postId);
     if (existing) {
@@ -33,8 +49,28 @@ class BookmarkService {
     logger.info("Fetching user bookmarked posts", { userId });
     
     const bookmarks = await BookmarkRepo.CachedRead.getUserBookmarkedPosts(userId);
-    logger.info("Retrieved user bookmarked posts", { userId, count: bookmarks.length });
-    return bookmarks;
+    const user = await UserRepo.Read.findById(userId, {});
+    if (!user) {
+      throw HttpError.notFound("User not found", {
+        code: "USER_NOT_FOUND",
+        meta: { source: "BookmarkService.getUserBookmarkedPosts" },
+      });
+    }
+
+    const blockedUserIds = await UserRepo.Blocks.getBlockedUserIdsInEitherDirection(user.authId);
+    const blockedUserIdSet = new Set(blockedUserIds);
+
+    const filteredBookmarks = bookmarks.filter((bookmark) => {
+      const authorId = bookmark.postedBy?.id;
+      return !authorId || !blockedUserIdSet.has(authorId);
+    });
+
+    logger.info("Retrieved user bookmarked posts", {
+      userId,
+      count: filteredBookmarks.length,
+      filteredOut: bookmarks.length - filteredBookmarks.length,
+    });
+    return filteredBookmarks;
   }
 
   async deleteBookmark(userId: string, postId: string) {
@@ -68,6 +104,16 @@ class BookmarkService {
           errors: [{ field: "postId", message: "Bookmark not found for this user" }],
         });
     }
+
+    const post = await PostRepo.CachedRead.findById(postId);
+    if (!post) {
+      throw HttpError.notFound("Post not found", {
+        code: "POST_NOT_FOUND",
+        meta: { source: "BookmarkService.getBookmark" },
+      });
+    }
+
+    await assertNoBlockRelationBetweenUsers(userId, post.postedBy, "BookmarkService.getBookmark");
     
     logger.info("Bookmark retrieved successfully", { userId, postId, bookmarkId: bookmark.id });
     return bookmark;

@@ -90,6 +90,7 @@ class PostController {
 
     const userId = req.user?.id;
     const userCollegeId = req.user?.collegeId;
+    const blockerAuthId = req.user?.authId;
 
     const result = await postService.getPostsByCollege(collegeId, {
       page,
@@ -98,6 +99,7 @@ class PostController {
       sortOrder,
       userId,
       userCollegeId,
+      blockerAuthId,
     });
 
     return HttpResponse.ok("Posts retrieved successfully by college", result);
@@ -109,6 +111,7 @@ class PostController {
 
     const userId = req.user?.id;
     const userCollegeId = req.user?.collegeId;
+    const blockerAuthId = req.user?.authId;
 
     const result = await postService.getPostsByBranch(branch, {
       page,
@@ -117,6 +120,7 @@ class PostController {
       sortOrder,
       userId,
       userCollegeId,
+      blockerAuthId,
     });
 
     return HttpResponse.ok("Posts retrieved successfully by branch", result);
@@ -132,6 +136,7 @@ class PostController {
 
     const currentUserId = req.user?.id;
     const userCollegeId = req.user?.collegeId;
+    const blockerAuthId = req.user?.authId;
 
     const result = await postService.getPostsByAuthor(userId, {
       page,
@@ -140,6 +145,7 @@ class PostController {
       sortOrder,
       userId: currentUserId,
       userCollegeId,
+      blockerAuthId,
     });
 
     return HttpResponse.ok("Posts retrieved successfully by user", result);

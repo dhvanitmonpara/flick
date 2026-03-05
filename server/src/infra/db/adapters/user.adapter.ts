@@ -471,3 +471,51 @@ export const getBlockedUsers = async (blockerId: string, dbTx?: DB) => {
 
   return blocks;
 };
+
+export const hasBlockRelation = async (firstAuthId: string, secondAuthId: string, dbTx?: DB) => {
+  if (firstAuthId === secondAuthId) return false;
+
+  const client = dbTx ?? db;
+  const [row] = await client
+    .select({ id: userBlocks.id })
+    .from(userBlocks)
+    .where(
+      or(
+        and(
+          eq(userBlocks.blockerId, firstAuthId),
+          eq(userBlocks.blockedId, secondAuthId)
+        ),
+        and(
+          eq(userBlocks.blockerId, secondAuthId),
+          eq(userBlocks.blockedId, firstAuthId)
+        )
+      )
+    )
+    .limit(1);
+
+  return Boolean(row);
+};
+
+export const getBlockedUserIdsInEitherDirection = async (authId: string, dbTx?: DB) => {
+  const client = dbTx ?? db;
+
+  const [blockedByRequester, blockingRequester] = await Promise.all([
+    client
+      .select({ id: users.id })
+      .from(userBlocks)
+      .innerJoin(users, eq(userBlocks.blockedId, users.authId))
+      .where(eq(userBlocks.blockerId, authId)),
+    client
+      .select({ id: users.id })
+      .from(userBlocks)
+      .innerJoin(users, eq(userBlocks.blockerId, users.authId))
+      .where(eq(userBlocks.blockedId, authId)),
+  ]);
+
+  const ids = [
+    ...blockedByRequester.map((row) => row.id),
+    ...blockingRequester.map((row) => row.id),
+  ];
+
+  return [...new Set(ids)];
+};

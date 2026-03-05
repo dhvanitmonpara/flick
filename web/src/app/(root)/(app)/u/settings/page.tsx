@@ -80,7 +80,7 @@ function SettingsPage() {
       try {
         setLoadingBlocked(true);
         const res = await userApi.getBlockedUsers();
-        setBlockedUsers(res.data?.blockedUsers || []);
+        setBlockedUsers(res.data || []);
       } catch {
         // Silently fail
       } finally {

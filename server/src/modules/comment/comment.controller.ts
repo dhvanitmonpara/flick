@@ -48,6 +48,7 @@ class CommentController {
       sortBy,
       sortOrder,
       blockerAuthId: req.user?.authId,
+      requesterUserId: req.user?.id,
     });
 
     return HttpResponse.ok("Comments retrieved successfully", result);
@@ -56,7 +57,7 @@ class CommentController {
   static async getCommentById(req: Request) {
     const { commentId } = commentSchemas.CommentIdSchema.parse(req.params);
 
-    const comment = await commentService.getCommentById(commentId);
+    const comment = await commentService.getCommentById(commentId, req.user?.id);
     return HttpResponse.ok("Comment retrieved successfully", { comment });
   }
 }

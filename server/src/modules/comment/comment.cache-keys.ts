@@ -2,6 +2,7 @@ import cache from "@/infra/services/cache";
 
 const commentCacheKeys = {
   id: (id: string) => `comment:id:${id}`,
+  authorId: (id: string) => `comment:author:id:${id}`,
   postCount: (postId: string) => `comment:count:post:${postId}`,
   postCommentsVersionKey: (postId: string) => `post:${postId}:comments:version`,
   commentRepliesVersionKey: (commentId: string) => `comment:${commentId}:replies:version`,

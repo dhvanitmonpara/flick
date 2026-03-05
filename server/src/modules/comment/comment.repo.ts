@@ -9,7 +9,7 @@ const CommentRepo = {
       cached(commentCacheKeys.id(id), () => CommentAdapter.findById(id, dbTx)),
 
     findAuthorId: (id: string, dbTx?: DB) =>
-      cached(commentCacheKeys.id(id), () => CommentAdapter.findAuthorId(id, dbTx)),
+      cached(commentCacheKeys.authorId(id), () => CommentAdapter.findAuthorId(id, dbTx)),
 
     findByIdWithAuthor: (id: string, dbTx?: DB) =>
       cached(commentCacheKeys.id(id), () => CommentAdapter.findByIdWithAuthor(id, dbTx)),

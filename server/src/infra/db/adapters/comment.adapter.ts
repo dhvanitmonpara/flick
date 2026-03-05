@@ -20,8 +20,8 @@ export const findAuthorId = async (id: string, dbTx?: DB) => {
     .where(eq(comments.id, id))
     .limit(1);
 
-  return result[0].postedBy;
-}
+  return result[0] ?? null;
+};
 
 export const findByPostId = async (
   postId: string,

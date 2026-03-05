@@ -8,6 +8,7 @@ import recordAudit from "@/lib/record-audit";
 import { AuditAction } from "@/shared/constants/audit/actions";
 import logger from "@/core/logger";
 import UserRepo from "../user/user.repo";
+import { assertNoBlockRelationBetweenUsers } from "../user/block.guard";
 
 class VoteService {
   static async createVote(userId: string, targetType: "post" | "comment", targetId: string, voteType: "upvote" | "downvote") {
@@ -17,6 +18,21 @@ class VoteService {
     const isUpvoted = voteType === "upvote"
 
     return await runTransaction(async tx => {
+      const TargetRepo = doesTargetedPost ? PostRepo : CommentRepo;
+      const target = await TargetRepo.CachedRead.findAuthorId(targetId, tx);
+
+      if (!target) {
+        logger.warn("Target not found for vote", { targetType, targetId });
+        throw HttpError.notFound(`${targetType} not found`);
+      }
+
+      await assertNoBlockRelationBetweenUsers(
+        userId,
+        target.postedBy,
+        "VoteService.createVote",
+        tx
+      );
+
       const createdVote = await VoteRepo.Write.create({
         targetId,
         userId,
@@ -27,14 +43,6 @@ class VoteService {
       if (!createdVote) {
         logger.error("Failed to create vote", { userId, targetType, targetId, voteType });
         throw HttpError.internal("Failed to create vote");
-      }
-
-      const TargetRepo = doesTargetedPost ? PostRepo : CommentRepo
-      const target = await TargetRepo.CachedRead.findAuthorId(targetId, tx);
-
-      if (!target) {
-        logger.warn("Target not found for vote", { targetType, targetId });
-        throw HttpError.notFound(`${targetType} not found`);
       }
 
       const ownerId = target.postedBy;
@@ -93,6 +101,13 @@ class VoteService {
         logger.warn("Target not found for vote patch", { targetType, targetId });
         throw HttpError.notFound(`${targetType} not found`);
       }
+
+      await assertNoBlockRelationBetweenUsers(
+        userId,
+        target.postedBy,
+        "VoteService.patchVote",
+        tx
+      );
 
       const ownerId = target.postedBy;
       const karmaChange = (voteType === "upvote" ? 1 : -1) * 2;

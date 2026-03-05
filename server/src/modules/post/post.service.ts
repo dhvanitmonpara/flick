@@ -6,6 +6,7 @@ import logger from "@/core/logger";
 import cache from "@/infra/services/cache";
 import postCacheKeys from "./post.cache-keys";
 import { moderationService } from "@/infra/services/moderator";
+import { assertNoBlockRelationBetweenUsers } from "../user/block.guard";
 
 class PostService {
   private throwModerationViolation(
@@ -108,6 +109,14 @@ class PostService {
           meta: { source: "PostService.getPostById" },
         });
       }
+    }
+
+    if (user && post.postedBy?.id) {
+      await assertNoBlockRelationBetweenUsers(
+        user.id,
+        post.postedBy.id,
+        "PostService.getPostById"
+      );
     }
 
     logger.info("Post retrieved successfully", { postId: id, title: post.title });
@@ -295,6 +304,7 @@ class PostService {
     sortOrder?: "asc" | "desc";
     userId?: string;
     userCollegeId?: string;
+    blockerAuthId?: string;
   }) {
     return this.getPosts({
       ...options,
@@ -309,6 +319,7 @@ class PostService {
     sortOrder?: "asc" | "desc";
     userId?: string;
     userCollegeId?: string;
+    blockerAuthId?: string;
   }) {
     return this.getPosts({
       ...options,
@@ -323,6 +334,7 @@ class PostService {
     sortOrder?: "asc" | "desc";
     userId?: string;
     userCollegeId?: string;
+    blockerAuthId?: string;
   }) {
     const queryOpts = {
       ...options,

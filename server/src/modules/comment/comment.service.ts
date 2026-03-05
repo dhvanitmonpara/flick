@@ -6,6 +6,8 @@ import cache from "@/infra/services/cache";
 import commentCacheKeys from "./comment.cache-keys";
 import postCacheKeys from "../post/post.cache-keys";
 import { moderationService } from "@/infra/services/moderator";
+import PostRepo from "../post/post.repo";
+import { assertNoBlockRelationBetweenUsers } from "../user/block.guard";
 
 class CommentService {
   async getCommentsByPostId(
@@ -16,9 +18,26 @@ class CommentService {
       sortBy?: "createdAt" | "updatedAt";
       sortOrder?: "asc" | "desc";
       blockerAuthId?: string;
+      requesterUserId?: string;
     }
   ) {
     logger.info("Fetching comments by post ID", { postId, options });
+
+    const post = await PostRepo.CachedRead.findById(postId);
+    if (!post || post.isBanned || post.isShadowBanned) {
+      throw HttpError.notFound("Post not found", {
+        code: "POST_NOT_FOUND",
+        meta: { source: "CommentService.getCommentsByPostId" },
+      });
+    }
+
+    if (options?.requesterUserId) {
+      await assertNoBlockRelationBetweenUsers(
+        options.requesterUserId,
+        post.postedBy,
+        "CommentService.getCommentsByPostId"
+      );
+    }
 
     const comments = await CommentRepo.CachedRead.findByPostId(postId, options);
     const totalComments = await CommentRepo.CachedRead.countByPostId(postId);
@@ -58,6 +77,55 @@ class CommentService {
       commentedBy: commentData.commentedBy,
       parentCommentId: commentData.parentCommentId
     });
+
+    const post = await PostRepo.CachedRead.findById(commentData.postId);
+    if (!post) {
+      throw HttpError.notFound("Post not found", {
+        code: "POST_NOT_FOUND",
+        meta: { source: "CommentService.createComment" },
+      });
+    }
+    if (post.isBanned || post.isShadowBanned) {
+      throw HttpError.notFound("Post not found", {
+        code: "POST_NOT_FOUND",
+        meta: { source: "CommentService.createComment" },
+      });
+    }
+
+    await assertNoBlockRelationBetweenUsers(
+      commentData.commentedBy,
+      post.postedBy,
+      "CommentService.createComment"
+    );
+
+    if (commentData.parentCommentId) {
+      const parentComment = await CommentRepo.CachedRead.findById(commentData.parentCommentId);
+      if (!parentComment) {
+        throw HttpError.notFound("Parent comment not found", {
+          code: "COMMENT_NOT_FOUND",
+          meta: { source: "CommentService.createComment" },
+        });
+      }
+      if (parentComment.isBanned) {
+        throw HttpError.notFound("Parent comment not found", {
+          code: "COMMENT_NOT_FOUND",
+          meta: { source: "CommentService.createComment" },
+        });
+      }
+
+      if (parentComment.postId !== commentData.postId) {
+        throw HttpError.badRequest("Parent comment does not belong to this post", {
+          code: "INVALID_PARENT_COMMENT",
+          meta: { source: "CommentService.createComment" },
+        });
+      }
+
+      await assertNoBlockRelationBetweenUsers(
+        commentData.commentedBy,
+        parentComment.commentedBy,
+        "CommentService.createComment"
+      );
+    }
 
     const moderationResult = await moderationService.moderateText({
       text: commentData.content,
@@ -231,15 +299,24 @@ class CommentService {
     return deletedComment;
   }
 
-  async getCommentById(commentId: string) {
+  async getCommentById(commentId: string, requesterUserId?: string) {
     const comment = await CommentRepo.CachedRead.findById(commentId);
-    if (!comment) {
+    if (!comment || comment.isBanned) {
       throw HttpError.notFound("Comment not found", {
         code: "COMMENT_NOT_FOUND",
         meta: { source: "CommentService.getCommentById" },
         errors: [{ field: "commentId", message: "Comment not found" }],
       });
     }
+
+    if (requesterUserId) {
+      await assertNoBlockRelationBetweenUsers(
+        requesterUserId,
+        comment.commentedBy,
+        "CommentService.getCommentById"
+      );
+    }
+
     return comment;
   }
 }
