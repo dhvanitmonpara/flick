@@ -1,1 +1,0 @@
-ALTER TABLE "posts" ADD COLUMN "isPrivate" boolean DEFAULT false NOT NULL;

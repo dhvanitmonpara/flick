@@ -1,10 +1,17 @@
 import { relations } from "drizzle-orm";
-import { platformUser as users } from "./auth.table";
+import { platformUser as users, auth } from "./auth.table";
 import { posts } from "./post.table";
 import { bookmarks } from "./bookmark.table";
 import { votes } from "./vote.table";
 import { contentReports } from "./content-report.table";
 import { comments } from "./comment.table";
+import { userBlocks } from "./user-block.table";
+
+// Auth — has user blocks
+export const authUserBlocksRelations = relations(auth, ({ many }) => ({
+  blockedUsers: many(userBlocks, { relationName: "blocked_users" }),
+  blockedBy: many(userBlocks, { relationName: "blocked_by" }),
+}));
 
 // User — has posts, bookmarks, votes
 export const usersRelations = relations(users, ({ many }) => ({
@@ -61,4 +68,4 @@ export const contentReportRelations = relations(contentReports, ({ one }) => ({
     fields: [contentReports.commentId],
     references: [comments.id],
   }),
-})); users
+}));

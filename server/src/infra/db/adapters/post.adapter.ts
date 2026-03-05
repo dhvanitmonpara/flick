@@ -1,7 +1,8 @@
-import { and, desc, eq, sql, asc, or } from "drizzle-orm";
+import { and, desc, eq, sql, asc, or, notExists } from "drizzle-orm";
 import db from "@/infra/db/index";
 import type { DB } from "@/infra/db/types";
 import { posts, users, colleges, votes, bookmarks, comments } from "../tables";
+import { userBlocks } from "../tables/user-block.table";
 
 export const findById = async (id: string, dbTx?: DB) => {
   const client = dbTx ?? db;
@@ -166,6 +167,7 @@ export const findMany = async (
     userId?: string;
     userCollegeId?: string;
     authorId?: string;
+    blockerAuthId?: string;
   },
   dbTx?: DB
 ) => {
@@ -259,6 +261,28 @@ export const findMany = async (
     whereConditions.push(eq(posts.postedBy, options.authorId));
   }
 
+  if (options?.blockerAuthId) {
+    // Exclude posts from users who are blocked by or have blocked the requester
+    whereConditions.push(
+      notExists(
+        db.select({ id: userBlocks.id })
+          .from(userBlocks)
+          .where(
+            or(
+              and(
+                eq(userBlocks.blockerId, options.blockerAuthId),
+                eq(userBlocks.blockedId, users.authId)
+              ),
+              and(
+                eq(userBlocks.blockerId, users.authId),
+                eq(userBlocks.blockedId, options.blockerAuthId)
+              )
+            )
+          )
+      )
+    );
+  }
+
   const orderBy = sortOrder === "asc" ? asc(posts[sortBy]) : desc(posts[sortBy]);
 
   const results = await client
@@ -336,6 +360,7 @@ export const countAll = async (
     branch?: string;
     userCollegeId?: string;
     authorId?: string;
+    blockerAuthId?: string;
   },
   dbTx?: DB
 ) => {
@@ -375,6 +400,27 @@ export const countAll = async (
 
   if (filters?.authorId) {
     whereConditions.push(eq(posts.postedBy, filters.authorId));
+  }
+
+  if (filters?.blockerAuthId) {
+    whereConditions.push(
+      notExists(
+        db.select({ id: userBlocks.id })
+          .from(userBlocks)
+          .where(
+            or(
+              and(
+                eq(userBlocks.blockerId, filters.blockerAuthId),
+                eq(userBlocks.blockedId, users.authId)
+              ),
+              and(
+                eq(userBlocks.blockerId, users.authId),
+                eq(userBlocks.blockedId, filters.blockerAuthId)
+              )
+            )
+          )
+      )
+    );
   }
 
   const result = await client

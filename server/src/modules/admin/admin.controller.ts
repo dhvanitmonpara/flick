@@ -81,6 +81,9 @@ class AdminController {
 
     const image = await uploadImageToCloudinary(file, id);
 
+    // Persist the Cloudinary URL to the college record in the DB
+    await adminService.updateCollege(id, { profile: image.url });
+
     return HttpResponse.ok("College profile uploaded successfully", image);
   }
 }

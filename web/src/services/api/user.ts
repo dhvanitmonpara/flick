@@ -12,5 +12,14 @@ export const userApi = {
   },
   updateProfile: async (data: { branch: string }) => {
     return http.patch("/users/me", data);
-  }
+  },
+  blockUser: async (userId: string) => {
+    return http.post(`/users/block/${userId}`, {});
+  },
+  unblockUser: async (userId: string) => {
+    return http.post(`/users/unblock/${userId}`, {});
+  },
+  getBlockedUsers: async () => {
+    return http.get("/users/blocked");
+  },
 };

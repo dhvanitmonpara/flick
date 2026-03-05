@@ -46,7 +46,7 @@ function Comment({ comment, className, depth = 0 }: { comment: CommentEntity, cl
               </p>
             </div>
           </div>
-          <PostDropdown showBookmark={false} id={comment.id} type="comment" key={comment.id} editableData={isOwnComment ? { title: "", content: comment.content } : null} />
+          <PostDropdown showBookmark={false} id={comment.id} type="comment" key={comment.id} authorId={isUser(comment.commentedBy) ? comment.commentedBy.id : undefined} editableData={isOwnComment ? { title: "", content: comment.content } : null} />
         </CardHeader>
         <CardContent>
           <p className="text-zinc-600 dark:text-zinc-400 pt-1">{comment.content}</p>

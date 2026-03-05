@@ -1,7 +1,8 @@
-import { and, desc, eq, sql, asc } from "drizzle-orm";
+import { and, desc, eq, sql, asc, notExists, or } from "drizzle-orm";
 import db from "@/infra/db/index";
 import type { DB } from "@/infra/db/types";
 import { comments, posts, users, colleges, votes } from "../tables";
+import { userBlocks } from "../tables/user-block.table";
 
 export const findById = async (id: string, dbTx?: DB) => {
   const client = dbTx ?? db;
@@ -30,6 +31,7 @@ export const findByPostId = async (
     sortBy?: "createdAt" | "updatedAt";
     sortOrder?: "asc" | "desc";
     userId?: string;
+    blockerAuthId?: string;
   },
   dbTx?: DB
 ) => {
@@ -68,6 +70,32 @@ export const findByPostId = async (
     ? asc(comments[sortBy])
     : desc(comments[sortBy]);
 
+  const whereConditions: any[] = [
+    eq(comments.postId, postId),
+    eq(comments.isBanned, false),
+  ];
+
+  if (options?.blockerAuthId) {
+    whereConditions.push(
+      notExists(
+        db.select({ id: userBlocks.id })
+          .from(userBlocks)
+          .where(
+            or(
+              and(
+                eq(userBlocks.blockerId, options.blockerAuthId),
+                eq(userBlocks.blockedId, users.authId)
+              ),
+              and(
+                eq(userBlocks.blockerId, users.authId),
+                eq(userBlocks.blockedId, options.blockerAuthId)
+              )
+            )
+          )
+      )
+    );
+  }
+
   const rows = await client
     .with(voteAgg)
     .select({
@@ -99,12 +127,7 @@ export const findByPostId = async (
     .leftJoin(voteAgg, eq(voteAgg.commentId, comments.id))
     .leftJoin(users, sql`${comments.commentedBy}::text = ${users.id}::text`)
     .leftJoin(colleges, sql`${users.collegeId}::text = ${colleges.id}::text`)
-    .where(
-      and(
-        eq(comments.postId, postId),
-        eq(comments.isBanned, false)
-      )
-    )
+    .where(and(...whereConditions))
     .orderBy(orderBy)
     .limit(limit)
     .offset((page - 1) * limit);

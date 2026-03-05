@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1772096357112,
-      "tag": "0000_bored_dakota_north",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1772127450877,
-      "tag": "0001_early_masked_marvel",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1772342071551,
-      "tag": "0002_heavy_photon",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1772345672745,
-      "tag": "0003_amused_mister_sinister",
+      "when": 1772694353755,
+      "tag": "0000_loose_edwin_jarvis",
       "breakpoints": true
     }
   ]

@@ -137,6 +137,7 @@ function PostPage() {
           upvoteCount={currentPost.upvoteCount}
           downvoteCount={currentPost.downvoteCount}
           commentsCount={currentPost.commentsCount ?? comments?.length ?? 0}
+          authorId={isUser(currentPost.postedBy) ? currentPost.postedBy.id : undefined}
         />
       }
       {isLoggedIn && (

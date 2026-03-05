@@ -35,6 +35,12 @@ const UserRepo = {
     updateById: userAdapter.updateById,
     updateKarma: userAdapter.updateKarma,
     delete: userAdapter.deleteById,
+    createBlock: userAdapter.createBlock,
+    removeBlock: userAdapter.removeBlock,
+  },
+
+  Blocks: {
+    getBlockedUsers: userAdapter.getBlockedUsers,
   }
 }
 

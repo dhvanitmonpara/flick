@@ -36,9 +36,10 @@ interface PostProps {
   removedPostOnAction?: (id: string) => void
   topic: PostTopic
   isPrivate?: boolean
+  authorId?: string
 }
 
-function Post({ avatar, userVote, avatarFallback, id, createdAt, college, title, content, upvoteCount, downvoteCount, commentsCount, viewsCount, username, branch, topic, bookmarked, removedPostOnAction, isPrivate }: PostProps) {
+function Post({ avatar, userVote, avatarFallback, id, createdAt, college, title, content, upvoteCount, downvoteCount, commentsCount, viewsCount, username, branch, topic, bookmarked, removedPostOnAction, isPrivate, authorId }: PostProps) {
   const profile = useProfileStore(state => state.profile)
   const navigate = useRouter().push
 
@@ -88,6 +89,7 @@ function Post({ avatar, userVote, avatarFallback, id, createdAt, college, title,
           id={id}
           type="post"
           key={id}
+          authorId={authorId}
           editableData={profile.username === username ? { title, content, topic, isPrivate } : null}
         />
       </CardHeader>

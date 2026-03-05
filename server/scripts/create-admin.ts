@@ -22,7 +22,7 @@ async function createAdmin() {
     existing = await AuthRepo.Read.findByEmail(email);
   }
 
-  await AuthRepo.Write.update(existing.id, { role: "admin" })
+  await AuthRepo.Write.update(existing.id, { role: "admin", emailVerified: true })
 
   console.log("Admin ensured successfully");
 }

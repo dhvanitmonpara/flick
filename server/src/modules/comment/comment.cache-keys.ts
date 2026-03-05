@@ -11,11 +11,12 @@ const commentCacheKeys = {
     limit: number,
     sortBy: string,
     sortOrder: string,
-    userId?: string
+    userId?: string,
+    blockerAuthId?: string
   ) => {
     const versionKey = `post:${postId}:comments:version`;
     const version = (await cache.get<number>(versionKey, { bypassL1: true })) || 1;
-    return `post:${postId}:comments:v${version}:page:${page}:limit:${limit}:sortBy:${sortBy}:sortOrder:${sortOrder}:user:${userId || "guest"}`;
+    return `post:${postId}:comments:v${version}:page:${page}:limit:${limit}:sortBy:${sortBy}:sortOrder:${sortOrder}:user:${userId || "guest"}:blocker:${blockerAuthId || "none"}`;
   },
   commentReplies: async (
     commentId: string,

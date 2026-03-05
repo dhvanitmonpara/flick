@@ -86,6 +86,10 @@ async function ensureTestUser(email: string, index: number, collegeId: string) {
     });
   }
 
+  await AuthRepo.Write.update(existingAuth.id, {
+    emailVerified: true,
+  });
+
   console.log(`Ensured user: ${email} (password: ${TEST_PASSWORD})`);
 }
 

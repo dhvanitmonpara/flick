@@ -22,6 +22,7 @@ const CommentRepo = {
         sortBy?: "createdAt" | "updatedAt";
         sortOrder?: "asc" | "desc";
         userId?: string;
+        blockerAuthId?: string;
       },
       dbTx?: DB
     ) => {
@@ -32,7 +33,7 @@ const CommentRepo = {
       const userId = options?.userId;
 
       return cached(
-        await commentCacheKeys.postComments(postId, page, limit, sortBy, sortOrder, userId),
+        await commentCacheKeys.postComments(postId, page, limit, sortBy, sortOrder, userId, options?.blockerAuthId),
         () => CommentAdapter.findByPostId(postId, options, dbTx)
       );
     },
@@ -54,6 +55,7 @@ const CommentRepo = {
         sortBy?: "createdAt" | "updatedAt";
         sortOrder?: "asc" | "desc";
         userId?: string;
+        blockerAuthId?: string;
       },
       dbTx?: DB
     ) => CommentAdapter.findByPostId(postId, options, dbTx),

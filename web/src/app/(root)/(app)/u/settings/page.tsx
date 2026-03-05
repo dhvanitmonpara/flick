@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, ShieldBan } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -19,6 +19,8 @@ import useProfileStore from "@/store/profileStore";
 import { toastError } from "@/utils/toast-error";
 import { OtpVerification } from "@/components/general/OtpVerification";
 import { authClient } from "@/lib/auth-client";
+import { userApi } from "@/services/api/user";
+import { MdBlock } from "react-icons/md";
 
 function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -48,6 +50,11 @@ function SettingsPage() {
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [isPasswordFormVisible, setIsPasswordFormVisible] = useState(false);
 
+  // Blocked users state
+  const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
+  const [loadingBlocked, setLoadingBlocked] = useState(true);
+  const [unblockingId, setUnblockingId] = useState<string | null>(null);
+
   const { data: session } = authClient.useSession();
   const profile = useProfileStore((state) => state.profile);
   const removeProfile = useProfileStore((state) => state.removeProfile);
@@ -66,6 +73,35 @@ function SettingsPage() {
       .then((data) => setHasPassword(data.hasPassword))
       .catch(() => setHasPassword(null));
   }, []);
+
+  // Fetch blocked users
+  useEffect(() => {
+    const fetchBlockedUsers = async () => {
+      try {
+        setLoadingBlocked(true);
+        const res = await userApi.getBlockedUsers();
+        setBlockedUsers(res.data?.blockedUsers || []);
+      } catch {
+        // Silently fail
+      } finally {
+        setLoadingBlocked(false);
+      }
+    };
+    fetchBlockedUsers();
+  }, []);
+
+  const handleUnblock = async (userId: string) => {
+    try {
+      setUnblockingId(userId);
+      await userApi.unblockUser(userId);
+      setBlockedUsers((prev) => prev.filter((u) => u.id !== userId));
+      toast.success("User unblocked successfully");
+    } catch {
+      toast.error("Failed to unblock user");
+    } finally {
+      setUnblockingId(null);
+    }
+  };
 
   const handleSendOtp = useCallback(async () => {
     if (!session?.user?.email || !session?.user?.id) return;
@@ -306,6 +342,52 @@ function SettingsPage() {
               )}
             </div>
           )}
+        </section>
+
+        {/* Blocked Users */}
+        <section className="pt-8 border-t dark:border-zinc-800">
+          <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
+            <MdBlock className="text-zinc-500" />
+            Blocked Users
+          </h2>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+            Users you&apos;ve blocked won&apos;t be able to see your posts or comments, and you won&apos;t see theirs.
+          </p>
+          <div className="p-4 border dark:border-zinc-800 rounded-lg">
+            {loadingBlocked ? (
+              <div className="flex items-center gap-2 text-sm text-zinc-500">
+                <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+              </div>
+            ) : blockedUsers.length === 0 ? (
+              <p className="text-sm text-zinc-500">You haven&apos;t blocked anyone.</p>
+            ) : (
+              <div className="space-y-3">
+                {blockedUsers.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between py-2 px-1 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-xs font-semibold">
+                        {user.username?.slice(0, 2)?.toUpperCase() || "??"}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{user.username || "Unknown"}</p>
+                        <p className="text-xs text-zinc-500">{user.branch || ""}{user.collegeName ? ` · ${user.collegeName}` : ""}</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={unblockingId === user.id}
+                      onClick={() => handleUnblock(user.id)}
+                    >
+                      {unblockingId === user.id ? (
+                        <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Unblocking…</>
+                      ) : "Unblock"}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
 
         {/* Danger Zone */}

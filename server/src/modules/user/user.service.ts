@@ -3,6 +3,7 @@ import UserRepo from "@/modules/user/user.repo";
 import logger from "@/core/logger";
 import recordAudit from "@/lib/record-audit";
 import AuthRepo from "../auth/auth.repo";
+import cache from "@/infra/services/cache";
 
 class UserService {
   getUserProfileById = async (userId: string) => {
@@ -42,8 +43,10 @@ class UserService {
     return await UserRepo.CachedRead.findByAuthId(authId, {});
   }
 
-  acceptTerms = async (userId: string) => {
+  acceptTerms = async (userId: string, authId: string) => {
     await UserRepo.Write.updateById(userId, { isAcceptedTerms: true });
+
+    await cache.del(`user:authId:${authId}`)
 
     recordAudit({
       action: "user:accepted:terms",
@@ -67,9 +70,6 @@ class UserService {
 
     const updatedUser = await UserRepo.Write.updateById(userId, { branch: updates.branch });
 
-    // Since we're modifying the DB directly, we should invalidate or trigger cache updates if necessary
-    // Assuming cached responses will expire or are handled similarly to other places
-
     recordAudit({
       action: "other:action",
       entityId: userId,
@@ -80,6 +80,44 @@ class UserService {
 
     return updatedUser;
   }
+
+  blockUser = async (requestingUserId: string, targetUserId: string) => {
+    if (requestingUserId === targetUserId) {
+      throw HttpError.badRequest("You cannot block yourself");
+    }
+
+    const requester = await UserRepo.Read.findById(requestingUserId, {});
+    if (!requester) throw HttpError.notFound("Requesting user not found");
+
+    const target = await UserRepo.Read.findById(targetUserId, {});
+    if (!target) throw HttpError.notFound("Target user not found");
+
+    await UserRepo.Write.createBlock(requester.authId, target.authId);
+
+    logger.info("User blocked", { blockerId: requestingUserId, blockedId: targetUserId });
+    return { blocked: true };
+  };
+
+  unblockUser = async (requestingUserId: string, targetUserId: string) => {
+    const requester = await UserRepo.Read.findById(requestingUserId, {});
+    if (!requester) throw HttpError.notFound("Requesting user not found");
+
+    const target = await UserRepo.Read.findById(targetUserId, {});
+    if (!target) throw HttpError.notFound("Target user not found");
+
+    await UserRepo.Write.removeBlock(requester.authId, target.authId);
+
+    logger.info("User unblocked", { blockerId: requestingUserId, blockedId: targetUserId });
+    return { blocked: false };
+  };
+
+  getBlockedUsers = async (userId: string) => {
+    const user = await UserRepo.Read.findById(userId, {});
+    if (!user) throw HttpError.notFound("User not found");
+
+    const blocked = await UserRepo.Blocks.getBlockedUsers(user.authId);
+    return blocked;
+  };
 }
 
 export default new UserService();

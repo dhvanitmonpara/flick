@@ -25,6 +25,7 @@ class PostController {
 
     const userId = req.user?.id;
     const userCollegeId = req.user?.collegeId;
+    const blockerAuthId = req.user?.authId;
 
     const result = await postService.getPosts({
       page,
@@ -36,6 +37,7 @@ class PostController {
       branch,
       userId,
       userCollegeId,
+      blockerAuthId,
     });
 
     return HttpResponse.ok("Posts retrieved successfully", result);

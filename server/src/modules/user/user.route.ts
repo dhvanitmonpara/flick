@@ -19,4 +19,8 @@ router.route("/me")
   .patch(UserController.updateUserProfile);
 router.post("/accept-terms", UserController.acceptTerms);
 
+router.post("/block/:userId", UserController.blockUser);
+router.post("/unblock/:userId", UserController.unblockUser);
+router.get("/blocked", UserController.getBlockedUsers);
+
 export default router;

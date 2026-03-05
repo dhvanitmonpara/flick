@@ -125,6 +125,7 @@ class PostService {
     userId?: string;
     userCollegeId?: string;
     authorId?: string;
+    blockerAuthId?: string;
   }) {
     const postsResult = await PostRepo.CachedRead.findMany(options);
     const posts = Array.isArray(postsResult) ? postsResult : [];
@@ -134,6 +135,7 @@ class PostService {
       branch: options?.branch,
       userCollegeId: options?.userCollegeId,
       authorId: options?.authorId,
+      blockerAuthId: options?.blockerAuthId,
     });
 
     const page = options?.page || 1;

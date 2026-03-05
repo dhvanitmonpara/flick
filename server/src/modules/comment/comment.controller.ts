@@ -47,6 +47,7 @@ class CommentController {
       limit,
       sortBy,
       sortOrder,
+      blockerAuthId: req.user?.authId,
     });
 
     return HttpResponse.ok("Comments retrieved successfully", result);

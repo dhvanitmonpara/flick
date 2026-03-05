@@ -2,7 +2,7 @@ import { and, eq, ilike, or, sql } from "drizzle-orm";
 import db from "@/infra/db";
 import type { DB } from "@/infra/db/types";
 import { auth, colleges, users } from "@/infra/db/tables";
-
+import { userBlocks } from "@/infra/db/tables/user-block.table";
 export type UserInclude = {
   auth?: boolean;
   college?: boolean;
@@ -421,4 +421,53 @@ export const findByQuery = async (
     .where(conditions.length ? and(...conditions) : undefined);
 
   return rows.map(toModerationUser);
+};
+
+export const createBlock = async (blockerId: string, blockedId: string, dbTx?: DB) => {
+  const client = dbTx ?? db;
+  const [created] = await client
+    .insert(userBlocks)
+    .values({
+      blockerId,
+      blockedId,
+    })
+    .onConflictDoNothing()
+    .returning();
+  return created ?? null;
+};
+
+export const removeBlock = async (blockerId: string, blockedId: string, dbTx?: DB) => {
+  const client = dbTx ?? db;
+  const [deleted] = await client
+    .delete(userBlocks)
+    .where(
+      and(
+        eq(userBlocks.blockerId, blockerId),
+        eq(userBlocks.blockedId, blockedId)
+      )
+    )
+    .returning();
+  return deleted ?? null;
+};
+
+export const getBlockedUsers = async (blockerId: string, dbTx?: DB) => {
+  const client = dbTx ?? db;
+  const blocks = await client
+    .select({
+      id: users.id,
+      username: users.username,
+      authId: users.authId,
+      collegeId: users.collegeId,
+      branch: users.branch,
+      college: {
+        id: colleges.id,
+        name: colleges.name,
+      }
+    })
+    .from(userBlocks)
+    .innerJoin(users, eq(userBlocks.blockedId, users.authId))
+    .leftJoin(colleges, eq(users.collegeId, colleges.id))
+    .where(eq(userBlocks.blockerId, blockerId));
+
+  return blocks;
 };

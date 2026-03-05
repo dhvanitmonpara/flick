@@ -36,9 +36,11 @@ import { postApi } from "@/services/api/post";
 import { commentApi } from "@/services/api/comment";
 import { bookmarkApi } from "@/services/api/bookmark";
 import { reportApi } from "@/services/api/report";
+import { userApi } from "@/services/api/user";
 import { PostTopic } from "@/types/postTopics";
+import { MdBlock } from "react-icons/md";
 
-type DialogType = "DELETE" | "REPORT" | "EDIT" | "SAVE" | null;
+type DialogType = "DELETE" | "REPORT" | "EDIT" | "SAVE" | "BLOCK" | null;
 
 const ReportReasons = [
   "INAPPROPRIATE",
@@ -60,7 +62,7 @@ const reportSchema = z.object({
 
 type ReportFormValues = z.infer<typeof reportSchema>;
 
-function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark = true, bookmarked = false }: { type: ("post" | "comment"), id: string, editableData?: { title?: string, content: string, topic?: PostTopic, isPrivate?: boolean } | null, removePostOnAction?: (id: string) => void, showBookmark?: boolean, bookmarked?: boolean }) {
+function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark = true, bookmarked = false, authorId }: { type: ("post" | "comment"), id: string, editableData?: { title?: string, content: string, topic?: PostTopic, isPrivate?: boolean } | null, removePostOnAction?: (id: string) => void, showBookmark?: boolean, bookmarked?: boolean, authorId?: string }) {
   const [dialogType, setDialogType] = useState<DialogType>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -156,6 +158,21 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
     }
   }
 
+  const handleBlock = async () => {
+    if (!authorId) return;
+    try {
+      setLoading(true);
+      await userApi.blockUser(authorId);
+      toast.success("User blocked successfully");
+      if (removePostOnAction) removePostOnAction(id);
+    } catch (error) {
+      handleError(error as AxiosError | Error, "Failed to block user", undefined, () => handleBlock(), "Failed to block user");
+    } finally {
+      setLoading(false);
+      setOpen(false);
+    }
+  }
+
   return (
     <>
       <DropdownMenu>
@@ -181,6 +198,12 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openDialog("DELETE") }} className="hover:bg-red-400/50! dark:hover:bg-red-600/40!">
               <RiDeleteBin6Fill />
               <span>Delete</span>
+            </DropdownMenuItem>
+          )}
+          {!isOwner && authorId && (
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openDialog("BLOCK") }} className="hover:bg-red-400/50! dark:hover:bg-red-600/40!">
+              <MdBlock />
+              <span>Block User</span>
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -260,6 +283,22 @@ function PostDropdown({ type, id, editableData, removePostOnAction, showBookmark
                   </Button>
                 </form>
               </Form>
+            </>
+          )}
+          {dialogType === "BLOCK" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Block User</DialogTitle>
+                <DialogDescription>Are you sure you want to block this user? You won't see their posts or comments, and they won't see yours.</DialogDescription>
+              </DialogHeader>
+              <div className="flex justify-end items-center space-x-2">
+                <Button disabled={loading} onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button disabled={loading} onClick={handleBlock} variant="destructive">
+                  {loading ? <><Loader2 className="animate-spin" /> Blocking...</> : "Block"}
+                </Button>
+              </div>
             </>
           )}
           {dialogType === "EDIT" &&

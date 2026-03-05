@@ -126,6 +126,7 @@ function Feed() {
               upvoteCount={post.upvoteCount}
               downvoteCount={post.downvoteCount}
               commentsCount={post.commentsCount ?? 0}
+              authorId={postedBy.id}
             />
           )
         })

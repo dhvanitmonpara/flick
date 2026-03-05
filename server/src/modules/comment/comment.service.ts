@@ -15,6 +15,7 @@ class CommentService {
       limit?: number;
       sortBy?: "createdAt" | "updatedAt";
       sortOrder?: "asc" | "desc";
+      blockerAuthId?: string;
     }
   ) {
     logger.info("Fetching comments by post ID", { postId, options });

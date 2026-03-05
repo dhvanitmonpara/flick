@@ -1,5 +1,5 @@
 {
-  "id": "bb9eff8b-5f3c-408e-bd72-11085071d36d",
+  "id": "8e8d84e8-93f0-4740-97d0-77de404c9873",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -424,7 +424,7 @@
           "name": "branch",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "karma": {
           "name": "karma",
@@ -439,6 +439,14 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "status": {
+          "name": "status",
+          "type": "user_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ONBOARDING'"
         }
       },
       "indexes": {},
@@ -746,6 +754,99 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.banned_words": {
+      "name": "banned_words",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "word": {
+          "name": "word",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "strict_mode": {
+          "name": "strict_mode",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "severity": {
+          "name": "severity",
+          "type": "moderation_severity_enum",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "banned_words_word_idx": {
+          "name": "banned_words_word_idx",
+          "columns": [
+            {
+              "expression": "word",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "banned_words_strict_mode_idx": {
+          "name": "banned_words_strict_mode_idx",
+          "columns": [
+            {
+              "expression": "strict_mode",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "banned_words_word_unique": {
+          "name": "banned_words_word_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "word"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.bookmarks": {
       "name": "bookmarks",
       "schema": "",
@@ -818,7 +919,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "bookmarks_userId_platform_user_id_fk": {
@@ -831,7 +932,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1120,6 +1221,32 @@
       },
       "indexes": {},
       "foreignKeys": {
+        "content_reports_post_id_posts_id_fk": {
+          "name": "content_reports_post_id_posts_id_fk",
+          "tableFrom": "content_reports",
+          "tableTo": "posts",
+          "columnsFrom": [
+            "post_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "content_reports_comment_id_comments_id_fk": {
+          "name": "content_reports_comment_id_comments_id_fk",
+          "tableFrom": "content_reports",
+          "tableTo": "comments",
+          "columnsFrom": [
+            "comment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "content_reports_reported_by_platform_user_id_fk": {
           "name": "content_reports_reported_by_platform_user_id_fk",
           "tableFrom": "content_reports",
@@ -1130,7 +1257,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1343,6 +1470,13 @@
           "primaryKey": false,
           "notNull": true
         },
+        "isPrivate": {
+          "name": "isPrivate",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "isBanned": {
           "name": "isBanned",
           "type": "boolean",
@@ -1419,7 +1553,95 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_blocks": {
+      "name": "user_blocks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "blocker_id": {
+          "name": "blocker_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "blocked_id": {
+          "name": "blocked_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "user_blocks_unique_idx": {
+          "name": "user_blocks_unique_idx",
+          "columns": [
+            {
+              "expression": "blocker_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "blocked_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "user_blocks_blocker_id_auth_id_fk": {
+          "name": "user_blocks_blocker_id_auth_id_fk",
+          "tableFrom": "user_blocks",
+          "tableTo": "auth",
+          "columnsFrom": [
+            "blocker_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "user_blocks_blocked_id_auth_id_fk": {
+          "name": "user_blocks_blocked_id_auth_id_fk",
+          "tableFrom": "user_blocks",
+          "tableTo": "auth",
+          "columnsFrom": [
+            "blocked_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1569,10 +1791,11 @@
         "user:reported:content",
         "user:accepted:terms",
         "user:initialized:account",
-        "user:created:account",
+        "auth:created:account",
         "auth:otp:verify:success",
         "auth:otp:verify:failed",
         "auth:otp:send",
+        "user:finished:onboarding",
         "user:logged:in:self",
         "user:logged:out:self",
         "user:created:feedback",
@@ -1635,6 +1858,15 @@
         "vote"
       ]
     },
+    "public.moderation_severity_enum": {
+      "name": "moderation_severity_enum",
+      "schema": "public",
+      "values": [
+        "mild",
+        "moderate",
+        "severe"
+      ]
+    },
     "public.notification_type": {
       "name": "notification_type",
       "schema": "public",
@@ -1690,6 +1922,14 @@
         "Feedback / Suggestion",
         "News / Update",
         "Guide / Resource"
+      ]
+    },
+    "public.user_status": {
+      "name": "user_status",
+      "schema": "public",
+      "values": [
+        "ONBOARDING",
+        "ACTIVE"
       ]
     },
     "public.vote_entity_enum": {
