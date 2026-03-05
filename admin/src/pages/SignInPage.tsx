@@ -38,24 +38,37 @@ function SignInPage() {
   const onSubmit = async (data: SignInFormData) => {
     setIsSubmitting(true)
     try {
-      await authClient.signIn.email({
+      const { error } = await authClient.signIn.email({
         email: data.email,
         password: data.password,
-        fetchOptions: {
-          onSuccess: (ctx) => {
-            if (hasAdminAccess(ctx.data.user.role)) {
-              setProfile({ ...ctx.data.user, id: ctx.data.user.id } as any)
-              navigate('/')
-            } else {
-              toast.error("Unauthorized. Admin access only.")
-              authClient.signOut()
-            }
-          },
-          onError: (ctx) => {
-            toast.error(ctx.error.message || "Error signing in, Try again")
-          }
-        }
       })
+
+      if (error) {
+        toast.error(error.message || "Error signing in, Try again")
+        return
+      }
+
+      // Wait for the session cookie to be readable before route-guard checks run.
+      let sessionUser: any = null
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const session = await authClient.getSession()
+        sessionUser = session?.data?.user ?? null
+        if (sessionUser) break
+        await new Promise((resolve) => setTimeout(resolve, 120))
+      }
+
+      if (!sessionUser) {
+        toast.error("Sign in succeeded, but session is not ready. Please try again.")
+        return
+      }
+
+      if (hasAdminAccess(sessionUser.role)) {
+        setProfile({ ...sessionUser, id: sessionUser.id } as any)
+        navigate('/', { replace: true })
+      } else {
+        toast.error("Unauthorized. Admin access only.")
+        await authClient.signOut()
+      }
     } catch (err: any) {
       console.error("Sign in error", err)
       toast.error(err.message || "Error signing in, Try again")

@@ -286,6 +286,33 @@ class AuthService {
     return college;
   }
 
+  cleanupOrphanedAuthUser = async (authId: string, res?: Response) => {
+    logger.warn("Cleaning up orphaned auth user after failed profile provisioning", {
+      authId,
+      source: "authService.cleanupOrphanedAuthUser",
+    });
+
+    await db.delete(authTable).where(eq(authTable.id, authId));
+    await cache.del(`user:authId:${authId}`);
+
+    if (res) {
+      res.clearCookie("better-auth.session_token", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        path: "/",
+        domain: env.COOKIE_DOMAIN,
+      });
+      res.clearCookie("better-auth.session_data", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        path: "/",
+        domain: env.COOKIE_DOMAIN,
+      });
+    }
+  };
+
   loginAuth = async (email: string, password: string, res: Response) => {
     const response = await auth.api.signInEmail({
       body: { email, password },

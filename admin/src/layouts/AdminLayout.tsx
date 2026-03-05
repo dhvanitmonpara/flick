@@ -21,18 +21,48 @@ function AdminLayout() {
   }, [session, setProfile])
 
   useEffect(() => {
-    if (!isPending && !session?.user) {
-      navigate("/auth/signin");
-      return;
-    }
+    if (isPending) return;
 
-    if (!isPending && session?.user && !hasAdminAccess(session.user.role)) {
-      removeProfile();
-      authClient.signOut();
-      toast.error("Unauthorized. Admin access only.");
-      navigate("/auth/signin", { replace: true });
-    }
-  }, [navigate, session, isPending, removeProfile]);
+    let cancelled = false;
+
+    const validateSession = async () => {
+      if (!session?.user) {
+        const freshSession = await authClient.getSession();
+        const freshUser = freshSession?.data?.user;
+
+        if (cancelled) return;
+
+        if (!freshUser) {
+          navigate("/auth/signin", { replace: true });
+          return;
+        }
+
+        if (!hasAdminAccess(freshUser.role)) {
+          removeProfile();
+          await authClient.signOut();
+          toast.error("Unauthorized. Admin access only.");
+          navigate("/auth/signin", { replace: true });
+          return;
+        }
+
+        setProfile({ ...freshUser, id: freshUser.id } as any);
+        return;
+      }
+
+      if (!hasAdminAccess(session.user.role)) {
+        removeProfile();
+        await authClient.signOut();
+        toast.error("Unauthorized. Admin access only.");
+        navigate("/auth/signin", { replace: true });
+      }
+    };
+
+    validateSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, session, isPending, removeProfile, setProfile]);
 
   if (isPending) {
     return <div className="w-screen h-screen flex justify-center items-center bg-zinc-900 text-white">Loading...</div>

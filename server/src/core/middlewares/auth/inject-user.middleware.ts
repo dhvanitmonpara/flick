@@ -7,8 +7,9 @@ import authService from "@/modules/auth/auth.service";
 import recordAudit from "@/lib/record-audit";
 import { nanoid } from "nanoid";
 import { isConstraintViolation } from "@/lib/pg/errors/constraint-violantion";
+import { CollegeSelect } from "@/shared/types/College";
 
-const injectUser = async (req: Request, _: Response, next: NextFunction) => {
+const injectUser = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.auth?.id) {
     return next();
   }
@@ -16,7 +17,15 @@ const injectUser = async (req: Request, _: Response, next: NextFunction) => {
   let user = await UserRepo.CachedRead.findByAuthId(req.auth.id, {});
 
   if (!user && req.auth.email) {
-    const college = await authService.ensureEmailVerified(req.auth.email);
+    let college: null | CollegeSelect = null;
+    try {
+      college = await authService.ensureEmailVerified(req.auth.email);
+    } catch (error) {
+      if (HttpError.isHttpError(error) && error.code === "COLLEGE_NOT_FOUND") {
+        await authService.cleanupOrphanedAuthUser(req.auth.id, res);
+      }
+      throw error;
+    }
 
     try {
       user = await UserRepo.Write.create({
