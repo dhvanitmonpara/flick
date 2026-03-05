@@ -119,8 +119,11 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
       if (isUpdating && !id) throw new Error("Post id not found")
 
       await loadModerationConfig();
-      const censoredContent = censorText(data.content);
-      const payload = { ...data, content: censoredContent };
+      const payload = {
+        ...data,
+        title: censorText(data.title),
+        content: censorText(data.content),
+      };
 
       let res = null
 
@@ -184,15 +187,37 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
             control={form.control}
             name="title"
             disabled={loading}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Title</FormLabel>
-                <FormControl>
-                  <Input className="dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800" placeholder="Enter post title" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const titleModeration = validateText(field.value);
+              const hasTitleWarning = !titleModeration.allowed;
+
+              return (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input
+                      className={hasTitleWarning
+                        ? "border-red-500 bg-zinc-100 dark:bg-zinc-800 focus-visible:ring-red-500"
+                        : "dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800"}
+                      placeholder="Enter post title"
+                      {...field}
+                    />
+                  </FormControl>
+                  {hasTitleWarning && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {titleModeration.reason}
+                    </p>
+                  )}
+                  {hasTitleWarning && field.value && (
+                    <div className="mt-2 text-sm">
+                      <span className="font-semibold">Preview:</span>
+                      <ModeratedText text={field.value} />
+                    </div>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
 
           <FormField
@@ -251,7 +276,7 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
                         }}
                         className={hasBanned ? "border-red-500 bg-zinc-100 dark:bg-zinc-800 focus-visible:ring-red-500" : "bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-800"}
                       />
-                      {field.value && (
+                      {hasBanned && field.value && (
                         <div className="mt-2 text-sm">
                           <span className="font-semibold">Preview:</span>
                           <ModeratedText text={field.value} />

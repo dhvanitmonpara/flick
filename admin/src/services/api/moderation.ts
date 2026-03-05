@@ -27,7 +27,7 @@ export const moderationApi = {
   },
 
   listWords: async () => {
-    const response = await http.get("/moderation/words");
+    const response = await http.get<ApiResponse<{ words: BannedWord[] }>>("/moderation/words");
     return response.data;
   },
 

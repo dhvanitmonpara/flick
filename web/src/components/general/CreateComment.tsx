@@ -173,7 +173,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
                             : "h-11.5 min-h-0 rounded-2xl"
                         )}
                       />
-                      {field.value && (
+                      {hasBanned && field.value && (
                         <div className="mt-2 text-sm">
                           <span className="font-semibold">Preview:</span>
                           <ModeratedText text={field.value} />

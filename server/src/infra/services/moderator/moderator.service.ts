@@ -8,7 +8,7 @@ import {
   type BannedWordSeverity,
 } from "@/modules/moderation/words/words-moderation.repo";
 import { AhoCorasick } from "./aho-corasick";
-import { isBoundaryMatch, normalizeText } from "./normalize";
+import { isBoundaryMatch, isWordChar, normalizeText } from "./normalize";
 
 // --- Types ---
 
@@ -36,13 +36,22 @@ type CompiledWord = {
   strictMode: boolean;
   severity: BannedWordSeverity;
   normalizedWord: string;
+  normalizedStrictWord?: string;
 };
 
 type CompiledModerationSet = {
   strictMatcher: AhoCorasick;
   normalMatcher: AhoCorasick;
+  normalVariantsMatcher: AhoCorasick;
   strictWords: CompiledWord[];
   normalWords: CompiledWord[];
+  normalVariantWords: CompiledWord[];
+  wildcardPatterns: Array<{
+    word: string;
+    severity: BannedWordSeverity;
+    strictMode: boolean;
+    pattern: string;
+  }>;
 };
 
 // --- Cache & Constants ---
@@ -77,8 +86,127 @@ const dedupeAndSortMatches = (matches: ModerationMatch[]): ModerationMatch[] => 
     unique.push(match);
   }
 
-  unique.sort((a, b) => a.start - b.start || a.end - b.end);
-  return unique;
+  unique.sort((a, b) => a.start - b.start || b.end - a.end);
+
+  const merged: ModerationMatch[] = [];
+  let lastEnd = -1;
+
+  for (const match of unique) {
+    const previous = merged[merged.length - 1];
+    if (previous && match.start >= previous.start && match.end <= lastEnd) {
+      continue;
+    }
+
+    merged.push(match);
+    lastEnd = Math.max(lastEnd, match.end);
+  }
+
+  return merged;
+};
+
+const isWildcardChar = (char: string): boolean => char === "*";
+
+const makeWildcardMatcher = () => {
+  const memo = new Map<string, boolean>();
+
+  return (token: string, pattern: string): boolean => {
+    const dfs = (tokenIndex: number, patternIndex: number): boolean => {
+      const key = `${token}:${tokenIndex}:${pattern}:${patternIndex}`;
+      const cached = memo.get(key);
+      if (cached !== undefined) {
+        return cached;
+      }
+
+      if (tokenIndex === token.length) {
+        const result = patternIndex === pattern.length;
+        memo.set(key, result);
+        return result;
+      }
+
+      const tokenChar = token[tokenIndex] ?? "";
+      if (tokenChar === "*") {
+        for (let consume = 1; patternIndex + consume <= pattern.length; consume++) {
+          if (dfs(tokenIndex + 1, patternIndex + consume)) {
+            memo.set(key, true);
+            return true;
+          }
+        }
+
+        memo.set(key, false);
+        return false;
+      }
+
+      if ((pattern[patternIndex] ?? "") !== tokenChar) {
+        memo.set(key, false);
+        return false;
+      }
+
+      const result = dfs(tokenIndex + 1, patternIndex + 1);
+      memo.set(key, result);
+      return result;
+    };
+
+    return dfs(0, 0);
+  };
+};
+
+const collectWildcardCandidates = (
+  text: string
+): Array<{ start: number; end: number; normalizedToken: string; hasLiteral: boolean }> => {
+  const candidates: Array<{ start: number; end: number; normalizedToken: string; hasLiteral: boolean }> = [];
+  let start = -1;
+  let hasWildcard = false;
+
+  const flush = (end: number) => {
+    if (start < 0 || !hasWildcard) {
+      start = -1;
+      hasWildcard = false;
+      return;
+    }
+
+    const token = text.slice(start, end);
+    const normalizedToken = normalizeText(token, "strict").normalized;
+    if (!normalizedToken.includes("*")) {
+      start = -1;
+      hasWildcard = false;
+      return;
+    }
+
+    const literalChars = [...normalizedToken].filter((char) => char !== "*");
+    const hasLiteral = literalChars.length > 0;
+    const hasWildcardBridge = /\p{L}\*+\p{L}/u.test(normalizedToken);
+    const hasEnoughLiteralSignal = literalChars.length >= 2;
+
+    if (!hasLiteral || !hasWildcardBridge || !hasEnoughLiteralSignal || !isBoundaryMatch(text, start, end)) {
+      start = -1;
+      hasWildcard = false;
+      return;
+    }
+
+    candidates.push({ start, end, normalizedToken, hasLiteral });
+    start = -1;
+    hasWildcard = false;
+  };
+
+  for (let index = 0; index < text.length; index++) {
+    const char = text[index] ?? "";
+    const inToken = isWordChar(char) || isWildcardChar(char);
+
+    if (inToken) {
+      if (start < 0) {
+        start = index;
+      }
+      if (isWildcardChar(char)) {
+        hasWildcard = true;
+      }
+      continue;
+    }
+
+    flush(index);
+  }
+
+  flush(text.length);
+  return candidates;
 };
 
 const compileWords = (records: BannedWordRecord[]): CompiledModerationSet => {
@@ -105,14 +233,28 @@ const compileWords = (records: BannedWordRecord[]): CompiledModerationSet => {
           strictMode: false,
           severity: entry.severity,
           normalizedWord: normalNormalized,
+          normalizedStrictWord: strictNormalized,
         });
       }
     }
   }
 
+  const normalVariantWords = normalWords
+    .filter(
+      (word) =>
+        Boolean(word.normalizedStrictWord) &&
+        word.normalizedStrictWord !== word.normalizedWord &&
+        (word.normalizedStrictWord?.length ?? 0) > 0
+    )
+    .map((word) => ({
+      ...word,
+      normalizedWord: word.normalizedStrictWord as string,
+    }));
+
   return {
     strictWords,
     normalWords,
+    normalVariantWords,
     strictMatcher: new AhoCorasick(
       strictWords.map((word) => ({
         word: word.word,
@@ -129,6 +271,28 @@ const compileWords = (records: BannedWordRecord[]): CompiledModerationSet => {
         pattern: word.normalizedWord,
       }))
     ),
+    normalVariantsMatcher: new AhoCorasick(
+      normalVariantWords.map((word) => ({
+        word: word.word,
+        severity: word.severity,
+        strictMode: false,
+        pattern: word.normalizedWord,
+      }))
+    ),
+    wildcardPatterns: [
+      ...strictWords.map((word) => ({
+        word: word.word,
+        severity: word.severity,
+        strictMode: true,
+        pattern: word.normalizedWord,
+      })),
+      ...normalVariantWords.map((word) => ({
+        word: word.word,
+        severity: word.severity,
+        strictMode: false,
+        pattern: word.normalizedWord,
+      })),
+    ],
   };
 };
 
@@ -164,6 +328,29 @@ export const moderateTextWithCompiled = (
 
   extractMatches(compiled.strictMatcher, strictNormalized);
   extractMatches(compiled.normalMatcher, normalNormalized);
+  extractMatches(compiled.normalVariantsMatcher, strictNormalized);
+
+  const wildcardMatches = makeWildcardMatcher();
+  const wildcardCandidates = collectWildcardCandidates(original);
+
+  for (const candidate of wildcardCandidates) {
+    if (!candidate.hasLiteral) {
+      continue;
+    }
+
+    for (const payload of compiled.wildcardPatterns) {
+      if (!wildcardMatches(candidate.normalizedToken, payload.pattern)) {
+        continue;
+      }
+
+      detectedMatches.push({
+        word: payload.word,
+        start: candidate.start,
+        end: candidate.end,
+        severity: payload.severity,
+      });
+    }
+  }
 
   const matches = dedupeAndSortMatches(detectedMatches);
 

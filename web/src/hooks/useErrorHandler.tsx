@@ -40,12 +40,51 @@ export const useErrorHandler = () => {
     }
   }, [removeProfile, setProfile]);
 
+  const getModerationMessage = (data?: Record<string, any>): string | null => {
+    if (!data) return null;
+
+    const code = String(data.code || "");
+    const metaReasons = Array.isArray(data.meta?.reasons) ? data.meta.reasons.map(String) : [];
+    const fieldReasons = Array.isArray(data.errors) ? data.errors.map((e: any) => String(e?.message || "")) : [];
+    const reasons = [...metaReasons, ...fieldReasons].filter(Boolean);
+    const reasonsText = reasons.join(" ").toUpperCase();
+
+    const isModerationError =
+      code === "CONTENT_MODERATION_VIOLATION" ||
+      code === "CONTENT_POLICY_VIOLATION" ||
+      /CONTENT VIOLATES MODERATION POLICY/i.test(String(data.message || ""));
+
+    if (!isModerationError) return null;
+
+    if (reasonsText.includes("SELF_HARM")) {
+      return "We can’t allow content that encourages self-harm. If someone may be in immediate danger, please contact local emergency services right away.";
+    }
+
+    if (reasonsText.includes("BANNED_WORDS")) {
+      return "Your message contains blocked language. Please rephrase and avoid masked spellings with symbols or numbers.";
+    }
+
+    if (
+      reasonsText.includes("TOXICITY") ||
+      reasonsText.includes("INSULT") ||
+      reasonsText.includes("THREAT") ||
+      reasonsText.includes("IDENTITY_ATTACK") ||
+      reasonsText.includes("PROFANITY")
+    ) {
+      return "Your message may violate our safety policy (harassment, hate, threats, or abusive language). Please remove harmful content and try again.";
+    }
+
+    return "This message violates our content policy. Please edit and try again.";
+  };
+
   const extractErrorMessage = (
     error: AxiosError | Error,
     fallback: string
   ): string => {
     if (axios.isAxiosError(error)) {
       const data = error.response?.data as Record<string, any> | undefined;
+      const moderationMessage = getModerationMessage(data);
+      if (moderationMessage) return moderationMessage;
       return data?.message || data?.error || error.message || fallback;
     }
     return error.message || fallback;

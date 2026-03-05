@@ -61,11 +61,19 @@ describe("moderation matcher", () => {
     assert.equal(result.allowed, true);
   });
 
-  it("keeps normal-mode words exact only", () => {
+  it("detects normal-mode variants using strict-normalized patterns", () => {
     const normalOnlyCompiled = compileModerationConfig([buildWord("bitch", false, "mild")]);
 
     assert.equal(moderateTextWithCompiled("you are a bitch", normalOnlyCompiled).allowed, false);
-    assert.equal(moderateTextWithCompiled("you are a b1tch", normalOnlyCompiled).allowed, true);
-    assert.equal(moderateTextWithCompiled("you are a b.i.t.c.h", normalOnlyCompiled).allowed, true);
+    assert.equal(moderateTextWithCompiled("you are a b1tch", normalOnlyCompiled).allowed, false);
+    assert.equal(moderateTextWithCompiled("you are a b.i.t.c.h", normalOnlyCompiled).allowed, false);
+  });
+
+  it("supports smart wildcard matching for obfuscated tokens", () => {
+    const compiledWithWildcard = compileModerationConfig([buildWord("fuck", true, "severe")]);
+
+    assert.equal(moderateTextWithCompiled("f*ck", compiledWithWildcard).allowed, false);
+    assert.equal(moderateTextWithCompiled("f***k", compiledWithWildcard).allowed, false);
+    assert.equal(moderateTextWithCompiled("r*", compiledWithWildcard).allowed, true);
   });
 });
