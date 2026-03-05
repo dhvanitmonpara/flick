@@ -3,6 +3,7 @@ import CollegeRepo from "./college.repo";
 import recordAudit from "@/lib/record-audit";
 import { CollegeUpdates } from "./college.types";
 import logger from "@/core/logger";
+import { invalidateCollegeCaches } from "./college.cache-invalidation";
 
 class CollegeService {
   async createCollege(collegeData: {
@@ -42,6 +43,11 @@ class CollegeService {
       after: { id: newCollege.id },
       metadata: { emailDomain: newCollege.emailDomain }
     })
+
+    await invalidateCollegeCaches({
+      collegeId: newCollege.id,
+      nextEmailDomain: newCollege.emailDomain,
+    });
 
     return newCollege;
   }
@@ -119,6 +125,12 @@ class CollegeService {
       metadata: { emailDomain: updatedCollege.emailDomain }
     })
 
+    await invalidateCollegeCaches({
+      collegeId: updatedCollege.id,
+      previousEmailDomain: existing.emailDomain,
+      nextEmailDomain: updatedCollege.emailDomain,
+    });
+
     return updatedCollege;
   }
 
@@ -141,6 +153,11 @@ class CollegeService {
       before: { id: deletedCollege.id },
       metadata: { emailDomain: deletedCollege.emailDomain }
     })
+
+    await invalidateCollegeCaches({
+      collegeId: deletedCollege.id,
+      previousEmailDomain: existing.emailDomain,
+    });
 
     return deletedCollege;
   }

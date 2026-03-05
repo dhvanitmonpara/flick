@@ -28,8 +28,10 @@ const postCacheKeys = {
     return `post:many:v${version}:${page}:${limit}:${sortBy}:${sortOrder}:${topic || 'all'}:${collegeId || 'all'}:${branch || 'all'}:${userId || 'anonymous'}:${userCollegeId || 'none'}:${authorId || 'none'}:${blockerAuthId || 'none'}`;
   },
 
-  count: (topic?: string, collegeId?: string, branch?: string, userCollegeId?: string, authorId?: string, blockerAuthId?: string) =>
-    `post:count:${topic || 'all'}:${collegeId || 'all'}:${branch || 'all'}:${userCollegeId || 'none'}:${authorId || 'none'}:${blockerAuthId || 'none'}`,
+  count: async (topic?: string, collegeId?: string, branch?: string, userCollegeId?: string, authorId?: string, blockerAuthId?: string) => {
+    const version = (await cache.get<number>(`posts:list:version`, { bypassL1: true })) || 1;
+    return `post:count:v${version}:${topic || 'all'}:${collegeId || 'all'}:${branch || 'all'}:${userCollegeId || 'none'}:${authorId || 'none'}:${blockerAuthId || 'none'}`;
+  },
 };
 
 export default postCacheKeys;

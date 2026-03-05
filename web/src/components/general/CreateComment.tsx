@@ -202,7 +202,7 @@ function CreateComment({ parentCommentId, defaultData, commentId, setOpen, defau
                   else setWarningOpen(true);
                 }}
                 disabled={loading}
-                className="min-w-24"
+                className="min-w-24 flex-1"
               >
                 {content?.trim() ? "Discard" : "Cancel"}
               </Button>

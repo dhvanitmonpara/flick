@@ -38,8 +38,8 @@ const CommentRepo = {
       );
     },
 
-    countByPostId: (postId: string, dbTx?: DB) =>
-      cached(commentCacheKeys.postCount(postId), () => CommentAdapter.countByPostId(postId, dbTx))
+    countByPostId: async (postId: string, dbTx?: DB) =>
+      cached(await commentCacheKeys.postCount(postId), () => CommentAdapter.countByPostId(postId, dbTx))
   },
 
   Read: {

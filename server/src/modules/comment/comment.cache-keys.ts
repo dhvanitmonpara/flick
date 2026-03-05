@@ -3,7 +3,10 @@ import cache from "@/infra/services/cache";
 const commentCacheKeys = {
   id: (id: string) => `comment:id:${id}`,
   authorId: (id: string) => `comment:author:id:${id}`,
-  postCount: (postId: string) => `comment:count:post:${postId}`,
+  postCount: async (postId: string) => {
+    const version = (await cache.get<number>(`post:${postId}:comments:version`, { bypassL1: true })) || 1;
+    return `comment:count:post:${postId}:v${version}`;
+  },
   postCommentsVersionKey: (postId: string) => `post:${postId}:comments:version`,
   commentRepliesVersionKey: (commentId: string) => `comment:${commentId}:replies:version`,
   postComments: async (

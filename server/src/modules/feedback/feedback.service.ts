@@ -4,6 +4,8 @@ import recordAudit from "@/lib/record-audit";
 import logger from "@/core/logger";
 import { shouldSampleLog } from "@/lib/should-sample-log";
 import { observabilityContext } from "../audit/audit-context";
+import cache from "@/infra/services/cache";
+import feedbackCacheKeys from "./feedback.cache-keys";
 
 class FeedbackService {
   async createFeedback(feedbackData: {
@@ -34,6 +36,8 @@ class FeedbackService {
       after: { id: newFeedback.id },
       metadata: { type: newFeedback.type }
     })
+
+    await cache.incr(feedbackCacheKeys.listVersionKey());
 
     return newFeedback;
   }
@@ -118,6 +122,9 @@ class FeedbackService {
       after: { status },
     })
 
+    await cache.del(feedbackCacheKeys.id(id));
+    await cache.incr(feedbackCacheKeys.listVersionKey());
+
     return updatedFeedback;
   }
 
@@ -139,6 +146,9 @@ class FeedbackService {
       entityId: deletedFeedback.id,
       before: { status: existing.status, id: deletedFeedback.id },
     })
+
+    await cache.del(feedbackCacheKeys.id(id));
+    await cache.incr(feedbackCacheKeys.listVersionKey());
 
     return deletedFeedback;
   }

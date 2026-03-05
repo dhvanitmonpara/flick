@@ -78,6 +78,9 @@ class PostService {
       after: { id: newPost.id },
     });
 
+    await cache.incr(postCacheKeys.postVersionKey(newPost.id));
+    await cache.incr(postCacheKeys.postsListVersionKey());
+
     const postWithDetails = await PostRepo.Read.findByIdWithDetails(newPost.id, postData.postedBy);
 
     return postWithDetails || newPost;
@@ -284,6 +287,9 @@ class PostService {
       entityId: deletedPost.id,
       before: { id: deletedPost.id },
     });
+
+    await cache.incr(postCacheKeys.postVersionKey(deletedPost.id));
+    await cache.incr(postCacheKeys.postsListVersionKey());
 
     return deletedPost;
   }

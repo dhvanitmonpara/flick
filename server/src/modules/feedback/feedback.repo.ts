@@ -11,7 +11,7 @@ const FeedbackRepo = {
     findByIdWithUser: (id: string, dbTx?: DB) =>
       cached(feedbackCacheKeys.id(id), () => FeedbackAdapter.findByIdWithUser(id, dbTx)),
 
-    findAll: (
+    findAll: async (
       options?: {
         limit?: number;
         skip?: number;
@@ -26,18 +26,18 @@ const FeedbackRepo = {
       const status = options?.status;
 
       return cached(
-        feedbackCacheKeys.all(limit, skip, type, status),
+        await feedbackCacheKeys.all(limit, skip, type, status),
         () => FeedbackAdapter.findAll(options, dbTx)
       );
     },
 
-    countAll: (
+    countAll: async (
       filters?: {
         type?: string;
         status?: string;
       },
       dbTx?: DB
-    ) => cached(feedbackCacheKeys.count(filters?.type, filters?.status), () => FeedbackAdapter.countAll(filters, dbTx))
+    ) => cached(await feedbackCacheKeys.count(filters?.type, filters?.status), () => FeedbackAdapter.countAll(filters, dbTx))
   },
 
   Read: {

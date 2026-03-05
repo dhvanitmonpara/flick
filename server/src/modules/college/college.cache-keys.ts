@@ -1,8 +1,13 @@
+import cache from "@/infra/services/cache";
+
 const collegeCacheKeys = {
   id: (id: string) => `college:id:${id}`,
   emailDomain: (emailDomain: string) => `college:emailDomain:${emailDomain}`,
-  all: (filters?: { city?: string; state?: string }) =>
-    `college:all:${filters?.city || 'all'}:${filters?.state || 'all'}`,
+  listVersionKey: () => `college:list:version`,
+  all: async (filters?: { city?: string; state?: string }) => {
+    const version = (await cache.get<number>(`college:list:version`, { bypassL1: true })) || 1;
+    return `college:all:v${version}:${filters?.city || 'all'}:${filters?.state || 'all'}`;
+  },
 };
 
 export default collegeCacheKeys

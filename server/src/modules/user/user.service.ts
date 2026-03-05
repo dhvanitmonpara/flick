@@ -4,6 +4,7 @@ import logger from "@/core/logger";
 import recordAudit from "@/lib/record-audit";
 import AuthRepo from "../auth/auth.repo";
 import cache from "@/infra/services/cache";
+import userCacheKeys from "./user.cache-keys";
 
 class UserService {
   getUserProfileById = async (userId: string) => {
@@ -46,7 +47,8 @@ class UserService {
   acceptTerms = async (userId: string, authId: string) => {
     await UserRepo.Write.updateById(userId, { isAcceptedTerms: true });
 
-    await cache.del(`user:authId:${authId}`)
+    await cache.del(userCacheKeys.id(userId));
+    await cache.del(userCacheKeys.authId(authId));
 
     recordAudit({
       action: "user:accepted:terms",
@@ -69,6 +71,9 @@ class UserService {
     }
 
     const updatedUser = await UserRepo.Write.updateById(userId, { branch: updates.branch });
+
+    await cache.del(userCacheKeys.id(userId));
+    await cache.del(userCacheKeys.authId(existingUser.authId));
 
     recordAudit({
       action: "other:action",

@@ -47,7 +47,7 @@ const PostRepo = {
       );
     },
 
-    countAll: (
+    countAll: async (
       filters?: {
         topic?: string;
         collegeId?: string;
@@ -57,7 +57,7 @@ const PostRepo = {
         blockerAuthId?: string;
       },
       dbTx?: DB
-    ) => cached(postCacheKeys.count(filters?.topic, filters?.collegeId, filters?.branch, filters?.userCollegeId, filters?.authorId, filters?.blockerAuthId), () => PostAdapter.countAll(filters, dbTx)),
+    ) => cached(await postCacheKeys.count(filters?.topic, filters?.collegeId, filters?.branch, filters?.userCollegeId, filters?.authorId, filters?.blockerAuthId), () => PostAdapter.countAll(filters, dbTx)),
   },
 
   Read: {

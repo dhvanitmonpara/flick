@@ -9,15 +9,45 @@ import { AuditAction } from "@/shared/constants/audit/actions";
 import logger from "@/core/logger";
 import UserRepo from "../user/user.repo";
 import { assertNoBlockRelationBetweenUsers } from "../user/block.guard";
+import cache from "@/infra/services/cache";
+import voteCacheKeys from "./vote.cache-keys";
+import postCacheKeys from "../post/post.cache-keys";
+import commentCacheKeys from "../comment/comment.cache-keys";
 
 class VoteService {
+  private static resolveTargetAuthorId(target: unknown): string | null {
+    if (typeof target === "string") {
+      return target;
+    }
+    if (target && typeof target === "object" && "postedBy" in target) {
+      const postedBy = (target as { postedBy?: unknown }).postedBy;
+      return typeof postedBy === "string" ? postedBy : null;
+    }
+    return null;
+  }
+
+  private static async invalidateWriteCaches(userId: string, targetType: "post" | "comment", targetId: string) {
+    await cache.del(voteCacheKeys.userIdAndTarget(userId, targetId));
+
+    if (targetType === "post") {
+      await cache.incr(postCacheKeys.postVersionKey(targetId));
+      await cache.incr(postCacheKeys.postsListVersionKey());
+      return;
+    }
+
+    const comment = await CommentRepo.Read.findById(targetId);
+    if (comment) {
+      await cache.incr(commentCacheKeys.postCommentsVersionKey(comment.postId));
+    }
+  }
+
   static async createVote(userId: string, targetType: "post" | "comment", targetId: string, voteType: "upvote" | "downvote") {
     logger.info("Creating vote", { userId, targetType, targetId, voteType });
 
     const doesTargetedPost = targetType === "post"
     const isUpvoted = voteType === "upvote"
 
-    return await runTransaction(async tx => {
+    const createdVote = await runTransaction(async tx => {
       const TargetRepo = doesTargetedPost ? PostRepo : CommentRepo;
       const target = await TargetRepo.CachedRead.findAuthorId(targetId, tx);
 
@@ -26,9 +56,14 @@ class VoteService {
         throw HttpError.notFound(`${targetType} not found`);
       }
 
+      const ownerId = VoteService.resolveTargetAuthorId(target);
+      if (!ownerId) {
+        throw HttpError.internal("Failed to resolve target owner");
+      }
+
       await assertNoBlockRelationBetweenUsers(
         userId,
-        target.postedBy,
+        ownerId,
         "VoteService.createVote",
         tx
       );
@@ -45,7 +80,6 @@ class VoteService {
         throw HttpError.internal("Failed to create vote");
       }
 
-      const ownerId = target.postedBy;
       const karmaChange = isUpvoted ? 1 : -1;
 
       await UserRepo.Write.updateKarma(karmaChange, ownerId, tx);
@@ -73,7 +107,10 @@ class VoteService {
       });
 
       return createdVote
-    })
+    });
+
+    await VoteService.invalidateWriteCaches(userId, targetType, targetId);
+    return createdVote;
   }
 
   static async patchVote(userId: string, targetType: "post" | "comment", targetId: string, voteType: "upvote" | "downvote") {
@@ -102,14 +139,18 @@ class VoteService {
         throw HttpError.notFound(`${targetType} not found`);
       }
 
+      const ownerId = VoteService.resolveTargetAuthorId(target);
+      if (!ownerId) {
+        throw HttpError.internal("Failed to resolve target owner");
+      }
+
       await assertNoBlockRelationBetweenUsers(
         userId,
-        target.postedBy,
+        ownerId,
         "VoteService.patchVote",
         tx
       );
 
-      const ownerId = target.postedBy;
       const karmaChange = (voteType === "upvote" ? 1 : -1) * 2;
 
       await UserRepo.Write.updateKarma(karmaChange, ownerId, tx)
@@ -125,7 +166,9 @@ class VoteService {
       });
 
       return { message: "Vote patched successfully to the requested type", vote: updatedVote, before: existingVote.voteType }
-    })
+    });
+
+    await VoteService.invalidateWriteCaches(userId, targetType, targetId);
 
     const action: AuditAction = `user:switched:vote:on:${targetType}`;
 
@@ -163,7 +206,10 @@ class VoteService {
         throw HttpError.notFound(`${targetType} not found`);
       }
 
-      const ownerId = target.postedBy;
+      const ownerId = VoteService.resolveTargetAuthorId(target);
+      if (!ownerId) {
+        throw HttpError.internal("Failed to resolve target owner");
+      }
       const karmaChange = deletedVote.voteType === "upvote" ? -1 : 1;
 
       await UserRepo.Write.updateKarma(karmaChange, ownerId, tx)
@@ -178,7 +224,9 @@ class VoteService {
       });
 
       return deletedVote.id
-    })
+    });
+
+    await VoteService.invalidateWriteCaches(userId, targetType, targetId);
 
     const action: AuditAction = `user:deleted:vote:on:${targetType}`;
 

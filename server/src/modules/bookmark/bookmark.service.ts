@@ -4,6 +4,9 @@ import logger from "@/core/logger";
 import PostRepo from "../post/post.repo";
 import UserRepo from "../user/user.repo";
 import { assertNoBlockRelationBetweenUsers } from "../user/block.guard";
+import cache from "@/infra/services/cache";
+import bookmarkCacheKeys from "./bookmark.cache-keys";
+import postCacheKeys from "../post/post.cache-keys";
 
 class BookmarkService {
   async createBookmark(userId: string, postId: string) {
@@ -41,6 +44,10 @@ class BookmarkService {
     }
 
     const newBookmark = await BookmarkRepo.Write.createBookmark({ userId, postId });
+    await cache.del(bookmarkCacheKeys.multiId(userId, postId));
+    await cache.del(bookmarkCacheKeys.id(userId));
+    await cache.incr(postCacheKeys.postVersionKey(postId));
+    await cache.incr(postCacheKeys.postsListVersionKey());
     logger.info("Bookmark created successfully", { userId, postId, bookmarkId: newBookmark.id });
     return newBookmark;
   }
@@ -86,7 +93,12 @@ class BookmarkService {
           errors: [{ field: "postId", message: "Bookmark not found for this user" }],
         });
     }
-    
+
+    await cache.del(bookmarkCacheKeys.multiId(userId, postId));
+    await cache.del(bookmarkCacheKeys.id(userId));
+    await cache.incr(postCacheKeys.postVersionKey(postId));
+    await cache.incr(postCacheKeys.postsListVersionKey());
+
     logger.info("Bookmark deleted successfully", { userId, postId });
     return deleted;
   }
