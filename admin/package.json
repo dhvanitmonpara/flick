@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@flick/admin": "workspace:*",
     "@google/generative-ai": "^0.21.0",
     "@hookform/resolvers": "^4.0.0",
     "@monaco-editor/react": "^4.6.0",
