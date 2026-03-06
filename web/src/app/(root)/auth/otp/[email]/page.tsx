@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { AxiosError } from "axios";
 import { toast } from 'sonner'
 import { useParams, useRouter } from "next/navigation";
@@ -19,6 +19,7 @@ const OtpVerificationPage = () => {
   const [isResending, setIsResending] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [isOtpInvalid, setIsOtpInvalid] = useState(false);
+  const isVerifiedRef = useRef(false);
 
   const { email } = useParams()
   const decodedEmail = decodeURIComponent(email as string)
@@ -71,7 +72,10 @@ const OtpVerificationPage = () => {
   };
 
   const verify = async () => {
+    if (isVerifiedRef.current || isLoading) return
+    
     try {
+      isVerifiedRef.current = true
       setIsLoading(true)
 
       if (!email) {
@@ -83,6 +87,7 @@ const OtpVerificationPage = () => {
 
       if (!isVerified) {
         toast.error("failed to verify otp")
+        isVerifiedRef.current = false
         return
       }
 
@@ -91,6 +96,7 @@ const OtpVerificationPage = () => {
         navigate(`${onVerifiedRedirect}/${decodedEmail}`);
       }
     } catch (error) {
+      isVerifiedRef.current = false
       if (error instanceof AxiosError) {
         if (error.response?.status === 400) {
           toast.warning("wrong otp try again");

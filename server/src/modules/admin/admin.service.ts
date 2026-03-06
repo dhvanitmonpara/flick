@@ -52,35 +52,55 @@ class AdminService {
 
   async createCollege(data: { name: string; emailDomain: string; city: string; state: string; profile?: string; branches?: string[] }) {
     logger.info("Creating new college", { name: data.name });
-    const newCollege = await AdminRepo.Write.createCollege(data);
+
+    const { branches, ...collegeInfo } = data;
+    const newCollege = await AdminRepo.Write.createCollege(collegeInfo);
+
+    if (branches && branches.length > 0) {
+      await CollegeRepo.Write.setCollegeBranches(newCollege.id, branches);
+      logger.info("Branches assigned to college", { collegeId: newCollege.id, branches });
+    }
 
     await invalidateCollegeCaches({
       collegeId: newCollege.id,
       nextEmailDomain: newCollege.emailDomain,
+      invalidateBranches: !!branches,
     });
 
     logger.info("New college created successfully", { id: newCollege.id });
-    return newCollege;
+    return { ...newCollege, branches: branches ?? [] };
   }
 
   async updateCollege(id: string, updates: Partial<{ name: string; emailDomain: string; city: string; state: string; profile: string; branches: string[] }>) {
     logger.info("Updating college", { id, updates });
     const existingCollege = await CollegeRepo.Read.findById(id);
-    const updatedCollege = await AdminRepo.Write.updateCollege(id, updates);
 
-    if (updatedCollege) {
-      await invalidateCollegeCaches({
-        collegeId: updatedCollege.id,
-        previousEmailDomain: existingCollege?.emailDomain ?? null,
-        nextEmailDomain: updatedCollege.emailDomain,
-      });
+    const { branches, ...collegeUpdates } = updates;
+    const updatedCollege = await AdminRepo.Write.updateCollege(id, collegeUpdates);
 
-      logger.info("College updated successfully", { id: updatedCollege.id });
-    } else {
+    if (!updatedCollege) {
       logger.warn("Attempted to update non-existent college", { id });
+      return null;
     }
 
-    return updatedCollege;
+    if (branches) {
+      await CollegeRepo.Write.setCollegeBranches(id, branches);
+      logger.info("College branches updated", { collegeId: id, branches });
+    }
+
+    await invalidateCollegeCaches({
+      collegeId: updatedCollege.id,
+      previousEmailDomain: existingCollege?.emailDomain ?? null,
+      nextEmailDomain: updatedCollege.emailDomain,
+      invalidateBranches: !!branches,
+    });
+
+    logger.info("College updated successfully", { id: updatedCollege.id });
+
+    return {
+      ...updatedCollege,
+      branches: branches ?? (existingCollege && 'branches' in existingCollege ? existingCollege.branches : []),
+    };
   }
 }
 

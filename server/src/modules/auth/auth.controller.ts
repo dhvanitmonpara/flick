@@ -126,6 +126,11 @@ class AuthController {
     return HttpResponse.ok("Onboarding completed successfully!", data);
   }
 
+  static async getCurrentUser(req: Request) {
+    const user = req.user;
+    return HttpResponse.ok("User retrieved successfully", { user });
+  }
+
   static async deleteAccount(req: Request, res: Response) {
     const payload = authSchemas.deleteAccountSchema.parse(req.body ?? {});
     await authService.deleteAccount(req, res, payload);

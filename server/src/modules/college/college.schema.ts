@@ -6,7 +6,7 @@ export const CreateCollegeSchema = z.object({
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
   profile: z.url("Profile must be a valid URL").optional(),
-  branchIds: z.array(z.string().uuid("Invalid branch ID format")).optional(),
+  branches: z.array(z.string().uuid("Invalid branch ID format")).optional(),
 });
 
 export const UpdateCollegeSchema = z.object({

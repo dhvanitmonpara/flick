@@ -1,7 +1,7 @@
 import { and, eq, ilike, inArray, desc, asc, sql } from "drizzle-orm";
 import db from "@/infra/db/index";
 import type { DB } from "@/infra/db/types";
-import { users, auth, colleges, contentReports, posts, comments, auditLogs, feedbacks } from "../tables";
+import { users, auth, colleges, contentReports, posts, comments, auditLogs, feedbacks, collegeBranches } from "../tables";
 
 export const getManageUsersQuery = async (username?: string, email?: string, dbTx?: DB) => {
   const client = dbTx ?? db;
@@ -154,7 +154,26 @@ export const getAllColleges = async (dbTx?: DB) => {
     })
     .from(colleges);
 
-  return fetchedColleges;
+  const collegeIds = fetchedColleges.map(c => c.id);
+  
+  if (collegeIds.length === 0) return fetchedColleges;
+
+  const branchIdRecords = await client
+    .select({ collegeId: collegeBranches.collegeId, branchId: collegeBranches.branchId })
+    .from(collegeBranches)
+    .where(inArray(collegeBranches.collegeId, collegeIds));
+
+  const branchMap = new Map<string, string[]>();
+  for (const record of branchIdRecords) {
+    const existing = branchMap.get(record.collegeId) || [];
+    existing.push(record.branchId);
+    branchMap.set(record.collegeId, existing);
+  }
+
+  return fetchedColleges.map(college => ({
+    ...college,
+    branches: branchMap.get(college.id) || [],
+  }));
 };
 
 export const getLogs = async (page: number, limit: number, sortBy: string, sortOrder: "asc" | "desc", dbTx?: DB) => {
@@ -251,9 +270,12 @@ export const createCollege = async (data: { name: string; emailDomain: string; c
 
 export const updateCollege = async (id: string, updates: Partial<typeof colleges.$inferInsert>, dbTx?: DB) => {
   const client = dbTx ?? db;
+
+  const { branches: _branches, ...collegeUpdates } = updates as Partial<typeof colleges.$inferInsert> & { branches?: string[] };
+
   const [updatedCollege] = await client
     .update(colleges)
-    .set({ ...updates, updatedAt: new Date() })
+    .set({ ...collegeUpdates, updatedAt: new Date() })
     .where(eq(colleges.id, id))
     .returning();
 

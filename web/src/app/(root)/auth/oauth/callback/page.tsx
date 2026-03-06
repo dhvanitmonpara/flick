@@ -3,7 +3,7 @@
 import { useForm, Controller } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@/lib/zod-resolver"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -14,10 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { branch, defaultBranches } from "@/constants/branch"
+import { branch } from "@/constants/branch"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { authApi } from "@/services/api/auth"
+import { collegeApi, Branch } from "@/services/api/college"
 
 const signInSchema = z.object({
   branch: branch,
@@ -27,10 +28,31 @@ type SignInFormData = z.infer<typeof signInSchema>
 
 function OAuthSetupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [branches, setBranches] = useState<Branch[]>([])
+  const [isLoadingBranches, setIsLoadingBranches] = useState(true)
+  const [collegeId, setCollegeId] = useState<string | null>(null)
 
   const email = useSearchParams().get("email")
 
   const navigate = useRouter().push
+
+  useEffect(() => {
+    const fetchUserAndBranches = async () => {
+      try {
+        const profile = await authApi.me()
+        if (profile.collegeId) {
+          setCollegeId(profile.collegeId)
+          const collegeBranches = await collegeApi.getCollegeBranches(profile.collegeId)
+          setBranches(collegeBranches)
+        }
+      } catch (error) {
+        console.error("Failed to fetch user or branches:", error)
+      } finally {
+        setIsLoadingBranches(false)
+      }
+    }
+    fetchUserAndBranches()
+  }, [])
 
   const {
     handleSubmit,
@@ -39,7 +61,7 @@ function OAuthSetupPage() {
   } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
-      branch: "CSE"
+      branch: ""
     }
   })
 
@@ -87,9 +109,17 @@ function OAuthSetupPage() {
                 <SelectValue placeholder="Branch" />
               </SelectTrigger>
               <SelectContent className="bg-zinc-200 dark:bg-zinc-800">
-                {defaultBranches.map((branchValue) => (
-                  <SelectItem className="focus:bg-zinc-300 dark:focus:bg-zinc-700" key={branchValue} value={branchValue}>{branchValue}</SelectItem>
-                ))}
+                {isLoadingBranches ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </div>
+                ) : branches.length > 0 ? (
+                  branches.map((branchItem) => (
+                    <SelectItem className="focus:bg-zinc-300 dark:focus:bg-zinc-700" key={branchItem.id} value={branchItem.name}>{branchItem.name}</SelectItem>
+                  ))
+                ) : (
+                  <div className="p-4 text-sm text-zinc-500">No branches available</div>
+                )}
               </SelectContent>
             </Select>
           )}

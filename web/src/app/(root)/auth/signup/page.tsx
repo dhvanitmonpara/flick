@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@/lib/zod-resolver"
 import { Input } from "@/components/ui/input"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Loader2 } from "lucide-react"
 import { IoMdEye, IoMdEyeOff } from "react-icons/io"
 import { Button } from "@/components/ui/button"
@@ -40,6 +40,7 @@ function SignUpPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isPasswordShowing, setIsPasswordShowing] = useState(false);
   const [isConfirmPasswordShowing, setIsConfirmPasswordShowing] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   const { data: session, isPending } = authClient.useSession()
   const navigate = useRouter().push
@@ -60,11 +61,16 @@ function SignUpPage() {
   })
 
   const onSubmit = async (data: SignUpFormData) => {
+    if (isSubmittingRef.current) return
+    
+    isSubmittingRef.current = true
     setIsSubmitting(true)
     try {
 
       if (!data.email || !data.password) {
         toast.error("Please fill all the fields")
+        isSubmittingRef.current = false
+        setIsSubmitting(false)
         return
       }
 
@@ -75,6 +81,8 @@ function SignUpPage() {
 
       if (!response.success) {
         toast.error("Failed to initialize user")
+        isSubmittingRef.current = false
+        setIsSubmitting(false)
         return
       }
 
@@ -82,7 +90,7 @@ function SignUpPage() {
       navigate(`/auth/otp/${data.email}`)
     } catch (err: unknown) {
       toastError(err, "Failed to initialize user")
-    } finally {
+      isSubmittingRef.current = false
       setIsSubmitting(false)
     }
   }

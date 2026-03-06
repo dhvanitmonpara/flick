@@ -403,7 +403,7 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
               <Label>Branches</Label>
               <div className="grid grid-cols-2 gap-2 mt-2">
                 {availableBranches.map((branch) => {
-                  const isChecked = field.value?.includes(branch.code);
+                  const isChecked = field.value?.includes(branch.id);
                   return (
                     <label key={branch.id} className="flex items-center space-x-2 text-sm text-zinc-300">
                       <input
@@ -412,9 +412,9 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
                         onChange={(e) => {
                           const checked = e.target.checked;
                           if (checked) {
-                            field.onChange([...(field.value || []), branch.code]);
+                            field.onChange([...(field.value || []), branch.id]);
                           } else {
-                            field.onChange((field.value || []).filter((v) => v !== branch.code));
+                            field.onChange((field.value || []).filter((v) => v !== branch.id));
                           }
                         }}
                         className="rounded border-zinc-700 bg-zinc-800 text-zinc-100 focus:ring-zinc-200"

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@/lib/zod-resolver"
@@ -15,11 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { branch, defaultBranches } from "@/constants/branch"
-import { authApi } from "@/services/api/auth"
+import { branch } from "@/constants/branch"
+import { collegeApi, Branch } from "@/services/api/college"
 import { toastError } from "@/utils/toast-error"
 import { AxiosError } from "axios"
 import useProfileStore from "@/store/profileStore"
+import { authApi } from "@/services/api/auth"
 
 const onboardingSchema = z.object({
   branch: branch,
@@ -29,8 +30,35 @@ type OnboardingFormData = z.infer<typeof onboardingSchema>
 
 function OnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [branches, setBranches] = useState<Branch[]>([])
+  const [isLoadingBranches, setIsLoadingBranches] = useState(true)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const collegeIdFromUrl = searchParams.get("collegeId")
+  const profile = useProfileStore((state) => state.profile)
   const setProfile = useProfileStore((state) => state.setProfile)
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      let collegeId = collegeIdFromUrl || profile?.collegeId || null
+
+      if (!collegeId && profile?.college && typeof profile.college === 'object' && 'id' in profile.college) {
+        collegeId = (profile.college as { id: string }).id
+      }
+
+      try {
+        if (collegeId) {
+          const collegeBranches = await collegeApi.getCollegeBranches(collegeId)
+          setBranches(collegeBranches)
+        }
+      } catch (error) {
+        console.error("Failed to fetch branches:", error)
+      } finally {
+        setIsLoadingBranches(false)
+      }
+    }
+    fetchBranches()
+  }, [collegeIdFromUrl, profile])
 
   const {
     handleSubmit,
@@ -39,7 +67,7 @@ function OnboardingPage() {
   } = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
-      branch: "CSE"
+      branch: ""
     }
   })
 
@@ -85,9 +113,17 @@ function OnboardingPage() {
                   <SelectValue placeholder="Select your branch" />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-200 dark:bg-zinc-800">
-                  {defaultBranches.map((branchValue) => (
-                    <SelectItem className="focus:bg-zinc-300 dark:focus:bg-zinc-700" key={branchValue} value={branchValue}>{branchValue}</SelectItem>
-                  ))}
+                  {isLoadingBranches ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : branches.length > 0 ? (
+                    branches.map((branchItem) => (
+                      <SelectItem className="focus:bg-zinc-300 dark:focus:bg-zinc-700" key={branchItem.id} value={branchItem.name}>{branchItem.name}</SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-4 text-sm text-zinc-500">No branches available</div>
+                  )}
                 </SelectContent>
               </Select>
             )}

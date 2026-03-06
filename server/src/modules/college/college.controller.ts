@@ -6,7 +6,7 @@ import * as collegeSchemas from "./college.schema";
 @Controller()
 class CollegeController {
   static async createCollege(req: Request) {
-    const { name, emailDomain, city, state, profile, branchIds } = collegeSchemas.CreateCollegeSchema.parse(req.body);
+    const { name, emailDomain, city, state, profile, branches } = collegeSchemas.CreateCollegeSchema.parse(req.body);
 
     const newCollege = await collegeService.createCollege({
       name,
@@ -14,7 +14,7 @@ class CollegeController {
       city,
       state,
       profile,
-      branchIds,
+      branches,
     });
 
     return HttpResponse.created("College created successfully", {

@@ -1,7 +1,19 @@
 import { AxiosResponse } from "axios";
 import { http } from "../http";
 
+export interface UserProfile {
+  id: string;
+  username: string;
+  collegeId: string;
+  branch: string | null;
+  status: string;
+}
+
 export const authApi = {
+  me: async (): Promise<UserProfile> => {
+    const response: AxiosResponse<{ user: UserProfile }> = await http.get("/auth/me");
+    return response.data.user;
+  },
   otp: {
     send: async (email: string) => {
       const mailResponse: AxiosResponse = await http.post("/auth/otp/send", { email });

@@ -7,7 +7,13 @@ const requireOnboardedUser = async (req: Request, _: Response, next: NextFunctio
   }
 
   if (req.user.status === "ONBOARDING") {
-    throw HttpError.forbidden("User not onboarded", { code: "USER_NOT_ONBOARDED" });
+    throw HttpError.forbidden("User not onboarded", { 
+      code: "USER_NOT_ONBOARDED",
+      meta: { 
+        source: "requireOnboardedUser",
+        collegeId: req.user.collegeId,
+      } 
+    });
   }
 
   next();

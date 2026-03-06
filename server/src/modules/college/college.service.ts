@@ -12,7 +12,7 @@ class CollegeService {
     city: string;
     state: string;
     profile?: string;
-    branchIds?: string[];
+    branches?: string[];
   }) {
     logger.info("Creating college", { emailDomain: collegeData.emailDomain, name: collegeData.name });
 
@@ -33,13 +33,13 @@ class CollegeService {
       });
     }
 
-    const { branchIds, ...collegeInfo } = collegeData;
+    const { branches, ...collegeInfo } = collegeData;
     const newCollege = await CollegeRepo.Write.create(collegeInfo);
     logger.info("College created successfully", { collegeId: newCollege.id, emailDomain: newCollege.emailDomain });
 
-    if (branchIds && branchIds.length > 0) {
-      await CollegeRepo.Write.setCollegeBranches(newCollege.id, branchIds);
-      logger.info("Branches assigned to college", { collegeId: newCollege.id, branchIds });
+    if (branches && branches.length > 0) {
+      await CollegeRepo.Write.setCollegeBranches(newCollege.id, branches);
+      logger.info("Branches assigned to college", { collegeId: newCollege.id, branches });
     }
 
     await recordAudit({

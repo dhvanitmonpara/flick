@@ -23,6 +23,7 @@ router.post("/otp/login/verify", AuthController.verifyLoginOtp);
 // Protected routes
 router.use(authenticated);
 
+router.get("/me", injectUser, AuthController.getCurrentUser);
 router.post("/onboarding/complete", injectUser, AuthController.completeOnboarding);
 router.post("/logout", AuthController.logoutUser);
 router.post("/logout-all", AuthController.logoutAllDevices);

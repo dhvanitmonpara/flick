@@ -9,7 +9,17 @@ export const findById = async (id: string, dbTx?: DB) => {
     where: eq(colleges.id, id),
   });
 
-  return college;
+  if (!college) return college;
+
+  const branchIds = await client
+    .select({ branchId: collegeBranches.branchId })
+    .from(collegeBranches)
+    .where(eq(collegeBranches.collegeId, id));
+
+  return {
+    ...college,
+    branches: branchIds.map(b => b.branchId),
+  };
 };
 
 export const findByEmailDomain = async (emailDomain: string, dbTx?: DB) => {
@@ -39,7 +49,26 @@ export const findAll = async (filters?: { city?: string; state?: string }, dbTx?
     orderBy: (colleges, { asc }) => [asc(colleges.name)],
   });
 
-  return collegeList;
+  const collegeIds = collegeList.map(c => c.id);
+  
+  if (collegeIds.length === 0) return collegeList;
+
+  const branchIdRecords = await client
+    .select({ collegeId: collegeBranches.collegeId, branchId: collegeBranches.branchId })
+    .from(collegeBranches)
+    .where(inArray(collegeBranches.collegeId, collegeIds));
+
+  const branchMap = new Map<string, string[]>();
+  for (const record of branchIdRecords) {
+    const existing = branchMap.get(record.collegeId) || [];
+    existing.push(record.branchId);
+    branchMap.set(record.collegeId, existing);
+  }
+
+  return collegeList.map(college => ({
+    ...college,
+    branches: branchMap.get(college.id) || [],
+  }));
 };
 
 export const create = async (college: typeof colleges.$inferInsert, dbTx?: DB) => {
