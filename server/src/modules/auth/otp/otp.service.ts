@@ -1,0 +1,44 @@
+import cache from "@/infra/services/cache/index";
+import mailService from "@/infra/services/mail";
+import CryptoTools from "@/lib/crypto-tools";
+import { HttpError } from "@/core/http";
+import logger from "@/core/logger";
+
+class OtpService {
+  async sendOtp(signupId: string, email: string) {
+    const data = await mailService.send(email, "OTP", {
+      username: email,
+      projectName: "Flick",
+    });
+
+    if (data.status === "error" || !data?.otp) {
+      throw HttpError.internal("OTP send failed");
+    }
+
+    const hashed = await CryptoTools.otp.hash(data.otp);
+
+    const stored = await cache.set(`otp:${signupId}`, hashed, 900);
+    if (!stored) {
+      logger.error("Failed to set OTP in cache", {
+        source: "otpService.sendOtp",
+      })
+      throw HttpError.internal("Failed to set OTP in cache", {
+        meta: { source: "send_otp" },
+      });
+    }
+
+    return { messageId: data.id };
+  }
+
+  async verifyOtp(signupId: string, otp: string) {
+    const cached = await cache.get<string>(`otp:${signupId}`);
+    if (!cached) return false
+
+    const isMatch = await CryptoTools.otp.compare(otp, cached);
+    if (isMatch) await cache.del(`otp:${signupId}`);
+
+    return isMatch;
+  }
+}
+
+export default new OtpService();

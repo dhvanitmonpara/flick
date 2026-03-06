@@ -1,0 +1,24 @@
+--- /home/dhvanit/Desktop/Production/flick/admin/src/components/forms/CollegeForm.tsx
++++ /home/dhvanit/Desktop/Production/flick/admin/src/components/forms/CollegeForm.tsx
+@@ -28,6 +28,7 @@
+   emailDomain: z.string().min(3, { message: "Email domain must be at least 3 characters" }),
+   city: z.enum(availableCities),
+   state: z.enum(availableStates),
++  branches: z.string().min(1, { message: "At least one branch is required" }),
+ });
+ 
+ type CollegeFormValues = z.infer<typeof collegeSchema>;
+@@ -52,11 +53,13 @@
+       profile: defaultData.profile,
+       city: availableCities.includes(defaultData.city as any) ? defaultData.city as (typeof availableCities)[number] : availableCities[0],
+       state: availableStates.includes(defaultData.state as any) ? defaultData.state as (typeof availableStates)[number] : availableStates[0],
++      branches: defaultData.branches?.join(", ") || "",
+     } : {
+       name: "",
+       emailDomain: "",
+       profile: "",
+       city: availableCities[0],
+       state: availableStates[0],
++      branches: "",
+     }
+   });

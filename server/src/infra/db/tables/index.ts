@@ -1,0 +1,14 @@
+export { bookmarks } from "./bookmark.table";
+export { comments } from "./comment.table";
+export { feedbacks } from "./feedback.table";
+export { auditLogs } from "./audit-log.table";
+export { posts } from "./post.table";
+export { votes } from "./vote.table";
+export { colleges } from "./college.table";
+export { contentReports } from "./content-report.table";
+export { platformUser as users, session, account, verification, twoFactor, auth } from "./auth.table";
+export { notifications } from "./notification.table";
+export { bannedWords } from "./banned-word.table";
+export { userBlocks } from "./user-block.table";
+export { branches } from "./branch.table";
+export { collegeBranches } from "./college-branch.table";

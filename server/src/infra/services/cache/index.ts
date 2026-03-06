@@ -1,0 +1,6 @@
+import { createCacheProvider, createSessionStore } from "./cache.module";
+
+const cache = createCacheProvider();
+const redis = createSessionStore();
+export default cache;
+export { redis };

@@ -1,9 +1,18 @@
 {
-  "cSpell.words": [
-    "Downvoted",
-    "downvotes",
-    "numerified",
-    "Permadead",
-    "upvotes"
-  ]
+	"cSpell.words": [
+		"Downvoted",
+		"downvotes",
+		"numerified",
+		"Permadead",
+		"upvotes"
+	],
+	"editor.defaultFormatter": "biomejs.biome",
+	"editor.formatOnSave": true,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.biome": "explicit",
+		"source.organizeImports.biome": "explicit"
+	},
+	"files.associations": {
+		"*.hbs": "handlebars"
+	},
 }

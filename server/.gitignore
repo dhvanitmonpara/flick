@@ -1,3 +1,6 @@
+# Note that biome also uses this file to ignore files so be sure before updating this file
+# or just change config in biome.json
+
 # Logs
 logs
 *.log
@@ -9,6 +12,7 @@ lerna-debug.log*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+pnpm-debug.log*
 
 # Runtime data
 pids
@@ -62,6 +66,45 @@ web_modules/
 
 # Optional REPL history
 .node_repl_history
+# Diagnostic reports
+report.*.json
+
+# Dependency directories
+node_modules/
+
+# Coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Build / output directories
+dist/
+build/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.*.local
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+
+# Serverless
+.serverless/
+
+# IDE files
+.vscode/
+.idea/
+
+# Optional npm / yarn files
+.yarn/
+.yarnrc.yml
+.pnpm-store/
+.npm/
 
 # Output of 'npm pack'
 *.tgz
@@ -118,3 +161,9 @@ dist
 .pnp.*
 
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Node
+# REPL history
+.node_repl_history
+
+# Misc
+.DS_Store
+Thumbs.db
