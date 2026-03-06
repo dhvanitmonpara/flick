@@ -24,6 +24,8 @@ const signInSchema = z.object({
   branch: branch,
 })
 
+export const dynamic = "force-dynamic";
+
 type SignInFormData = z.infer<typeof signInSchema>
 
 function OAuthSetupPage() {
