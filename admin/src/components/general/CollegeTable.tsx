@@ -54,6 +54,11 @@ export function CollegeTable({ data, setCollege }: CollegeTableProps) {
     { key: "emailDomain", label: "Email Domain" },
     { key: "city", label: "City" },
     { key: "state", label: "State" },
+    {
+      key: "branches",
+      label: "Branches",
+      render: (row) => <span>{row.branches?.join(", ") || ""}</span>
+    },
   ];
 
   const renderActions = (college: College) => (

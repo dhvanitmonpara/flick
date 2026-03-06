@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { branch } from "@/constants/branch"
+import { branch, defaultBranches } from "@/constants/branch"
 import { authApi } from "@/services/api/auth"
 import { toastError } from "@/utils/toast-error"
 import { AxiosError } from "axios"
@@ -85,7 +85,7 @@ function OnboardingPage() {
                   <SelectValue placeholder="Select your branch" />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-200 dark:bg-zinc-800">
-                  {branch.options.map((branchValue) => (
+                  {defaultBranches.map((branchValue) => (
                     <SelectItem className="focus:bg-zinc-300 dark:focus:bg-zinc-700" key={branchValue} value={branchValue}>{branchValue}</SelectItem>
                   ))}
                 </SelectContent>

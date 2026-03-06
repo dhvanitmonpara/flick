@@ -12,7 +12,10 @@ const CollegeRepo = {
       cached(collegeCacheKeys.emailDomain(emailDomain), () => CollegeAdapter.findByEmailDomain(emailDomain, dbTx)),
 
     findAll: async (filters?: { city?: string; state?: string }, dbTx?: DB) =>
-      cached(await collegeCacheKeys.all(filters), () => CollegeAdapter.findAll(filters, dbTx))
+      cached(await collegeCacheKeys.all(filters), () => CollegeAdapter.findAll(filters, dbTx)),
+
+    findBranchesByCollegeId: (collegeId: string, dbTx?: DB) =>
+      cached(collegeCacheKeys.branches(collegeId), () => CollegeAdapter.findBranchesByCollegeId(collegeId, dbTx)),
   },
 
   Read: {
@@ -20,13 +23,16 @@ const CollegeRepo = {
 
     findByEmailDomain: (emailDomain: string, dbTx?: DB) => CollegeAdapter.findByEmailDomain(emailDomain, dbTx),
 
-    findAll: (filters?: { city?: string; state?: string }, dbTx?: DB) => CollegeAdapter.findAll(filters, dbTx)
+    findAll: (filters?: { city?: string; state?: string }, dbTx?: DB) => CollegeAdapter.findAll(filters, dbTx),
+
+    findBranchesByCollegeId: (collegeId: string, dbTx?: DB) => CollegeAdapter.findBranchesByCollegeId(collegeId, dbTx),
   },
 
   Write: {
     create: CollegeAdapter.create,
     updateById: CollegeAdapter.updateById,
-    deleteById: CollegeAdapter.deleteById
+    deleteById: CollegeAdapter.deleteById,
+    setCollegeBranches: CollegeAdapter.setCollegeBranches,
   }
 }
 

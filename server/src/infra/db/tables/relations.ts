@@ -6,6 +6,9 @@ import { votes } from "./vote.table";
 import { contentReports } from "./content-report.table";
 import { comments } from "./comment.table";
 import { userBlocks } from "./user-block.table";
+import { colleges } from "./college.table";
+import { branches } from "./branch.table";
+import { collegeBranches } from "./college-branch.table";
 
 // Auth — has user blocks
 export const authUserBlocksRelations = relations(auth, ({ many }) => ({
@@ -67,5 +70,27 @@ export const contentReportRelations = relations(contentReports, ({ one }) => ({
   comment: one(comments, {
     fields: [contentReports.commentId],
     references: [comments.id],
+  }),
+}));
+
+// College — has many branches (many-to-many via junction table)
+export const collegesRelations = relations(colleges, ({ many }) => ({
+  collegeBranches: many(collegeBranches),
+}));
+
+// Branch — has many colleges (many-to-many via junction table)
+export const branchesRelations = relations(branches, ({ many }) => ({
+  collegeBranches: many(collegeBranches),
+}));
+
+// Junction table — belongs to college and branch
+export const collegeBranchesRelations = relations(collegeBranches, ({ one }) => ({
+  college: one(colleges, {
+    fields: [collegeBranches.collegeId],
+    references: [colleges.id],
+  }),
+  branch: one(branches, {
+    fields: [collegeBranches.branchId],
+    references: [branches.id],
   }),
 }));

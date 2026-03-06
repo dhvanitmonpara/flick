@@ -10,8 +10,8 @@ const AdminRepo = {
     getAllFeedbacks: (dbTx?: DB) => AdminAdapter.getAllFeedbacks(dbTx),
   },
   Write: {
-    createCollege: (data: { name: string; emailDomain: string; city: string; state: string; profile?: string }, dbTx?: DB) => AdminAdapter.createCollege(data, dbTx),
-    updateCollege: (id: string, updates: Partial<{ name: string; emailDomain: string; city: string; state: string; profile: string }>, dbTx?: DB) => AdminAdapter.updateCollege(id, updates, dbTx),
+    createCollege: (data: { name: string; emailDomain: string; city: string; state: string; profile?: string; branches?: string[] }, dbTx?: DB) => AdminAdapter.createCollege(data, dbTx),
+    updateCollege: (id: string, updates: Partial<{ name: string; emailDomain: string; city: string; state: string; profile: string; branches: string[] }>, dbTx?: DB) => AdminAdapter.updateCollege(id, updates, dbTx),
   }
 };
 

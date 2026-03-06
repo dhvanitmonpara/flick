@@ -228,12 +228,16 @@ class PostService {
       beforeUpdates.isPrivate = existingPost.isPrivate;
     }
 
-    const moderationContext = [cleanUpdates.title, cleanUpdates.content].filter(Boolean).join("\n");
-    if (moderationContext.length > 0) {
+    // Check moderation if title or content is updated
+    if (cleanUpdates.title || cleanUpdates.content) {
+      const titleToCheck = cleanUpdates.title ?? existingPost.title;
+      const contentToCheck = cleanUpdates.content ?? existingPost.content;
+      const combinedText = `${titleToCheck}\n${contentToCheck}`;
+
       const moderationResult = await moderationService.moderateText({
-        text: cleanUpdates.content ?? "",
-        contextText: moderationContext,
-        runValidator: Boolean(cleanUpdates.content?.trim()),
+        text: combinedText,
+        contextText: combinedText,
+        runValidator: true,
       });
 
       if (!moderationResult.allowed) {

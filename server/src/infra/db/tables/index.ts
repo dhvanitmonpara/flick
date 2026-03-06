@@ -10,3 +10,5 @@ export { platformUser as users, session, account, verification, twoFactor, auth 
 export { notifications } from "./notification.table";
 export { bannedWords } from "./banned-word.table";
 export { userBlocks } from "./user-block.table";
+export { branches } from "./branch.table";
+export { collegeBranches } from "./college-branch.table";

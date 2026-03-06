@@ -55,7 +55,7 @@ export default function BannedWordsPage() {
     try {
       setLoading(true);
       const res = await moderationApi.listWords();
-      setWords(res?.words ?? []);
+      setWords(res?.data?.words ?? []);
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Failed to fetch banned words");
     } finally {

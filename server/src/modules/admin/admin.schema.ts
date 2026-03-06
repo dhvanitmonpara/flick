@@ -34,6 +34,7 @@ export const CreateCollegeSchema = z.object({
   city: z.string().min(2, "City is required"),
   state: z.string().min(2, "State is required"),
   profile: z.url("Profile must be a valid URL").optional(),
+  branches: z.array(z.string()).optional(),
 });
 
 export type CreateCollegeType = z.infer<typeof CreateCollegeSchema>;
@@ -44,6 +45,7 @@ export const UpdateCollegeSchema = z.object({
   city: z.string().min(2, "City is required").optional(),
   state: z.string().min(2, "State is required").optional(),
   profile: z.url("Profile must be a valid URL").optional(),
+  branches: z.array(z.string()).optional(),
 });
 
 export type UpdateCollegeType = z.infer<typeof UpdateCollegeSchema>;

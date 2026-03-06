@@ -1,0 +1,1 @@
+ALTER TABLE "colleges" ADD COLUMN "branches" text[] DEFAULT '{"CSE","BCA","ECE","IT","ME"}' NOT NULL;

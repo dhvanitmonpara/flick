@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
@@ -29,9 +29,12 @@ const collegeSchema = z.object({
   emailDomain: z.string().min(3, { message: "Email domain must be at least 3 characters" }),
   city: z.enum(availableCities),
   state: z.enum(availableStates),
+  branches: z.array(z.string()).min(1, { message: "Select at least one branch" }),
 });
 
 type CollegeFormValues = z.infer<typeof collegeSchema>;
+
+type Branch = { id: string; name: string; code: string };
 
 function CollegeForm({ defaultData, id, setOpen, setCollege }: {
   defaultData?: College | null,
@@ -41,6 +44,20 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [availableBranches, setAvailableBranches] = useState<Branch[]>([]);
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const res = await http.get("/branches/all");
+        setAvailableBranches(res.data);
+      } catch (err) {
+        console.error("Failed to fetch branches", err);
+      }
+    };
+    fetchBranches();
+  }, []);
 
   // Store a pending file for upload after college creation
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -57,12 +74,14 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
       profile: defaultData.profile,
       city: availableCities.includes(defaultData.city as any) ? defaultData.city as (typeof availableCities)[number] : availableCities[0],
       state: availableStates.includes(defaultData.state as any) ? defaultData.state as (typeof availableStates)[number] : availableStates[0],
+      branches: defaultData.branches || [],
     } : {
       name: "",
       emailDomain: "",
       profile: "",
       city: availableCities[0],
       state: availableStates[0],
+      branches: [],
     }
   });
 
@@ -211,6 +230,7 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
         profile: finalProfileUrl,
         city: college.city,
         state: college.state,
+        branches: college.branches,
       };
 
       if (isUpdating) {
@@ -370,6 +390,40 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
                   ))}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="branches"
+          render={({ field }) => (
+            <FormItem>
+              <Label>Branches</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {availableBranches.map((branch) => {
+                  const isChecked = field.value?.includes(branch.code);
+                  return (
+                    <label key={branch.id} className="flex items-center space-x-2 text-sm text-zinc-300">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          if (checked) {
+                            field.onChange([...(field.value || []), branch.code]);
+                          } else {
+                            field.onChange((field.value || []).filter((v) => v !== branch.code));
+                          }
+                        }}
+                        className="rounded border-zinc-700 bg-zinc-800 text-zinc-100 focus:ring-zinc-200"
+                      />
+                      <span>{branch.name} ({branch.code})</span>
+                    </label>
+                  );
+                })}
+              </div>
               <FormMessage />
             </FormItem>
           )}

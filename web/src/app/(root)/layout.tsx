@@ -4,9 +4,9 @@ import { Toaster } from "sonner"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { appApi } from "@/services/api/app"
+import ThemedToaster from "@/components/general/ThemedToaster"
 
 function RootLayout({ children }: { children: React.ReactElement }) {
-
   const navigate = useRouter().push
 
   useEffect(() => {
@@ -22,7 +22,7 @@ function RootLayout({ children }: { children: React.ReactElement }) {
   return (
     <main className="w-screen h-screen overflow-x-hidden bg-zinc-100 dark:bg-zinc-900">
       {children}
-      <Toaster />
+      <ThemedToaster />
     </main>
   )
 }

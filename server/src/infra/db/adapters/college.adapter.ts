@@ -1,7 +1,7 @@
-import { and, eq, ilike } from "drizzle-orm";
+import { and, eq, ilike, inArray } from "drizzle-orm";
 import db from "@/infra/db/index";
 import type { DB } from "@/infra/db/types";
-import { colleges } from "../tables";
+import { colleges, branches, collegeBranches } from "../tables";
 
 export const findById = async (id: string, dbTx?: DB) => {
   const client = dbTx ?? db;
@@ -74,4 +74,79 @@ export const deleteById = async (id: string, dbTx?: DB) => {
     .then((r) => r?.[0] || null);
 
   return deletedCollege;
+};
+
+export const findBranchesByCollegeId = async (collegeId: string, dbTx?: DB) => {
+  const client = dbTx ?? db;
+  const result = await client
+    .select({
+      id: branches.id,
+      name: branches.name,
+      code: branches.code,
+    })
+    .from(branches)
+    .innerJoin(collegeBranches, eq(branches.id, collegeBranches.branchId))
+    .where(eq(collegeBranches.collegeId, collegeId));
+
+  return result;
+};
+
+export const findCollegeBranchIds = async (collegeId: string, dbTx?: DB) => {
+  const client = dbTx ?? db;
+  const result = await client
+    .select({ branchId: collegeBranches.branchId })
+    .from(collegeBranches)
+    .where(eq(collegeBranches.collegeId, collegeId));
+
+  return result.map((r) => r.branchId);
+};
+
+export const addBranchesToCollege = async (
+  collegeId: string,
+  branchIds: string[],
+  dbTx?: DB
+) => {
+  const client = dbTx ?? db;
+  const values = branchIds.map((branchId) => ({
+    collegeId,
+    branchId,
+  }));
+
+  await client.insert(collegeBranches).values(values).onConflictDoNothing();
+};
+
+export const removeBranchesFromCollege = async (
+  collegeId: string,
+  branchIds: string[],
+  dbTx?: DB
+) => {
+  const client = dbTx ?? db;
+  await client
+    .delete(collegeBranches)
+    .where(
+      and(
+        eq(collegeBranches.collegeId, collegeId),
+        inArray(collegeBranches.branchId, branchIds)
+      )
+    );
+};
+
+export const setCollegeBranches = async (
+  collegeId: string,
+  branchIds: string[],
+  dbTx?: DB
+) => {
+  const client = dbTx ?? db;
+  
+  await client.transaction(async (tx) => {
+    await tx.delete(collegeBranches).where(eq(collegeBranches.collegeId, collegeId));
+    
+    if (branchIds.length > 0) {
+      const values = branchIds.map((branchId) => ({
+        collegeId,
+        branchId,
+      }));
+      await tx.insert(collegeBranches).values(values);
+    }
+  });
 };

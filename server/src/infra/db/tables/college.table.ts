@@ -13,6 +13,7 @@ export const colleges = pgTable("colleges", {
 },
   (table) => [
     index('idx_college_name').on(table.name),
+    index('idx_college_email_domain').on(table.emailDomain),
     index('idx_college_city_state').on(table.city, table.state),
   ]
 );

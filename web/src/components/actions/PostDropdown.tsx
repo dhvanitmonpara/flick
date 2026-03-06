@@ -23,7 +23,7 @@ import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { AxiosError } from "axios";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form } from "../ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { CreatePostForm } from "../general/CreatePost";

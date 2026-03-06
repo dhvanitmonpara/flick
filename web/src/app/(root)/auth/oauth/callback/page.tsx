@@ -2,7 +2,7 @@
 
 import { useForm, Controller } from "react-hook-form"
 import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { zodResolver } from "@/lib/zod-resolver"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { branch } from "@/constants/branch"
+import { branch, defaultBranches } from "@/constants/branch"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { authApi } from "@/services/api/auth"
@@ -52,7 +52,7 @@ function OAuthSetupPage() {
         return
       }
 
-      const isSetupSuccess = await authApi.oauth.setup(email, branch.parse(data.branch))
+      const isSetupSuccess = await authApi.oauth.setup(email)
 
       if (!isSetupSuccess) {
         toast.error("Failed to initialize user")
@@ -87,7 +87,7 @@ function OAuthSetupPage() {
                 <SelectValue placeholder="Branch" />
               </SelectTrigger>
               <SelectContent className="bg-zinc-200 dark:bg-zinc-800">
-                {branch.options.map((branchValue) => (
+                {defaultBranches.map((branchValue) => (
                   <SelectItem className="focus:bg-zinc-300 dark:focus:bg-zinc-700" key={branchValue} value={branchValue}>{branchValue}</SelectItem>
                 ))}
               </SelectContent>

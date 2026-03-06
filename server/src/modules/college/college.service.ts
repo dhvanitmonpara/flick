@@ -12,10 +12,10 @@ class CollegeService {
     city: string;
     state: string;
     profile?: string;
+    branchIds?: string[];
   }) {
     logger.info("Creating college", { emailDomain: collegeData.emailDomain, name: collegeData.name });
-    
-    // Check if college with this email domain already exists
+
     const existing = await CollegeRepo.CachedRead.findByEmailDomain(collegeData.emailDomain);
     if (existing) {
       logger.warn("College with email domain already exists", { emailDomain: collegeData.emailDomain });
@@ -33,8 +33,14 @@ class CollegeService {
       });
     }
 
-    const newCollege = await CollegeRepo.Write.create(collegeData);
+    const { branchIds, ...collegeInfo } = collegeData;
+    const newCollege = await CollegeRepo.Write.create(collegeInfo);
     logger.info("College created successfully", { collegeId: newCollege.id, emailDomain: newCollege.emailDomain });
+
+    if (branchIds && branchIds.length > 0) {
+      await CollegeRepo.Write.setCollegeBranches(newCollege.id, branchIds);
+      logger.info("Branches assigned to college", { collegeId: newCollege.id, branchIds });
+    }
 
     await recordAudit({
       action: "admin:created:college",
@@ -47,6 +53,7 @@ class CollegeService {
     await invalidateCollegeCaches({
       collegeId: newCollege.id,
       nextEmailDomain: newCollege.emailDomain,
+      invalidateBranches: true,
     });
 
     return newCollege;
@@ -54,7 +61,7 @@ class CollegeService {
 
   async getColleges(filters?: { city?: string; state?: string }) {
     logger.info("Fetching colleges", { filters });
-    
+
     const colleges = await CollegeRepo.CachedRead.findAll(filters);
     logger.info("Retrieved colleges", { count: colleges.length, filters });
     return colleges;
@@ -62,7 +69,7 @@ class CollegeService {
 
   async getCollegeById(id: string) {
     logger.info("Fetching college by ID", { collegeId: id });
-    
+
     const college = await CollegeRepo.CachedRead.findById(id);
     if (!college) {
       logger.warn("College not found", { collegeId: id });
@@ -72,13 +79,20 @@ class CollegeService {
         errors: [{ field: "id", message: "College not found" }],
       });
     }
-    
+
     logger.info("College retrieved successfully", { collegeId: id, emailDomain: college.emailDomain });
     return college;
   }
 
+  async getCollegeBranches(collegeId: string) {
+    logger.info("Fetching college branches", { collegeId });
+
+    const branches = await CollegeRepo.CachedRead.findBranchesByCollegeId(collegeId);
+    logger.info("Retrieved college branches", { collegeId, count: branches.length });
+    return branches;
+  }
+
   async updateCollege(id: string, updates: CollegeUpdates) {
-    // Check if college exists
     const existing = await CollegeRepo.CachedRead.findById(id);
     if (!existing) {
       throw HttpError.notFound("College not found", {
@@ -88,7 +102,6 @@ class CollegeService {
       });
     }
 
-    // If updating email domain, check for conflicts
     if (updates.emailDomain && updates.emailDomain !== existing.emailDomain) {
       const emailConflict = await CollegeRepo.CachedRead.findByEmailDomain(updates.emailDomain);
       if (emailConflict) {
@@ -107,14 +120,23 @@ class CollegeService {
       }
     }
 
-    const updatedCollege = await CollegeRepo.Write.updateById(id, updates);
-    const before: CollegeUpdates = {}
+    const { branches, ...collegeUpdates } = updates;
+    const updatedCollege = await CollegeRepo.Write.updateById(id, collegeUpdates);
 
+    const before: CollegeUpdates = {}
     if (updates.city) before.city = existing.city
     if (updates.emailDomain) before.emailDomain = existing.emailDomain
-    if (updates.name) before.emailDomain = existing.emailDomain
+    if (updates.name) before.name = existing.name
     if (updates.profile) before.profile = existing.profile
     if (updates.state) before.state = existing.state
+
+    if (branches) {
+      const existingBranches = await CollegeRepo.Read.findBranchesByCollegeId(id);
+      before.branches = existingBranches.map(b => b.id);
+
+      await CollegeRepo.Write.setCollegeBranches(id, branches);
+      logger.info("College branches updated", { collegeId: id, branches });
+    }
 
     await recordAudit({
       action: "admin:updated:college",
@@ -129,6 +151,7 @@ class CollegeService {
       collegeId: updatedCollege.id,
       previousEmailDomain: existing.emailDomain,
       nextEmailDomain: updatedCollege.emailDomain,
+      invalidateBranches: !!branches,
     });
 
     return updatedCollege;

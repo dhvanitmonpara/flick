@@ -235,7 +235,7 @@ export const getAllFeedbacks = async (dbTx?: DB) => {
   return data;
 };
 
-export const createCollege = async (data: { name: string; emailDomain: string; city: string; state: string; profile?: string }, dbTx?: DB) => {
+export const createCollege = async (data: { name: string; emailDomain: string; city: string; state: string; profile?: string; branches?: string[] }, dbTx?: DB) => {
   const client = dbTx ?? db;
   const [newCollege] = await client.insert(colleges).values(data).returning();
 

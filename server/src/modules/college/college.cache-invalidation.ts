@@ -5,6 +5,7 @@ type InvalidateCollegeCacheOptions = {
   collegeId?: string;
   previousEmailDomain?: string | null;
   nextEmailDomain?: string | null;
+  invalidateBranches?: boolean;
 };
 
 export async function invalidateCollegeCaches(options: InvalidateCollegeCacheOptions = {}) {
@@ -12,6 +13,10 @@ export async function invalidateCollegeCaches(options: InvalidateCollegeCacheOpt
 
   if (options.collegeId) {
     ops.push(cache.del(collegeCacheKeys.id(options.collegeId)));
+    
+    if (options.invalidateBranches) {
+      ops.push(cache.del(collegeCacheKeys.branches(options.collegeId)));
+    }
   }
 
   if (options.previousEmailDomain) {

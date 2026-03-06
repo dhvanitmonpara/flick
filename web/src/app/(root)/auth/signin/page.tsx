@@ -143,7 +143,7 @@ function SignInPage() {
               className="w-full"
               onClick={(e) => {
                 setNoPasswordEmail(null)
-                handleGoogleOAuthRedirect(e as unknown as React.FormEvent)
+                handleGoogleOAuthRedirect(e as any)
               }}
             >
               <FaGoogle className="mr-2" /> Continue with Google
@@ -235,7 +235,7 @@ function SignInPage() {
           <span className="px-4 text-zinc-500 dark:text-zinc-500 text-sm">Or</span>
           <Separator className="shrink" />
         </p>
-        <form onSubmit={handleGoogleOAuthRedirect}>
+        <form onSubmit={(e: any) => handleGoogleOAuthRedirect(e)}>
           <Button className="w-full">
             <FaGoogle /> Login with Google
           </Button>

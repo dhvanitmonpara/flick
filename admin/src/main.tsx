@@ -14,6 +14,7 @@ import UserPage from './pages/UserPage'
 import LogPage from './pages/LogPage'
 import FeedbackPage from './pages/FeedbackPage'
 import BannedWordsPage from './pages/BannedWordsPage'
+import BranchPage from './pages/BranchPage'
 
 // router
 const router = createBrowserRouter([
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
       {
         path: "colleges",
         element: <CollegePage />,
+      },
+      {
+        path: "branches",
+        element: <BranchPage />,
       },
       {
         path: "reports",

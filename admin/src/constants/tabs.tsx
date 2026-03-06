@@ -26,6 +26,11 @@ export const tabs = [
     icon: <FaGraduationCap />
   },
   {
+    name: 'Branches',
+    path: '/branches',
+    icon: <FaGraduationCap />
+  },
+  {
     name: 'Banned Words',
     path: '/banned-words',
     icon: <FaBan />

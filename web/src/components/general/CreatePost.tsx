@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
 import { FaPlus } from "react-icons/fa";
 import {
@@ -109,7 +109,7 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
       topic: PostTopic[0],
       isPrivate: false,
     });
-  }, [defaultData, id, form]);
+  }, [defaultData, form]);
 
   const onSubmit = async (data: PostFormValues) => {
     try {

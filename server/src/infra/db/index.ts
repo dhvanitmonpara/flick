@@ -1,6 +1,6 @@
 import { env } from "@/config/env";
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { users, auth, bookmarks, auditLogs, colleges, notifications, posts, comments, feedbacks, votes, bannedWords } from "./tables";
+import { users, auth, bookmarks, auditLogs, colleges, notifications, posts, comments, feedbacks, votes, bannedWords, branches } from "./tables";
 
 const db = drizzle(env.DATABASE_URL, {
   schema: {
@@ -15,6 +15,7 @@ const db = drizzle(env.DATABASE_URL, {
     auth,
     votes,
     bannedWords,
+    branches,
   },
 });
 

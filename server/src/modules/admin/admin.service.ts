@@ -50,7 +50,7 @@ class AdminService {
     return feedbacks;
   }
 
-  async createCollege(data: { name: string; emailDomain: string; city: string; state: string; profile?: string }) {
+  async createCollege(data: { name: string; emailDomain: string; city: string; state: string; profile?: string; branches?: string[] }) {
     logger.info("Creating new college", { name: data.name });
     const newCollege = await AdminRepo.Write.createCollege(data);
 
@@ -63,7 +63,7 @@ class AdminService {
     return newCollege;
   }
 
-  async updateCollege(id: string, updates: Partial<{ name: string; emailDomain: string; city: string; state: string; profile: string }>) {
+  async updateCollege(id: string, updates: Partial<{ name: string; emailDomain: string; city: string; state: string; profile: string; branches: string[] }>) {
     logger.info("Updating college", { id, updates });
     const existingCollege = await CollegeRepo.Read.findById(id);
     const updatedCollege = await AdminRepo.Write.updateCollege(id, updates);

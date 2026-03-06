@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { zodResolver } from "@/lib/zod-resolver"
 import { isAxiosError } from "axios"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -12,7 +12,7 @@ import { z } from "zod"
 import { feedbackApi } from "@/services/api/feedback"
 
 const feedbackSchema = z.object({
-  type: z.enum(["bug", "feedback"], { required_error: "Type is required" }),
+  type: z.enum(["bug", "feedback"], { message: "Type is required" }),
   title: z.string().min(5, "Title must be at least 5 characters"),
   content: z.string().min(20, "Content must be at least 20 characters"),
 })

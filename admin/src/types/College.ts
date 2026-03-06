@@ -5,4 +5,5 @@ export interface College {
   emailDomain: string;
   city: string;
   state: string;
+  branches: string[];
 }
