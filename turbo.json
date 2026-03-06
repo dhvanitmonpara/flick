@@ -7,17 +7,21 @@
       ],
       "outputs": [
         ".next/**",
-        "!.next/cache/**"
+        "!.next/cache/**",
+        "dist/**",
+        "build/**"
       ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
     },
     "check-types": {
       "dependsOn": [
         "^check-types"
       ]
     },
-    "dev": {
-      "persistent": true,
-      "cache": false
-    }
+    "lint": {},
+    "test": {}
   }
 }
