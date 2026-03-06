@@ -19,8 +19,6 @@
   "license": "ISC",
   "packageManager": "pnpm@10.28.1",
   "dependencies": {
-    "landing": "^0.0.1",
-    "next": "^16.1.6",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
