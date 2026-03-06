@@ -22,7 +22,7 @@ function FeedbackPage() {
   }, [])
 
   return (
-    <div className="p-6 col-span-10">
+    <div className="p-6 ">
       <div className={`bg-zinc-800/50 px-3 w-full ${feedback.length === 0 && "min-h-52"} rounded-md`}>
         {feedback.length > 0 ? (
           <FeedbackTable data={feedback} setData={setFeedback} />

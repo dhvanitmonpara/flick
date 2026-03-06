@@ -72,10 +72,10 @@ function BranchPage() {
     }
   };
 
-  if (isLoading) return <div className="p-6 col-span-10 text-zinc-400">Loading branches...</div>;
+  if (isLoading) return <div className="p-6  text-zinc-400">Loading branches...</div>;
 
   return (
-    <div className="p-6 col-span-10 flex flex-col gap-6 text-zinc-100">
+    <div className="p-6  flex flex-col gap-6 text-zinc-100">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Branches</h2>
 
@@ -105,7 +105,7 @@ function BranchPage() {
         </Dialog>
       </div>
 
-      <div className="border border-zinc-800 rounded-md">
+      <div className="border border-zinc-800 rounded-md overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-zinc-800 hover:bg-zinc-800/50">

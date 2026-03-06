@@ -33,10 +33,10 @@ function CollegePage() {
     fetchColleges();
   }, [fetchColleges]);
 
-  if (isLoading) return <div className="p-6 col-span-10 text-muted-foreground">Loading colleges...</div>;
+  if (isLoading) return <div className="p-6  text-muted-foreground">Loading colleges...</div>;
 
   return (
-    <div className="p-6 col-span-10 flex flex-col gap-6">
+    <div className="p-6  flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Colleges</h2>
 

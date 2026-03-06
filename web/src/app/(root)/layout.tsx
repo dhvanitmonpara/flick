@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { appApi } from "@/services/api/app"
 import ThemedToaster from "@/components/general/ThemedToaster"
 
-function RootLayout({ children }: { children: React.ReactElement }) {
+function RootLayout({ children }: { children: React.ReactNode }) {
   const navigate = useRouter().push
 
   useEffect(() => {

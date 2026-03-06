@@ -1,3 +1,7 @@
+"use client"
+
+import { useState, useEffect } from "react"
+
 import { AnimateWrapper } from "@/components/animations/AnimateWrapper";
 import CTAButton from "@/components/landing/CTAButton";
 import { FAQs } from "@/components/landing/FAQs";
@@ -12,137 +16,47 @@ import howItWorksSteps from "@/data/HowItWorksSteps";
 import { FaChartLine, FaRocket, FaUniversity } from "react-icons/fa";
 import { HiOutlineUserCircle } from "react-icons/hi";
 import BackgroundPattern from "@/components/landing/BackgroundPattern";
+import mockPosts from "@/data/mockPosts";
 
-const mockPosts = [
-  {
-    title: "Hostel Wi-Fi is Trash 🥲",
-    description: "Can't even load a single PDF for tomorrow's exam... any hacks to get better speed?",
-    date: "1/5/2025",
-    university: "IIT Delhi",
-    username: "a9f3k2jd8x",
-    branch: "EE"
-  },
-  {
-    title: "9 AM Lectures After Fest Night?",
-    description: "How do you guys survive these early classes after a crazy fest night? I’m still recovering from Holi celebrations at IIT Bombay—dancing till 2 AM, covered in colors, and now I can barely keep my eyes open in this lecture! My professor just called me out for dozing off, so I really need tips to stay awake and not miss important notes! #IITLife",
-    date: "2/5/2025",
-    university: "IIT Bombay",
-    username: "h0u39dkabx",
-    branch: "CS"
-  },
-  {
-    title: "Placement Stress is Real",
-    description: "Feeling so anxious about interviews… any tips for staying calm? I’m at DU.",
-    date: "3/5/2025",
-    university: "Delhi University",
-    username: "p4k9m2nx7q",
-    branch: "Economics"
-  },
-  {
-    title: "Best Canteen on Campus?",
-    description: "Newbie here! Where’s the best place to grab chai and samosas at BITS Pilani?",
-    date: "4/5/2025",
-    university: "BITS Pilani",
-    username: "z3t8v5lp9w",
-    branch: "Mech"
-  },
-  {
-    title: "JEE Prep Burnout",
-    description: "I’m retaking JEE and feeling so overwhelmed… anyone have study tips?",
-    date: "5/5/2025",
-    university: "IIT Kanpur",
-    username: "j7q2r4mk5y",
-    branch: "Civil"
-  },
-  {
-    title: "Toxic Project Group 😡",
-    description: "My group isn’t doing any work for our final project… what should I do? #NIT",
-    date: "6/5/2025",
-    university: "NIT Trichy",
-    username: "m9w3x8tk2p",
-    branch: "ECE"
-  },
-  {
-    title: "Fest Budget Hacks?",
-    description: "Want to enjoy our college fest without breaking the bank… any jugaad ideas?",
-    date: "7/5/2025",
-    university: "IIT Madras",
-    username: "v4y9p7ql3z",
-    branch: "Aero"
-  },
-  {
-    title: "Late-Night Study Spots",
-    description: "Where do you guys study late at night on campus? Library closes at 10 PM.",
-    date: "8/5/2025",
-    university: "IIT Kharagpur",
-    username: "k2r8w5nx9t",
-    branch: "Chem"
-  },
-  {
-    title: "Internship Advice Needed",
-    description: "Applying for summer internships… how do I make my resume stand out? #VIT",
-    date: "9/5/2025",
-    university: "VIT Vellore",
-    username: "q7t3m9xp2k",
-    branch: "IT"
-  },
-  {
-    title: "Roommate Issues",
-    description: "My hostel roommate keeps borrowing my stuff without asking… how to deal?",
-    date: "10/5/2025",
-    university: "IIT Roorkee",
-    username: "n4p8y2tk7w",
-    branch: "BioTech"
-  },
-  {
-    title: "Best Hangout Near Campus?",
-    description: "Looking for chill spots near Anna University to hang out with friends… suggestions?",
-    date: "11/5/2025",
-    university: "Anna University",
-    username: "x9k3v7qp2m",
-    branch: "Mech"
-  },
-  {
-    title: "Coding Club Worth It?",
-    description: "Thinking of joining the coding club at IIIT Hyderabad… is it helpful for placements?",
-    date: "12/5/2025",
-    university: "IIIT Hyderabad",
-    username: "t2w8r4nx9y",
-    branch: "CSE"
-  },
-  {
-    title: "Exam Week Survival Tips",
-    description: "Exams start next week and I’m nowhere near ready… how do you guys manage stress?",
-    date: "13/5/2025",
-    university: "IIT Guwahati",
-    username: "p7q3k9mt2x",
-    branch: "EEE"
-  },
-  {
-    title: "Cheap Food Near Campus",
-    description: "Broke and hungry… where can I get affordable food near SRM University?",
-    date: "14/5/2025",
-    university: "SRM University",
-    username: "y4t9w2rk7p",
-    branch: "CSE"
-  },
-  {
-    title: "First Year Nerves",
-    description: "Just started at JNU and feeling so lost… any advice for freshers?",
-    date: "15/5/2025",
-    university: "JNU Delhi",
-    username: "r2k8v5qp9t",
-    branch: "Sociology"
-  }
-];
+const getRandomPosts = (count: number) => {
+  const shuffled = [...mockPosts].sort(() => 0.5 - Math.random())
+  return shuffled.slice(0, count)
+}
 
 export default function Home() {
+  const [posts, setPosts] = useState(mockPosts)
+  const [postCount, setPostCount] = useState(10)
+
+  useEffect(() => {
+    const updatePostCount = () => {
+      const width = window.innerWidth
+      let count: number
+      if (width < 640) {
+        count = 3
+      } else if (width < 768) {
+        count = 6
+      } else if (width < 1024) {
+        count = 8
+      } else if (width < 1280) {
+        count = 10
+      } else {
+        count = mockPosts.length
+      }
+      setPostCount(count)
+      setPosts(getRandomPosts(count))
+    }
+
+    updatePostCount()
+    window.addEventListener("resize", updatePostCount)
+    return () => window.removeEventListener("resize", updatePostCount)
+  }, [])
+
   return (
     <div className="min-h-screen relative bg-linear-to-tr bg-[linear-gradient(to_right,#fdfcfb,#e2d1c3)] z-0 isolation">
       <BackgroundPattern />
       <Header />
       <div className="max-w-6xl mx-auto px-8 lg:px-4 relative z-10">
-        <div className="flex flex-col justify-center items-center gap-6 sm:gap-8 h-[450px] sm:h-[500px] md:h-[550px] lg:h-[600px] pb-8">
+        <div className="flex flex-col justify-center items-center gap-6 sm:gap-8 h-112.5 sm:h-125 md:h-137.5 lg:h-150 pb-8">
           <AnimateWrapper delay={0.05} once>
             <SecondaryButton />
           </AnimateWrapper>
@@ -159,7 +73,7 @@ export default function Home() {
           </AnimateWrapper>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 grid-auto-rows-[150px]">
-          {mockPosts.map((post, index) => (
+          {posts.map((post, index) => (
             <Post
               key={index}
               title={post.title}
@@ -169,7 +83,7 @@ export default function Home() {
               username={post.username}
               branch={post.branch}
               className={[
-                (index === 2) ? "row-span-2 mt-16" : "row-span-3",
+                (index === 2) ? "row-span-2 sm:mt-16" : "row-span-3",
                 index === 0 && "row-span-1! mt-8",
                 "p-4 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.10)] overflow-hidden"
               ].join(" ")}

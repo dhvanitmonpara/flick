@@ -8,7 +8,7 @@ import { isAxiosError } from "axios";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -124,4 +124,10 @@ function PasswordRecovery() {
   )
 }
 
-export default PasswordRecovery
+export default function Page() {
+  return (
+    <Suspense>
+      <PasswordRecovery />
+    </Suspense>
+  )
+}

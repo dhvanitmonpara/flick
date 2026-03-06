@@ -140,7 +140,7 @@ function UserPage() {
   };
 
   return (
-    <div className="p-6 col-span-10">
+    <div className="p-6 ">
       <div className="mb-6">
         <p className="text-2xl font-semibold text-zinc-100">User Management</p>
         <p className="text-sm text-zinc-400 mt-1">Review users, manage bans, and control suspensions.</p>

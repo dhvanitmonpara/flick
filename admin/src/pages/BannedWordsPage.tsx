@@ -177,7 +177,7 @@ export default function BannedWordsPage() {
   ];
 
   return (
-    <div className="p-6 col-span-10">
+    <div className="p-6 ">
       <div className="mb-6 flex justify-between items-start">
         <div>
           <p className="text-2xl font-semibold text-zinc-100">Banned Words</p>

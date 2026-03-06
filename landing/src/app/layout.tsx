@@ -3,7 +3,7 @@ import "./globals.css";
 import { geistMono, geistSans } from "./fonts";
 
 export const metadata: Metadata = {
-  title: "Flick - Your Anonymous Campus Hangout",
+  title: "Flick - Your anonymous campus hangout",
   description: "An anonymous reddit only for college students. You can vent, chill, hangout and all at one place",
 };
 

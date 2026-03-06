@@ -92,17 +92,17 @@ function ProfilePage() {
   }
 
   return (
-    <div className="py-12">
+    <div className="py-8 md:py-12 px-4 md:px-0">
       {profile
         ? <>
-          <div className="flex items-center space-x-4 h-40">
-            <Avatar className='cursor-pointer w-28 h-28 transition-colors duration-300 border-2 border-transparent hover:border-zinc-400'>
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6 pb-6 pt-4">
+            <Avatar className='cursor-pointer w-24 h-24 md:w-28 md:h-28 transition-colors duration-300 border-2 border-transparent hover:border-zinc-400'>
               <AvatarImage src={isCollege(profile.college) ? profile.college.profile : "Unknown College"} alt={profile.username} />
-              <AvatarFallback className='bg-zinc-200 cursor-pointer select-none'>{profile.username?.slice(0, 2)}</AvatarFallback>
+              <AvatarFallback className='bg-zinc-200 cursor-pointer select-none text-xl'>{profile.username?.slice(0, 2)}</AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <div className="flex items-center gap-4">
-                <h4 className="text-xl font-semibold">{profile.username}</h4>
+            <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
+              <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 mt-2 md:mt-0">
+                <h4 className="text-2xl font-semibold">{profile.username}</h4>
                 <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 gap-1">
@@ -149,16 +149,21 @@ function ProfilePage() {
                   </DialogContent>
                 </Dialog>
               </div>
-              <p className="text-zinc-600 dark:text-zinc-500 flex items-center space-x-0.5 mt-1">
+              <p className="text-zinc-600 dark:text-zinc-500 flex flex-wrap justify-center md:justify-start items-center gap-x-0.5 gap-y-1 mt-3 md:mt-2 text-sm md:text-base">
                 <span>{isCollege(profile.college) ? profile.college.name : "Unknown College"}</span>
-                <BsDot size={24} />
-                <span>{profile.branch}</span>
-                <BsDot size={24} />
-                <span>{profile.karma} Karma</span>
+                <BsDot size={20} className="hidden md:block" />
+                <span className="hidden md:inline">{profile.branch}</span>
+                <BsDot size={20} className="hidden md:block" />
+                <span className="hidden md:inline">{profile.karma} Karma</span>
+              </p>
+              <p className="text-zinc-600 dark:text-zinc-500 flex md:hidden justify-center items-center gap-x-0.5 mt-1 text-sm">
+                 <span>{profile.branch}</span>
+                 <BsDot size={20} />
+                 <span>{profile.karma} Karma</span>
               </p>
             </div>
           </div>
-          <div className="mt-6">
+          <div className="mt-6 md:mt-2">
             <h3 className="text-lg font-semibold mb-4 border-b pb-2">Posts</h3>
             {loadingPosts ? (
               <div className="space-y-6">
@@ -242,16 +247,16 @@ function ProfilePage() {
 
 export function ProfileSkeleton() {
   return (
-    <div className="flex items-center space-x-4 h-40">
-      <Skeleton className="w-28 h-28 rounded-full" />
-      <div className="space-y-2">
-        <Skeleton className="h-6 w-48" />
-        <div className="flex items-center space-x-2">
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-4 w-4 rounded-full" />
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-4 rounded-full" />
-          <Skeleton className="h-4 w-20" />
+    <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6 pb-6 pt-4">
+      <Skeleton className="w-24 h-24 md:w-28 md:h-28 rounded-full" />
+      <div className="space-y-3 flex flex-col items-center md:items-start mt-2 md:mt-0">
+        <Skeleton className="h-8 w-48" />
+        <div className="flex flex-col md:flex-row items-center gap-2 mt-2">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-4 w-4 rounded-full hidden md:block" />
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-4 w-4 rounded-full hidden md:block" />
+          <Skeleton className="h-5 w-20" />
         </div>
       </div>
     </div>

@@ -137,7 +137,7 @@ export default function LogPage() {
   ];
 
   return (
-    <div className="p-6 col-span-10">
+    <div className="p-6 ">
       <div className={`bg-zinc-800/50 px-3 w-full ${logs.length === 0 && "min-h-52"} rounded-md`}>
         {loading ? (
           <div className="p-4 space-y-2">

@@ -42,7 +42,7 @@ const PostsPage = () => {
   }, [fetchReports, page, statuses]);
 
   return (
-    <div className="flex flex-col items-center col-span-10 p-2">
+    <div className="flex flex-col items-center  p-2">
       <div className="flex items-center w-full">
         <h2 className="px-8 pt-10 pb-8 text-2xl self-start">Posts</h2>
         <Button className="ml-auto mr-8 bg-zinc-800 hover:bg-zinc-700" onClick={fetchReports}>

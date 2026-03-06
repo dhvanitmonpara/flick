@@ -61,12 +61,12 @@ function Post({ avatar, userVote, avatarFallback, id, createdAt, college, title,
             <AvatarFallback>{avatarFallback}</AvatarFallback>
           </Avatar>
           <div className="space-y-1">
-            <h2 className="flex items-center space-x-0.5 font-semibold text-zinc-900 dark:text-zinc-100">
+            <h2 className="flex flex-wrap items-center gap-x-0.5 gap-y-1 font-semibold text-zinc-900 dark:text-zinc-100">
               <Link onClick={(e) => handleLinkClick(e, `/?branch=${branch}`)} className="hover:underline" href={`/?branch=${branch}`}>{branch}</Link>
               <BsDot size={14} />
               <span className="text-xs text-zinc-600 dark:text-zinc-400">{createdAt}</span>
             </h2>
-            <p className="flex space-x-0.5 text-xs text-zinc-600 dark:text-zinc-400">
+            <p className="flex flex-wrap items-center gap-x-0.5 gap-y-1 text-xs text-zinc-600 dark:text-zinc-400">
               <Link onClick={(e) => handleLinkClick(e, `/college/${college}`)} className="hover:underline" href={`/college/${college}`}>{college}</Link>
               <BsDot size={16} />
               <Link onClick={(e) => handleLinkClick(e, `/user/${username}`)} className="hover:underline" href={`/user/${username}`}>{username}</Link>

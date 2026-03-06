@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { IoArrowBack } from "react-icons/io5";
 
-function AuthLayout({ children }: { children: React.ReactElement }) {
+function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <main
       className="flex items-center justify-center h-[calc(100vh-3.5rem)] p-8 sm:px-12 g:px-16 lg:py-12"

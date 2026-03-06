@@ -29,7 +29,7 @@ function OverviewPage() {
   }, []);
 
   return (
-    <div className="flex flex-col col-span-10 p-8 w-full">
+    <div className="flex flex-col  p-8 w-full">
       <h2 className="text-3xl font-bold tracking-tight mb-6">Dashboard Overview</h2>
 
       {loading ? (

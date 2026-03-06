@@ -69,7 +69,7 @@ const ReportsPage = () => {
   }, [fetchReports, page, statuses]);
 
   return (
-    <div className="flex flex-col items-center col-span-10 p-2 md:p-4">
+    <div className="flex flex-col items-center  p-2 md:p-4">
       <div className="flex flex-wrap items-center gap-2 w-full px-2 md:px-6 pt-4 md:pt-6 pb-4">
         <h2 className="text-2xl self-start">Reports</h2>
         <div className="ml-0 md:ml-6 flex items-center gap-2">

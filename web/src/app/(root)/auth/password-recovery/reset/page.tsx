@@ -1,4 +1,6 @@
+
 "use client"
+import React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -154,4 +156,4 @@ function ResetPassword() {
   )
 }
 
-export default ResetPassword
+export default function Page() { return <React.Suspense><ResetPassword /></React.Suspense> }

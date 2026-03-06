@@ -1,14 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import CTAButton from './CTAButton';
-
-const changeTheme = () => {
-  const root = document.documentElement;
-  root.classList.toggle('dark');
-  localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
-}
 
 function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -22,11 +16,6 @@ function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    const darkModeEnables = localStorage.getItem('theme') === 'dark';
-    if (darkModeEnables) changeTheme();
-  }, []);
-
   return (
     <div
       className={`sticky flex justify-between items-center transition-all duration-300 mx-auto z-50 ${scrolled
@@ -36,6 +25,7 @@ function Header() {
     >
       <div className='font-avallon text-3xl sm:text-4xl animate-fade-in-blur lg:w-24 text-center'>
         <Link href="/">Flick</Link>
+        {/* <Link href="/"><LogoSVG /></Link> */}
       </div>
       <div className={`flex justify-center items-center ${scrolled ? "gap-8" : "gap-12"} animate-fade-in-blur`}>
         <Link className='hover:text-primary hover:font-semibold hidden sm:block' href="/">Features</Link>
