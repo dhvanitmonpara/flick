@@ -3,7 +3,7 @@
 import { useForm, Controller } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@/lib/zod-resolver"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -20,21 +20,30 @@ import Link from "next/link"
 import { authApi } from "@/services/api/auth"
 import { collegeApi, Branch } from "@/services/api/college"
 
+export const dynamic = "force-dynamic";
+
 const signInSchema = z.object({
   branch: branch,
 })
 
-export const dynamic = "force-dynamic";
-
 type SignInFormData = z.infer<typeof signInSchema>
 
-function OAuthSetupPage() {
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OAuthSetupForm />
+    </Suspense>
+  )
+}
+
+function OAuthSetupForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [branches, setBranches] = useState<Branch[]>([])
   const [isLoadingBranches, setIsLoadingBranches] = useState(true)
   const [collegeId, setCollegeId] = useState<string | null>(null)
 
-  const email = useSearchParams().get("email")
+  const searchParams = useSearchParams()
+  const email = searchParams.get("email")
 
   const navigate = useRouter().push
 
@@ -148,5 +157,3 @@ function OAuthSetupPage() {
     </div>
   )
 }
-
-export default OAuthSetupPage
