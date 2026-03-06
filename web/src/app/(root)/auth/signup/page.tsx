@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react"
 import { IoMdEye, IoMdEyeOff } from "react-icons/io"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import FileInput from "@/components/FileInput"
+import FileInput from "@/components/ui/FileInput"
 import { FaGoogle } from "react-icons/fa"
 import { handleGoogleOAuthRedirect } from "@/utils/googleOAuthRedirect"
 import { Separator } from "@/components/ui/separator"
@@ -62,7 +62,7 @@ function SignUpPage() {
 
   const onSubmit = async (data: SignUpFormData) => {
     if (isSubmittingRef.current) return
-    
+
     isSubmittingRef.current = true
     setIsSubmitting(true)
     try {
