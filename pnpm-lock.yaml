@@ -8,12 +8,6 @@ importers:
 
   .:
     dependencies:
-      landing:
-        specifier: ^0.0.1
-        version: 0.0.1
-      next:
-        specifier: ^16.1.6
-        version: 16.1.6(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       uuid:
         specifier: ^13.0.0
         version: 13.0.0
@@ -3835,12 +3829,6 @@ packages:
   cobe@0.6.5:
     resolution: {integrity: sha512-MA8bu81EFY6JjQpj+FovEuhyJ25khx2Q7Lh+ot/UkCJe5yKyDgzdc6u2lGZIOmsZTXK6Itg1i4lQZIJZbPWnAg==}
 
-  coffee-script@1.12.7:
-    resolution: {integrity: sha512-fLeEhqwymYat/MpTPUjSKHVYYl0ec2mOyALEMLmzr5i1isuG+6jfI2j2d5oBO3VIzgUXgBVIcOT9uH1TFxBckw==}
-    engines: {node: '>=0.8.0'}
-    deprecated: CoffeeScript on NPM has moved to "coffeescript" (no hyphen)
-    hasBin: true
-
   collapse-white-space@2.1.0:
     resolution: {integrity: sha512-loKTxY1zCOuG4j9f6EPnuyyYkf58RnhhWTvRoZEokgB+WbdXehfjFviyOVYkqzEWz1Q5kRiZdBYS5SwxbQYwzw==}
 
@@ -3869,10 +3857,6 @@ packages:
 
   colorette@2.0.20:
     resolution: {integrity: sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w==}
-
-  colors@1.4.0:
-    resolution: {integrity: sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==}
-    engines: {node: '>=0.1.90'}
 
   combined-stream@1.0.8:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
@@ -4970,9 +4954,6 @@ packages:
     resolution: {integrity: sha512-ksNxfzIW77OcZ+QWSAPC7yDqUSaIVwkTWnTPNiIy//vifNbwsSgQ57OkkncHxxpcBHM3LRfLAZVEh7kjq5twVA==}
     engines: {node: '>=20.0.0'}
 
-  landing@0.0.1:
-    resolution: {integrity: sha512-2AePzulkT8WsbJB05qcrI0kY76hkX5LR8SzeJ/oHgUNSsqNgkuPMHuKhrDNmZuZjEd/0Y09D9gifpxtm0pcgLA==}
-
   leac@0.6.0:
     resolution: {integrity: sha512-y+SqErxb8h7nE/fiEX07jsbuhrpO9lL8eca7/Y1nuWV2moNlXhyd59iDGcRf6moVyDMbmTNzL40SUyrFU/yDpg==}
 
@@ -5294,9 +5275,6 @@ packages:
     resolution: {integrity: sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow==}
     engines: {node: '>=16 || 14 >=14.17'}
 
-  minimist@0.0.10:
-    resolution: {integrity: sha512-iotkTvxc+TwOm5Ieim8VnSNvCDjCK9S8G3scJ50ZthspSxa7jx50jkhYduuAtAjvfDUwSgOwf8+If99AlOEhyw==}
-
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
 
@@ -5442,11 +5420,6 @@ packages:
   node-releases@2.0.27:
     resolution: {integrity: sha512-nmh3lCkYZ3grZvqcCH+fjmQ7X+H0OeZgP40OierEaAptX4XofMh5kwNbWh7lBduUzCcV/8kZ+NDLCwm2iorIlA==}
 
-  node-static@0.7.11:
-    resolution: {integrity: sha512-zfWC/gICcqb74D9ndyvxZWaI1jzcoHmf4UTHWQchBNuNMxdBLJMDiUgZ1tjGLEIe/BMhj2DxKD8HOuc2062pDQ==}
-    engines: {node: '>= 0.4.1'}
-    hasBin: true
-
   nodemailer@7.0.12:
     resolution: {integrity: sha512-H+rnK5bX2Pi/6ms3sN4/jRQvYSMltV6vqup/0SFOrxYYY/qoNvhXPlYq3e+Pm9RFJRwrMGbMIwi81M4dxpomhA==}
     engines: {node: '>=6.0.0'}
@@ -5505,9 +5478,6 @@ packages:
   opencollective-postinstall@2.0.3:
     resolution: {integrity: sha512-8AV/sCtuzUeTo8gQK5qDZzARrulB3egtLzFgteqB2tcT4Mw7B8Kt7JcDHmltjz6FOAHsvTevk70gZEbhM4ZS9Q==}
     hasBin: true
-
-  optimist@0.6.1:
-    resolution: {integrity: sha512-snN4O4TkigujZphWLN0E//nQmm7790RYaE53DdL7ZYwee2D8DDo9/EyYiKUfN3rneWUjhJnueija3G9I2i0h3g==}
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -6714,10 +6684,6 @@ packages:
   word-wrap@1.2.5:
     resolution: {integrity: sha512-BN22B5eaMMI9UMtjrGd5g5eCYPpCPDUy0FJXbYsaT5zYxjFOckS53SQDE3pWkVoWpHXVb3BrYcEN4Twa55B5cA==}
     engines: {node: '>=0.10.0'}
-
-  wordwrap@0.0.3:
-    resolution: {integrity: sha512-1tMA907+V4QmxV7dbRvb4/8MaRALK6q9Abid3ndMYnbyo8piisCmeONVqVSXqQA3KaP4SLt5b7ud6E2sqP8TFw==}
-    engines: {node: '>=0.4.0'}
 
   wrap-ansi@7.0.0:
     resolution: {integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==}
@@ -10803,8 +10769,6 @@ snapshots:
     dependencies:
       phenomenon: 1.6.0
 
-  coffee-script@1.12.7: {}
-
   collapse-white-space@2.1.0: {}
 
   color-convert@2.0.1:
@@ -10829,8 +10793,6 @@ snapshots:
       color-string: 2.1.4
 
   colorette@2.0.20: {}
-
-  colors@1.4.0: {}
 
   combined-stream@1.0.8:
     dependencies:
@@ -11894,11 +11856,6 @@ snapshots:
 
   kysely@0.28.10: {}
 
-  landing@0.0.1:
-    dependencies:
-      coffee-script: 1.12.7
-      node-static: 0.7.11
-
   leac@0.6.0: {}
 
   levn@0.4.1:
@@ -12158,8 +12115,6 @@ snapshots:
     dependencies:
       brace-expansion: 2.0.2
 
-  minimist@0.0.10: {}
-
   minimist@1.2.8: {}
 
   minipass@7.1.2: {}
@@ -12321,12 +12276,6 @@ snapshots:
 
   node-releases@2.0.27: {}
 
-  node-static@0.7.11:
-    dependencies:
-      colors: 1.4.0
-      mime: 1.6.0
-      optimist: 0.6.1
-
   nodemailer@7.0.12: {}
 
   nodemon@3.1.11:
@@ -12383,11 +12332,6 @@ snapshots:
   openapi-types@12.1.3: {}
 
   opencollective-postinstall@2.0.3: {}
-
-  optimist@0.6.1:
-    dependencies:
-      minimist: 0.0.10
-      wordwrap: 0.0.3
 
   optionator@0.9.4:
     dependencies:
@@ -13797,8 +13741,6 @@ snapshots:
       winston-transport: 4.9.0
 
   word-wrap@1.2.5: {}
-
-  wordwrap@0.0.3: {}
 
   wrap-ansi@7.0.0:
     dependencies:
