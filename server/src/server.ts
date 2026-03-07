@@ -2,7 +2,7 @@ import createApp from "@/app";
 import { env } from "@/config/env";
 
 const port = env.PORT;
-const host = env.NODE_ENV === "development" ? "localhost" : "0.0.0.0";
+const host = env.HOST;
 
 const main = async () => {
 	const app = createApp();
