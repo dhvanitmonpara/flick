@@ -27,6 +27,7 @@
 	"dependencies": {
 		"@flick/shared": "workspace:*",
 		"@react-email/components": "^1.0.1",
+		"@react-email/render": "^2.0.4",
 		"axios": "^1.13.2",
 		"bcryptjs": "^3.0.3",
 		"better-auth": "^1.4.17",
@@ -70,7 +71,6 @@
 		"@types/swagger-jsdoc": "^6.0.4",
 		"@types/swagger-ui-express": "^4.1.8",
 		"esbuild-plugin-alias": "^0.2.1",
-		"react-email": "^5.0.7",
 		"swagger-jsdoc": "^6.2.8",
 		"swagger-ui-express": "^5.0.1"
 	},
