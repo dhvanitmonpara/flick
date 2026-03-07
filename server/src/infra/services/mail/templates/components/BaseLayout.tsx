@@ -6,9 +6,6 @@ import {
 	Section,
 	Text,
 } from "@react-email/components";
-import React from "react";
-
-void React;
 
 interface BaseLayoutProps {
 	projectName: string;

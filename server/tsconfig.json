@@ -7,9 +7,11 @@
 		"rootDir": "./",
 		"baseUrl": "./src",
 		"paths": {
-			"@/*": ["*"]
+			"@/*": [
+				"*"
+			]
 		},
-		"jsx": "react",
+		"jsx": "react-jsx",
 		"esModuleInterop": true,
 		"resolveJsonModule": true,
 		"declaration": false,
@@ -17,5 +19,9 @@
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true
 	},
-	"include": ["src/**/*", "docs/**/*", "scripts/**/*"]
+	"include": [
+		"src/**/*",
+		"docs/**/*",
+		"scripts/**/*"
+	]
 }

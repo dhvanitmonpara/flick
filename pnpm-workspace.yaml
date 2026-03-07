@@ -6,9 +6,9 @@ packages:
   - ocr
   - shared
 
-ignoredBuiltDependencies:
-  - sharp
-
 onlyBuiltDependencies:
   - core-js
   - tesseract.js
+  - sharp
+  - '@scarf/scarf'
+  - esbuild
