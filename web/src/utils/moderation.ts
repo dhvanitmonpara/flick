@@ -55,7 +55,7 @@ const LEET_MAP: Record<string, string> = {
   "|": "i",
   "!": "i",
   "0": "o",
-  "$": "s",
+  $: "s",
   "5": "s",
   "+": "t",
   "7": "t",
@@ -64,12 +64,22 @@ const LEET_MAP: Record<string, string> = {
   "9": "g",
 };
 
-const STRICT_IGNORED_SEPARATORS = new Set([" ", "\t", "\n", "\r", ".", "-", "_"]);
+const STRICT_IGNORED_SEPARATORS = new Set([
+  " ",
+  "\t",
+  "\n",
+  "\r",
+  ".",
+  "-",
+  "_",
+]);
 const COMBINING_MARK_REGEX = /\p{M}/u;
 const WORD_CHAR_REGEX = /[\p{L}\p{N}]/u;
 
 class AhoCorasick {
-  private readonly nodes: AutomatonNode[] = [{ next: new Map(), fail: 0, outputs: [] }];
+  private readonly nodes: AutomatonNode[] = [
+    { next: new Map(), fail: 0, outputs: [] },
+  ];
 
   constructor(patterns: PatternPayload[]) {
     for (const payload of patterns) {
@@ -128,8 +138,14 @@ class AhoCorasick {
     }
   }
 
-  search(text: string): Array<{ start: number; end: number; payload: PatternPayload }> {
-    const matches: Array<{ start: number; end: number; payload: PatternPayload }> = [];
+  search(
+    text: string,
+  ): Array<{ start: number; end: number; payload: PatternPayload }> {
+    const matches: Array<{
+      start: number;
+      end: number;
+      payload: PatternPayload;
+    }> = [];
     let state = 0;
 
     for (let index = 0; index < text.length; index++) {
@@ -167,7 +183,11 @@ const isInlineSymbolSeparator = (input: string, index: number): boolean => {
   return Boolean(prev && next && isWordChar(prev) && isWordChar(next));
 };
 
-const isBoundaryMatch = (text: string, startInclusive: number, endExclusive: number): boolean => {
+const isBoundaryMatch = (
+  text: string,
+  startInclusive: number,
+  endExclusive: number,
+): boolean => {
   const prev = startInclusive > 0 ? text[startInclusive - 1] : "";
   const next = endExclusive < text.length ? text[endExclusive] : "";
 
@@ -190,7 +210,10 @@ const normalizeText = (input: string, mode: NormalizeMode): NormalizedText => {
       }
 
       if (mode === "strict") {
-        if (decomposedChar === "@" && isInlineSymbolSeparator(input, originalIndex)) {
+        if (
+          decomposedChar === "@" &&
+          isInlineSymbolSeparator(input, originalIndex)
+        ) {
           continue;
         }
 
@@ -238,7 +261,7 @@ const notifySubscribers = () => {
 // the normal AC tree already covers it and we'd be doing redundant work.
 const compileMatcher = (
   config: { strictWords: string[]; normalWords: string[] },
-  configVersion: string
+  configVersion: string,
 ): CompiledMatcher => {
   const strictPatterns: PatternPayload[] = config.strictWords
     .map((word) => ({
@@ -265,7 +288,10 @@ const compileMatcher = (
       const normalPattern = normalizeText(word, "normal").normalized;
       return { word, strictPattern, normalPattern };
     })
-    .filter(({ strictPattern, normalPattern }) => strictPattern !== normalPattern && strictPattern.length > 0)
+    .filter(
+      ({ strictPattern, normalPattern }) =>
+        strictPattern !== normalPattern && strictPattern.length > 0,
+    )
     .map(({ word, strictPattern }) => ({
       word,
       pattern: strictPattern,
@@ -303,7 +329,11 @@ const makeWildcardMatcher = () => {
 
       const tokenChar = token[tokenIndex] ?? "";
       if (tokenChar === "*") {
-        for (let consume = 1; patternIndex + consume <= pattern.length; consume++) {
+        for (
+          let consume = 1;
+          patternIndex + consume <= pattern.length;
+          consume++
+        ) {
           if (dfs(tokenIndex + 1, patternIndex + consume)) {
             memo.set(key, true);
             return true;
@@ -328,9 +358,19 @@ const makeWildcardMatcher = () => {
 };
 
 const collectWildcardCandidates = (
-  text: string
-): Array<{ start: number; end: number; normalizedToken: string; hasLiteral: boolean }> => {
-  const candidates: Array<{ start: number; end: number; normalizedToken: string; hasLiteral: boolean }> = [];
+  text: string,
+): Array<{
+  start: number;
+  end: number;
+  normalizedToken: string;
+  hasLiteral: boolean;
+}> => {
+  const candidates: Array<{
+    start: number;
+    end: number;
+    normalizedToken: string;
+    hasLiteral: boolean;
+  }> = [];
   let start = -1;
   let hasWildcard = false;
 
@@ -354,7 +394,12 @@ const collectWildcardCandidates = (
     const hasWildcardBridge = /\p{L}\*+\p{L}/u.test(normalizedToken);
     const hasEnoughLiteralSignal = literalChars.length >= 2;
 
-    if (!hasLiteral || !hasWildcardBridge || !hasEnoughLiteralSignal || !isBoundaryMatch(text, start, end)) {
+    if (
+      !hasLiteral ||
+      !hasWildcardBridge ||
+      !hasEnoughLiteralSignal ||
+      !isBoundaryMatch(text, start, end)
+    ) {
       start = -1;
       hasWildcard = false;
       return;
@@ -418,12 +463,15 @@ export async function loadModerationConfig(): Promise<void> {
           strictWords: Array.isArray(data.strictWords) ? data.strictWords : [],
           normalWords: Array.isArray(data.normalWords) ? data.normalWords : [],
         },
-        incomingVersion
+        incomingVersion,
       );
       lastFetchTime = Date.now();
     } catch {
       if (!matcher) {
-        matcher = compileMatcher({ strictWords: [], normalWords: [] }, "fallback");
+        matcher = compileMatcher(
+          { strictWords: [], normalWords: [] },
+          "fallback",
+        );
       }
     } finally {
       revision += 1;
@@ -435,7 +483,9 @@ export async function loadModerationConfig(): Promise<void> {
   return configPromise;
 }
 
-export const subscribeModerationUpdates = (listener: () => void): (() => void) => {
+export const subscribeModerationUpdates = (
+  listener: () => void,
+): (() => void) => {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
@@ -470,7 +520,10 @@ const dedupeAndSort = (matches: ModerationMatch[]): ModerationMatch[] => {
 
   for (const match of unique) {
     // Fully contained within the previous accepted span — skip
-    if (match.start >= merged[merged.length - 1]?.start && match.end <= lastEnd) {
+    if (
+      match.start >= merged[merged.length - 1]?.start &&
+      match.end <= lastEnd
+    ) {
       continue;
     }
     merged.push(match);
@@ -520,7 +573,8 @@ export const moderateText = (text: string): ModerationResult => {
     if (!candidate.hasLiteral) continue;
 
     for (const payload of matcher.wildcardPatterns) {
-      if (!wildcardMatches(candidate.normalizedToken, payload.pattern)) continue;
+      if (!wildcardMatches(candidate.normalizedToken, payload.pattern))
+        continue;
 
       found.push({
         word: payload.word,
@@ -535,7 +589,9 @@ export const moderateText = (text: string): ModerationResult => {
   return { allowed: matches.length === 0, matches };
 };
 
-export const validateText = (text: string): { allowed: boolean; reason?: string; matches: ModerationMatch[] } => {
+export const validateText = (
+  text: string,
+): { allowed: boolean; reason?: string; matches: ModerationMatch[] } => {
   const result = moderateText(text);
   if (result.allowed) return { allowed: true, matches: [] };
 
@@ -543,13 +599,17 @@ export const validateText = (text: string): { allowed: boolean; reason?: string;
     new Set(
       result.matches
         .map((match) => text.slice(match.start, match.end).trim())
-        .filter((snippet) => snippet.length > 0)
-    )
+        .filter((snippet) => snippet.length > 0),
+    ),
   );
 
-  const hasObfuscation = uniqueFlaggedSnippets.some((snippet) => /[*@!$0-9_+.|-]/.test(snippet));
+  const hasObfuscation = uniqueFlaggedSnippets.some((snippet) =>
+    /[*@!$0-9_+.|-]/.test(snippet),
+  );
   const preview = uniqueFlaggedSnippets.slice(0, 2).join(", ");
-  const previewLabel = preview ? ` (${preview}${uniqueFlaggedSnippets.length > 2 ? ", ..." : ""})` : "";
+  const previewLabel = preview
+    ? ` (${preview}${uniqueFlaggedSnippets.length > 2 ? ", ..." : ""})`
+    : "";
   const guidance = hasObfuscation
     ? "Please rewrite it without symbols/numbers used to bypass filters."
     : "Please rephrase and keep the language respectful.";
@@ -563,7 +623,7 @@ export const validateText = (text: string): { allowed: boolean; reason?: string;
 
 export const splitTextByMatches = (
   text: string,
-  matches: ModerationMatch[]
+  matches: ModerationMatch[],
 ): Array<{ value: string; flagged: boolean; key: string }> => {
   if (matches.length === 0) {
     return [{ value: text, flagged: false, key: "plain-0" }];
@@ -574,15 +634,27 @@ export const splitTextByMatches = (
 
   for (const match of matches) {
     if (match.start > cursor) {
-      parts.push({ value: text.slice(cursor, match.start), flagged: false, key: `plain-${cursor}` });
+      parts.push({
+        value: text.slice(cursor, match.start),
+        flagged: false,
+        key: `plain-${cursor}`,
+      });
     }
 
-    parts.push({ value: text.slice(match.start, match.end), flagged: true, key: `flag-${match.start}-${match.end}` });
+    parts.push({
+      value: text.slice(match.start, match.end),
+      flagged: true,
+      key: `flag-${match.start}-${match.end}`,
+    });
     cursor = match.end;
   }
 
   if (cursor < text.length) {
-    parts.push({ value: text.slice(cursor), flagged: false, key: `plain-${cursor}` });
+    parts.push({
+      value: text.slice(cursor),
+      flagged: false,
+      key: `plain-${cursor}`,
+    });
   }
 
   return parts;

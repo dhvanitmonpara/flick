@@ -12,7 +12,7 @@ export const PostBranches = [
   "MSC CS",
   "BSC CS",
   "MSC AI",
-  "BSC AI"
+  "BSC AI",
 ] as const;
 
-export type PostBranch = typeof PostBranches[number];
+export type PostBranch = (typeof PostBranches)[number];

@@ -1,11 +1,11 @@
 import {
-  pgTable,
-  text,
-  timestamp,
-  jsonb,
-  index,
-  uuid,
-  inet,
+	index,
+	inet,
+	jsonb,
+	pgTable,
+	text,
+	timestamp,
+	uuid,
 } from "drizzle-orm/pg-core";
 import { entityEnum, roleEnum } from "./enums";
 
@@ -38,36 +38,38 @@ CREATE INDEX idx_audit_logs_occurred_at
  */
 
 export const auditLogs = pgTable(
-  "logs",
-  {
-    id: uuid().defaultRandom().primaryKey(),
-    occuredAt: timestamp("occured_at", { withTimezone: true }).defaultNow().notNull(),
+	"logs",
+	{
+		id: uuid().defaultRandom().primaryKey(),
+		occuredAt: timestamp("occured_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
 
-    actorId: uuid("actor_id"),
-    actorType: roleEnum("actor_type").notNull(),
+		actorId: uuid("actor_id"),
+		actorType: roleEnum("actor_type").notNull(),
 
-    // can be improved
-    action: text().notNull(),
+		// can be improved
+		action: text().notNull(),
 
-    entityType: entityEnum("entity_type").notNull(),
-    entityId: uuid("entity_id"),
+		entityType: entityEnum("entity_type").notNull(),
+		entityId: uuid("entity_id"),
 
-    before: jsonb(),
-    after: jsonb(),
+		before: jsonb(),
+		after: jsonb(),
 
-    ipAddress: inet("ip_address"),
-    userAgent: text("user_agent"),
+		ipAddress: inet("ip_address"),
+		userAgent: text("user_agent"),
 
-    requestId: uuid("request_id"),
-    reason: text(),
-    metadata: jsonb()
-  },
-  (table) => [
-    index("idx_audit_logs_entity").on(table.entityType, table.entityId),
-    index("idx_audit_logs_actor").on(table.actorId),
-    index("idx_audit_logs_occurred_at").on(table.occuredAt.desc()),
-  ]
+		requestId: uuid("request_id"),
+		reason: text(),
+		metadata: jsonb(),
+	},
+	(table) => [
+		index("idx_audit_logs_entity").on(table.entityType, table.entityId),
+		index("idx_audit_logs_actor").on(table.actorId),
+		index("idx_audit_logs_occurred_at").on(table.occuredAt.desc()),
+	],
 );
 
-export type AuditLogsInsert = typeof auditLogs.$inferInsert
-export type AuditLogsSelect = typeof auditLogs.$inferSelect
+export type AuditLogsInsert = typeof auditLogs.$inferInsert;
+export type AuditLogsSelect = typeof auditLogs.$inferSelect;

@@ -1,6 +1,11 @@
 import { Router } from "express";
+import {
+	authenticate,
+	ensureRatelimit,
+	requireAuth,
+	requireRole,
+} from "@/core/middlewares";
 import WordsModerationController from "./words-moderation.controller";
-import { authenticate, ensureRatelimit, requireAuth, requireRole } from "@/core/middlewares";
 
 const router = Router();
 

@@ -1,5 +1,6 @@
 const voteCacheKeys = {
-  userIdAndTarget: (id: string, target: string) => `vote:user:${id}:target:${target}`
+	userIdAndTarget: (id: string, target: string) =>
+		`vote:user:${id}:target:${target}`,
 };
 
-export default voteCacheKeys
+export default voteCacheKeys;

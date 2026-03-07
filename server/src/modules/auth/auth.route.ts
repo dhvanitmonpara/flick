@@ -1,7 +1,7 @@
 import { Router } from "express";
-import AuthController from "@/modules/auth/auth.controller";
 import { ensureRatelimit, injectUser, requireRole } from "@/core/middlewares";
 import { authenticated } from "@/core/middlewares/pipelines";
+import AuthController from "@/modules/auth/auth.controller";
 
 const router = Router();
 
@@ -24,14 +24,18 @@ router.post("/otp/login/verify", AuthController.verifyLoginOtp);
 router.use(authenticated);
 
 router.get("/me", injectUser, AuthController.getCurrentUser);
-router.post("/onboarding/complete", injectUser, AuthController.completeOnboarding);
+router.post(
+	"/onboarding/complete",
+	injectUser,
+	AuthController.completeOnboarding,
+);
 router.post("/logout", AuthController.logoutUser);
 router.post("/logout-all", AuthController.logoutAllDevices);
 router.delete("/account", AuthController.deleteAccount);
 router.get("/password/status", AuthController.getPasswordStatus);
 router.post("/password/set", AuthController.setPassword);
 
-router.use(requireRole("admin"))
+router.use(requireRole("admin"));
 
 router.get("/admins", AuthController.getAllAdmins);
 router.get("/users", AuthController.getAllUsersForAdmin);

@@ -10,19 +10,36 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import useProfileStore from "@/store/profileStore";
-import { loadModerationConfig, validateText, censorText } from "@/utils/moderation";
+import {
+  loadModerationConfig,
+  validateText,
+  censorText,
+} from "@/utils/moderation";
 import { Textarea } from "../ui/textarea";
 import { Loader2 } from "lucide-react";
 import usePostStore from "@/store/postStore";
 import { TermsForm } from "./TermsForm";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Switch } from "../ui/switch";
 import { PostTopic } from "@/types/postTopics";
 import { postApi } from "@/services/api/post";
@@ -30,8 +47,14 @@ import { userApi } from "@/services/api/user";
 import ModeratedText from "@/components/general/ModeratedText";
 
 const postSchema = z.object({
-  title: z.string().min(3, "Title must be at least 3 characters.").max(100, "Title must be at most 100 characters."),
-  content: z.string().min(10, "Content must be at least 10 characters.").max(2000, "Content must be at most 2000 characters."),
+  title: z
+    .string()
+    .min(3, "Title must be at least 3 characters.")
+    .max(100, "Title must be at most 100 characters."),
+  content: z
+    .string()
+    .min(10, "Content must be at least 10 characters.")
+    .max(2000, "Content must be at most 2000 characters."),
   topic: z.enum(PostTopic),
   isPrivate: z.boolean().default(false),
 });
@@ -45,16 +68,28 @@ type PostDefaultData = {
   isPrivate?: boolean;
 };
 
-function CreatePost({ className, children, defaultData }: { className?: string, children?: React.ReactNode, defaultData?: PostDefaultData }) {
+function CreatePost({
+  className,
+  children,
+  defaultData,
+}: {
+  className?: string;
+  children?: React.ReactNode;
+  defaultData?: PostDefaultData;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {children || <Button className={`flex items-center cursor-pointer space-x-3 px-4 py-4 rounded-md w-full justify-start text-lg font-normal dark:bg-transparent bg-zinc-100 text-zinc-800 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/40 ${className}`}>
-          <FaPlus />
-          <span>create</span>
-        </Button>}
+        {children || (
+          <Button
+            className={`flex items-center cursor-pointer space-x-3 px-4 py-4 rounded-md w-full justify-start text-lg font-normal dark:bg-transparent bg-zinc-100 text-zinc-800 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/40 ${className}`}
+          >
+            <FaPlus />
+            <span>create</span>
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="dark:bg-zinc-900 dark:border-zinc-800">
         <DialogHeader>
@@ -66,31 +101,41 @@ function CreatePost({ className, children, defaultData }: { className?: string, 
   );
 }
 
-export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.Dispatch<React.SetStateAction<boolean>>, defaultData?: PostDefaultData, id?: string }) => {
+export const CreatePostForm = ({
+  setOpen,
+  defaultData,
+  id,
+}: {
+  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  defaultData?: PostDefaultData;
+  id?: string;
+}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showTerms, setShowTerms] = useState(false);
 
-  const profile = useProfileStore(state => state.profile)
-  const addPost = usePostStore(state => state.addPost)
-  const updatePost = usePostStore(state => state.updatePost)
-  const { handleError } = useErrorHandler()
+  const profile = useProfileStore((state) => state.profile);
+  const addPost = usePostStore((state) => state.addPost);
+  const updatePost = usePostStore((state) => state.updatePost);
+  const { handleError } = useErrorHandler();
 
   const isUpdating = !!defaultData;
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postSchema),
-    defaultValues: defaultData ? {
-      title: defaultData.title,
-      content: defaultData.content,
-      topic: defaultData.topic ?? PostTopic[0],
-      isPrivate: defaultData.isPrivate ?? false,
-    } : {
-      title: "",
-      content: "",
-      topic: PostTopic[0],
-      isPrivate: false,
-    },
+    defaultValues: defaultData
+      ? {
+          title: defaultData.title,
+          content: defaultData.content,
+          topic: defaultData.topic ?? PostTopic[0],
+          isPrivate: defaultData.isPrivate ?? false,
+        }
+      : {
+          title: "",
+          content: "",
+          topic: PostTopic[0],
+          isPrivate: false,
+        },
   });
 
   useEffect(() => {
@@ -98,17 +143,21 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
   }, []);
 
   useEffect(() => {
-    form.reset(defaultData ? {
-      title: defaultData.title,
-      content: defaultData.content,
-      topic: defaultData.topic ?? PostTopic[0],
-      isPrivate: defaultData.isPrivate ?? false,
-    } : {
-      title: "",
-      content: "",
-      topic: PostTopic[0],
-      isPrivate: false,
-    });
+    form.reset(
+      defaultData
+        ? {
+            title: defaultData.title,
+            content: defaultData.content,
+            topic: defaultData.topic ?? PostTopic[0],
+            isPrivate: defaultData.isPrivate ?? false,
+          }
+        : {
+            title: "",
+            content: "",
+            topic: PostTopic[0],
+            isPrivate: false,
+          },
+    );
   }, [defaultData, form]);
 
   const onSubmit = async (data: PostFormValues) => {
@@ -116,7 +165,7 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
       setLoading(true);
 
       if (!profile?.id) throw new Error("User not found");
-      if (isUpdating && !id) throw new Error("Post id not found")
+      if (isUpdating && !id) throw new Error("Post id not found");
 
       await loadModerationConfig();
       const payload = {
@@ -125,23 +174,24 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
         content: censorText(data.content),
       };
 
-      let res = null
+      let res = null;
 
       if (isUpdating) {
-        res = await postApi.update(id as string, payload)
+        res = await postApi.update(id as string, payload);
       } else {
         res = await postApi.create(payload);
       }
 
-      if (res.status !== (isUpdating ? 200 : 201)) throw new Error(`Failed to ${isUpdating ? "update" : "create"} post`);
+      if (res.status !== (isUpdating ? 200 : 201))
+        throw new Error(`Failed to ${isUpdating ? "update" : "create"} post`);
 
       toast.success(`Post ${isUpdating ? "updated" : "created"} successfully!`);
       form.reset();
 
       if (isUpdating && id) {
-        updatePost(id, res.data.post)
+        updatePost(id, res.data.post);
       } else {
-        addPost(res.data.post)
+        addPost(res.data.post);
       }
 
       if (setOpen) setOpen(false);
@@ -177,7 +227,7 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
     } catch (error) {
       handleError(error as AxiosError, "Failed to accept terms");
     }
-  }
+  };
 
   return (
     <>
@@ -196,9 +246,11 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
                   <FormLabel>Title</FormLabel>
                   <FormControl>
                     <Input
-                      className={hasTitleWarning
-                        ? "border-red-500 bg-zinc-100 dark:bg-zinc-800 focus-visible:ring-red-500"
-                        : "dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800"}
+                      className={
+                        hasTitleWarning
+                          ? "border-red-500 bg-zinc-100 dark:bg-zinc-800 focus-visible:ring-red-500"
+                          : "dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800"
+                      }
                       placeholder="Enter post title"
                       {...field}
                     />
@@ -239,7 +291,11 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
                       </SelectTrigger>
                       <SelectContent>
                         {PostTopic.map((topic) => (
-                          <SelectItem className="focus:bg-zinc-200 dark:focus:bg-zinc-700" key={topic} value={topic}>
+                          <SelectItem
+                            className="focus:bg-zinc-200 dark:focus:bg-zinc-700"
+                            key={topic}
+                            value={topic}
+                          >
                             {topic}
                           </SelectItem>
                         ))}
@@ -274,7 +330,11 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
                           setError("");
                           field.onChange(e);
                         }}
-                        className={hasBanned ? "border-red-500 bg-zinc-100 dark:bg-zinc-800 focus-visible:ring-red-500" : "bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-800"}
+                        className={
+                          hasBanned
+                            ? "border-red-500 bg-zinc-100 dark:bg-zinc-800 focus-visible:ring-red-500"
+                            : "bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-800"
+                        }
                       />
                       {hasBanned && field.value && (
                         <div className="mt-2 text-sm">
@@ -305,7 +365,8 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
                     College-Only Post
                   </FormLabel>
                   <div className="text-sm text-zinc-500 dark:text-zinc-400">
-                    Only users from your verified college email domain will see this.
+                    Only users from your verified college email domain will see
+                    this.
                   </div>
                 </div>
                 <FormControl>
@@ -319,15 +380,29 @@ export const CreatePostForm = ({ setOpen, defaultData, id }: { setOpen?: React.D
             )}
           />
 
-          <Button disabled={loading || Boolean(error)} type="submit" className="w-full">
-            {loading ? <><Loader2 className="animate-spin" /> Creating...</> : "Create"}
+          <Button
+            disabled={loading || Boolean(error)}
+            type="submit"
+            className="w-full"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" /> Creating...
+              </>
+            ) : (
+              "Create"
+            )}
           </Button>
           {error && <p className="text-red-500 text-sm">{error}</p>}
         </form>
       </Form>
-      <TermsForm showTerms={showTerms} setShowTerms={setShowTerms} onSubmitTerms={onSubmitTerms} />
+      <TermsForm
+        showTerms={showTerms}
+        setShowTerms={setShowTerms}
+        onSubmitTerms={onSubmitTerms}
+      />
     </>
-  )
-}
+  );
+};
 
 export default CreatePost;

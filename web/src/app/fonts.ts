@@ -1,5 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import localFont from 'next/font/local';
+import localFont from "next/font/local";
 
 export const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,7 +12,7 @@ export const geistMono = Geist_Mono({
 });
 
 export const avallon = localFont({
-  src: '../assets/fonts/avallon-regular/Avallon.woff2',
-  display: 'swap',
-  variable: "--font-avallon"
+  src: "../assets/fonts/avallon-regular/Avallon.woff2",
+  display: "swap",
+  variable: "--font-avallon",
 });

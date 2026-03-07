@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
 import Comment from "@/components/general/Comment";
 import CreateComment from "@/components/general/CreateComment";
-import Post from "@/components/general/Post"
+import Post from "@/components/general/Post";
 import SkeletonCard from "@/components/skeletons/PostSkeleton";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import useCommentStore from "@/store/commentStore";
@@ -18,62 +18,78 @@ import { postApi } from "@/services/api/post";
 import { commentApi } from "@/services/api/comment";
 import useProfileStore from "@/store/profileStore";
 
-const getAvatarUrl = (user: UserEntity | string | null) => isUser(user) && isCollege(user.college) ? user.college.profile : "";
-const getCollegeName = (user: UserEntity | string | null) => isUser(user) && isCollege(user.college) ? user.college.name : "Unknown College";
-const getUsername = (user: UserEntity | string | null) => isUser(user) ? user.username : "Anonymous";
+const getAvatarUrl = (user: UserEntity | string | null) =>
+  isUser(user) && isCollege(user.college) ? user.college.profile : "";
+const getCollegeName = (user: UserEntity | string | null) =>
+  isUser(user) && isCollege(user.college)
+    ? user.college.name
+    : "Unknown College";
+const getUsername = (user: UserEntity | string | null) =>
+  isUser(user) ? user.username : "Anonymous";
 
 function PostPage() {
+  const [currentPost, setCurrentPost] = useState<PostEntity | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadingPosts, setLoadingPosts] = useState(false);
 
-  const [currentPost, setCurrentPost] = useState<PostEntity | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [loadingPosts, setLoadingPosts] = useState(false)
+  const comments = useCommentStore((state) => state.comments);
+  const setComments = useCommentStore((state) => state.setComments);
+  const resetComments = useCommentStore((state) => state.resetComments);
 
-  const comments = useCommentStore(state => state.comments)
-  const setComments = useCommentStore(state => state.setComments)
-  const resetComments = useCommentStore(state => state.resetComments)
-
-  const { handleError } = useErrorHandler()
+  const { handleError } = useErrorHandler();
 
   const { id } = useParams();
-  const posts = usePostStore(state => state.posts)
-  const isLoggedIn = Boolean(useProfileStore(state => state.profile.id))
+  const posts = usePostStore((state) => state.posts);
+  const isLoggedIn = Boolean(useProfileStore((state) => state.profile.id));
   const navigate = useRouter().push;
 
   const incrementView = useCallback(async () => {
     try {
-      const res = await postApi.incrementView(id as string)
+      const res = await postApi.incrementView(id as string);
       if (res.status !== 200) {
-        throw new Error("Failed to increment view")
+        throw new Error("Failed to increment view");
       }
     } catch (error) {
-      await handleError(error as AxiosError | Error, "Error incrementing view", undefined, incrementView, "Failed to increment view")
+      await handleError(
+        error as AxiosError | Error,
+        "Error incrementing view",
+        undefined,
+        incrementView,
+        "Failed to increment view",
+      );
     }
-  }, [handleError, id])
+  }, [handleError, id]);
 
   const fetchComments = useCallback(async () => {
     try {
-      setLoading(true)
-      const res = await commentApi.getByPostId(id as string)
+      setLoading(true);
+      const res = await commentApi.getByPostId(id as string);
       if (res.status !== 200) {
-        throw new Error("Failed to fetch comments")
+        throw new Error("Failed to fetch comments");
       }
-      const commentTree = buildCommentTree(res.data.comments)
-      setComments(commentTree)
+      const commentTree = buildCommentTree(res.data.comments);
+      setComments(commentTree);
     } catch (error) {
-      await handleError(error as AxiosError | Error, "Error fetching comments", undefined, fetchComments, "Failed to fetch comments")
+      await handleError(
+        error as AxiosError | Error,
+        "Error fetching comments",
+        undefined,
+        fetchComments,
+        "Failed to fetch comments",
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [handleError, id, setComments])
+  }, [handleError, id, setComments]);
 
   const fetchPostById = useCallback(async () => {
     try {
-      setLoadingPosts(true)
-      const res = await postApi.getById(id as string)
+      setLoadingPosts(true);
+      const res = await postApi.getById(id as string);
       if (res.status !== 200) {
-        throw new Error("Failed to fetch post")
+        throw new Error("Failed to fetch post");
       }
-      setCurrentPost(res.data.post)
+      setCurrentPost(res.data.post);
     } catch (error) {
       await handleError(
         error as AxiosError | Error,
@@ -81,12 +97,12 @@ function PostPage() {
         undefined,
         fetchPostById,
         "Failed to fetch post",
-        () => navigate("/")
-      )
+        () => navigate("/"),
+      );
     } finally {
-      setLoadingPosts(false)
+      setLoadingPosts(false);
     }
-  }, [handleError, id, navigate])
+  }, [handleError, id, navigate]);
 
   useEffect(() => {
     resetComments();
@@ -106,17 +122,27 @@ function PostPage() {
 
     incrementView();
     fetchComments();
-  }, [fetchComments, fetchPostById, id, incrementView, navigate, posts, resetComments]);
+  }, [
+    fetchComments,
+    fetchPostById,
+    id,
+    incrementView,
+    navigate,
+    posts,
+    resetComments,
+  ]);
 
   if (loadingPosts || !currentPost) {
-    return <div className="divide-y divide-zinc-300/60 dark:divide-zinc-700/50 w-full">
-      <SkeletonCard />
-    </div>
+    return (
+      <div className="divide-y divide-zinc-300/60 dark:divide-zinc-700/50 w-full">
+        <SkeletonCard />
+      </div>
+    );
   }
 
   return (
     <div className="dark:divide-zinc-700/50 w-full">
-      {currentPost?.id &&
+      {currentPost?.id && (
         <Post
           key={currentPost.id}
           id={currentPost.id}
@@ -129,7 +155,11 @@ function PostPage() {
           isPrivate={currentPost.isPrivate}
           userVote={currentPost.userVote ?? null}
           title={currentPost.title}
-          branch={isUser(currentPost.postedBy) ? currentPost.postedBy.branch : "Unknown Branch"}
+          branch={
+            isUser(currentPost.postedBy)
+              ? currentPost.postedBy.branch
+              : "Unknown Branch"
+          }
           viewsCount={currentPost.views}
           content={currentPost.content}
           avatarFallback=""
@@ -137,30 +167,33 @@ function PostPage() {
           upvoteCount={currentPost.upvoteCount}
           downvoteCount={currentPost.downvoteCount}
           commentsCount={currentPost.commentsCount ?? comments?.length ?? 0}
-          authorId={isUser(currentPost.postedBy) ? currentPost.postedBy.id : undefined}
+          authorId={
+            isUser(currentPost.postedBy) ? currentPost.postedBy.id : undefined
+          }
         />
-      }
+      )}
       {isLoggedIn && (
         <div className="px-4">
           <CreateComment />
         </div>
       )}
       <div className="divide-y! divide-zinc-300/60 dark:divide-zinc-700/50">
-        {loading
-          ? <>
+        {loading ? (
+          <>
             {[...Array(10)].map((_, index) => (
               <SkeletonCard key={index} />
             ))}
           </>
-          : (comments
-            ? comments.map((comment) => (
-              <Comment key={comment.id} comment={comment} />
-            ))
-            : <p>Comments not found</p>
-          )}
+        ) : comments ? (
+          comments.map((comment) => (
+            <Comment key={comment.id} comment={comment} />
+          ))
+        ) : (
+          <p>Comments not found</p>
+        )}
       </div>
-    </div >
-  )
+    </div>
+  );
 }
 
 function buildCommentTree(comments: CommentEntity[]): CommentEntity[] {
@@ -168,13 +201,13 @@ function buildCommentTree(comments: CommentEntity[]): CommentEntity[] {
   const roots: CommentEntity[] = [];
 
   // Add all comments to map and init children
-  comments.forEach(comment => {
+  comments.forEach((comment) => {
     comment.children = [];
     commentMap.set(comment.id, comment);
   });
 
   // Link children to their parent
-  comments.forEach(comment => {
+  comments.forEach((comment) => {
     if (comment.parentCommentId) {
       const parent = commentMap.get(comment.parentCommentId);
       if (parent) {
@@ -188,4 +221,4 @@ function buildCommentTree(comments: CommentEntity[]): CommentEntity[] {
   return roots;
 }
 
-export default PostPage
+export default PostPage;

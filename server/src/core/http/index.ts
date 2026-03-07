@@ -1,5 +1,11 @@
-import HttpResponse from "./response";
+import { Controller, ControllerHandler, controllerHandler } from "./controller";
 import HttpError from "./error";
-import { controllerHandler, ControllerHandler, Controller } from "./controller";
+import HttpResponse from "./response";
 
-export { HttpResponse, HttpError, ControllerHandler, controllerHandler, Controller };
+export {
+	HttpResponse,
+	HttpError,
+	ControllerHandler,
+	controllerHandler,
+	Controller,
+};

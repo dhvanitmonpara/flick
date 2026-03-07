@@ -1,41 +1,41 @@
 interface BaseDetails {
-  username: string;
-  projectName: string;
+	username: string;
+	projectName: string;
 }
 
 interface OTPDetails extends BaseDetails {
-  otp?: string;
+	otp?: string;
 }
 
-interface WelcomeDetails extends BaseDetails { }
+interface WelcomeDetails extends BaseDetails {}
 
 interface FeedbackReceivedDetails {
-  projectName: string;
+	projectName: string;
 }
 
 interface FeedbackSentDetails {
-  title: string;
-  description: string;
-  sendBy: string;
-  projectName: string;
+	title: string;
+	description: string;
+	sendBy: string;
+	projectName: string;
 }
 
 interface NewDeviceLoginDetails {
-  device: string;
-  location?: string;
-  projectName: string;
+	device: string;
+	location?: string;
+	projectName: string;
 }
 
 interface ResetPasswordDetails {
-  url: string;
-  projectName: string;
+	url: string;
+	projectName: string;
 }
 
 export type MailPayloadMap = {
-  OTP: OTPDetails;
-  WELCOME: WelcomeDetails;
-  "FEEDBACK-RECEIVED": FeedbackReceivedDetails;
-  "FEEDBACK-SENT": FeedbackSentDetails;
-  "NEW-DEVICE-LOGIN": NewDeviceLoginDetails;
-  "RESET-PASSWORD": ResetPasswordDetails;
+	OTP: OTPDetails;
+	WELCOME: WelcomeDetails;
+	"FEEDBACK-RECEIVED": FeedbackReceivedDetails;
+	"FEEDBACK-SENT": FeedbackSentDetails;
+	"NEW-DEVICE-LOGIN": NewDeviceLoginDetails;
+	"RESET-PASSWORD": ResetPasswordDetails;
 };

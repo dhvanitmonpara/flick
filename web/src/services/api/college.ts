@@ -9,7 +9,9 @@ export interface Branch {
 
 export const collegeApi = {
   getCollegeBranches: async (collegeId: string): Promise<Branch[]> => {
-    const response: AxiosResponse<{ branches: Branch[] }> = await http.get(`/colleges/${collegeId}/branches`);
+    const response: AxiosResponse<{ branches: Branch[] }> = await http.get(
+      `/colleges/${collegeId}/branches`,
+    );
     return response.data.branches;
   },
 };

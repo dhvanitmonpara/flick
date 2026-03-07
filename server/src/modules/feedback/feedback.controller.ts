@@ -1,61 +1,73 @@
-import { Request } from "express";
+import type { Request } from "express";
 import { Controller, HttpResponse } from "@/core/http";
-import feedbackService from "./feedback.service";
 import * as feedbackSchemas from "./feedback.schema";
+import feedbackService from "./feedback.service";
 
 @Controller()
 class FeedbackController {
-  static async createFeedback(req: Request) {
-    const { title, content, type } = feedbackSchemas.CreateFeedbackSchema.parse(req.body);
-    const userId = req.user.id;
+	static async createFeedback(req: Request) {
+		const { title, content, type } = feedbackSchemas.CreateFeedbackSchema.parse(
+			req.body,
+		);
+		const userId = req.user.id;
 
-    const newFeedback = await feedbackService.createFeedback({
-      title,
-      content,
-      type,
-      userId,
-    });
+		const newFeedback = await feedbackService.createFeedback({
+			title,
+			content,
+			type,
+			userId,
+		});
 
-    return HttpResponse.created("Feedback created successfully", { feedback: newFeedback });
-  }
+		return HttpResponse.created("Feedback created successfully", {
+			feedback: newFeedback,
+		});
+	}
 
-  static async getFeedbackById(req: Request) {
-    const { id } = feedbackSchemas.FeedbackIdSchema.parse(req.params);
+	static async getFeedbackById(req: Request) {
+		const { id } = feedbackSchemas.FeedbackIdSchema.parse(req.params);
 
-    const feedback = await feedbackService.getFeedbackById(id, true);
+		const feedback = await feedbackService.getFeedbackById(id, true);
 
-    return HttpResponse.ok("Feedback retrieved successfully", { feedback });
-  }
+		return HttpResponse.ok("Feedback retrieved successfully", { feedback });
+	}
 
-  static async listFeedbacks(req: Request) {
-    const { limit, skip, type, status } = feedbackSchemas.ListFeedbacksQuerySchema.parse(req.query)
+	static async listFeedbacks(req: Request) {
+		const { limit, skip, type, status } =
+			feedbackSchemas.ListFeedbacksQuerySchema.parse(req.query);
 
-    const result = await feedbackService.listFeedbacks({
-      limit,
-      skip,
-      type,
-      status,
-    });
+		const result = await feedbackService.listFeedbacks({
+			limit,
+			skip,
+			type,
+			status,
+		});
 
-    return HttpResponse.ok("Feedbacks retrieved successfully", result);
-  }
+		return HttpResponse.ok("Feedbacks retrieved successfully", result);
+	}
 
-  static async updateFeedbackStatus(req: Request) {
-    const { id } = feedbackSchemas.FeedbackIdSchema.parse(req.params);
-    const { status } = feedbackSchemas.UpdateFeedbackStatusSchema.parse(req.body);
+	static async updateFeedbackStatus(req: Request) {
+		const { id } = feedbackSchemas.FeedbackIdSchema.parse(req.params);
+		const { status } = feedbackSchemas.UpdateFeedbackStatusSchema.parse(
+			req.body,
+		);
 
-    const updatedFeedback = await feedbackService.updateFeedbackStatus(id, status);
+		const updatedFeedback = await feedbackService.updateFeedbackStatus(
+			id,
+			status,
+		);
 
-    return HttpResponse.ok("Feedback status updated successfully", { feedback: updatedFeedback });
-  }
+		return HttpResponse.ok("Feedback status updated successfully", {
+			feedback: updatedFeedback,
+		});
+	}
 
-  static async deleteFeedback(req: Request) {
-    const { id } = feedbackSchemas.FeedbackIdSchema.parse(req.params);
+	static async deleteFeedback(req: Request) {
+		const { id } = feedbackSchemas.FeedbackIdSchema.parse(req.params);
 
-    await feedbackService.deleteFeedback(id);
+		await feedbackService.deleteFeedback(id);
 
-    return HttpResponse.ok("Feedback deleted successfully");
-  }
+		return HttpResponse.ok("Feedback deleted successfully");
+	}
 }
 
 export default FeedbackController;

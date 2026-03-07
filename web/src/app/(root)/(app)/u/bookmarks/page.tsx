@@ -1,76 +1,87 @@
-"use client"
+"use client";
 
-import Post from "@/components/general/Post"
-import { useErrorHandler } from "@/hooks/useErrorHandler"
-import type { Post as PostEntity } from "@/types/Post"
-import { useCallback, useEffect, useState } from "react"
-import { AxiosError } from "axios"
-import { isCollege, isUser } from "@/utils/helpers"
-import SkeletonCard from "@/components/skeletons/PostSkeleton"
-import { bookmarkApi } from "@/services/api/bookmark"
+import Post from "@/components/general/Post";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import type { Post as PostEntity } from "@/types/Post";
+import { useCallback, useEffect, useState } from "react";
+import { AxiosError } from "axios";
+import { isCollege, isUser } from "@/utils/helpers";
+import SkeletonCard from "@/components/skeletons/PostSkeleton";
+import { bookmarkApi } from "@/services/api/bookmark";
 
 function BookmarksPage() {
-
-  const [posts, setPosts] = useState<PostEntity[]>([])
-  const [loading, setLoading] = useState(true)
-  const { handleError } = useErrorHandler()
+  const [posts, setPosts] = useState<PostEntity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { handleError } = useErrorHandler();
 
   const getBookmarks = useCallback(async () => {
     try {
-      setLoading(true)
-      const res = await bookmarkApi.listMine()
+      setLoading(true);
+      const res = await bookmarkApi.listMine();
       if (res.status !== 200) throw new Error("Failed to get bookmarks");
-      setPosts(res.data.posts)
+      setPosts(res.data.posts);
     } catch (error) {
-      handleError(error as AxiosError, "Failed to get bookmarks")
+      handleError(error as AxiosError, "Failed to get bookmarks");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [handleError])
+  }, [handleError]);
 
   useEffect(() => {
-    getBookmarks()
-  }, [getBookmarks])
+    getBookmarks();
+  }, [getBookmarks]);
 
   const removedPostOnAction = (id: string) => {
-    setPosts((prev) => prev.filter((post) => post.id !== id))
-  }
+    setPosts((prev) => prev.filter((post) => post.id !== id));
+  };
 
-  if (loading) return (
-    <section className="w-full max-h-screen overflow-y-auto no-scrollbar py-6 divide-y divide-zinc-300/60 dark:divide-zinc-700/50">
-      {[...Array(10)].map((_, index) => (
-        <SkeletonCard key={index} />
-      ))}
-    </section>
-  )
+  if (loading)
+    return (
+      <section className="w-full max-h-screen overflow-y-auto no-scrollbar py-6 divide-y divide-zinc-300/60 dark:divide-zinc-700/50">
+        {[...Array(10)].map((_, index) => (
+          <SkeletonCard key={index} />
+        ))}
+      </section>
+    );
 
   return (
     <section className="w-full max-h-screen overflow-y-auto no-scrollbar py-6 divide-y divide-zinc-300/60 dark:divide-zinc-700/50">
-      {posts.length > 0 && posts.map((post) => (
-        <Post
-          avatarFallback={isUser(post.postedBy) ? post.postedBy.username.slice(0, 2) : ""}
-          branch={isUser(post.postedBy) ? post.postedBy.branch : ""}
-          commentsCount={0}
-          userVote={post.userVote ?? null}
-          viewsCount={0}
-          key={post.id}
-          id={post.id}
-          topic={post.topic}
-          isPrivate={post.isPrivate}
-          removedPostOnAction={removedPostOnAction}
-          bookmarked={true}
-          avatar={isUser(post.postedBy) && isCollege(post.postedBy.college) ? post.postedBy.college.profile : ""}
-          username={isUser(post.postedBy) ? post.postedBy.username : ""}
-          college={isUser(post.postedBy) && isCollege(post.postedBy.college) ? post.postedBy.college.name : "Unknown College"}
-          title={post.title}
-          content={post.content}
-          createdAt={post.createdAt}
-          upvoteCount={post.upvoteCount}
-          downvoteCount={post.downvoteCount}
-        />
-      ))}
+      {posts.length > 0 &&
+        posts.map((post) => (
+          <Post
+            avatarFallback={
+              isUser(post.postedBy) ? post.postedBy.username.slice(0, 2) : ""
+            }
+            branch={isUser(post.postedBy) ? post.postedBy.branch : ""}
+            commentsCount={0}
+            userVote={post.userVote ?? null}
+            viewsCount={0}
+            key={post.id}
+            id={post.id}
+            topic={post.topic}
+            isPrivate={post.isPrivate}
+            removedPostOnAction={removedPostOnAction}
+            bookmarked={true}
+            avatar={
+              isUser(post.postedBy) && isCollege(post.postedBy.college)
+                ? post.postedBy.college.profile
+                : ""
+            }
+            username={isUser(post.postedBy) ? post.postedBy.username : ""}
+            college={
+              isUser(post.postedBy) && isCollege(post.postedBy.college)
+                ? post.postedBy.college.name
+                : "Unknown College"
+            }
+            title={post.title}
+            content={post.content}
+            createdAt={post.createdAt}
+            upvoteCount={post.upvoteCount}
+            downvoteCount={post.downvoteCount}
+          />
+        ))}
     </section>
-  )
+  );
 }
 
-export default BookmarksPage
+export default BookmarksPage;

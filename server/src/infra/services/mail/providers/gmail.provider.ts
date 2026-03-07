@@ -1,50 +1,53 @@
-import nodemailer, { Transporter } from "nodemailer";
-import { EmailProvider } from "../core/mail.interface";
+import nodemailer, { type Transporter } from "nodemailer";
 import { env } from "@/config/env";
+import type { EmailProvider } from "../core/mail.interface";
 
 export class GmailProvider implements EmailProvider {
-  private transporter: Transporter;
+	private transporter: Transporter;
 
-  constructor() {
-    this.transporter = nodemailer.createTransport({
-      service: "gmail",
-      port: 465,
-      secure: true,
-      auth: {
-        user: env.GMAIL_APP_USER,
-        pass: env.GMAIL_APP_PASS,
-      },
-    });
-  }
+	constructor() {
+		this.transporter = nodemailer.createTransport({
+			service: "gmail",
+			port: 465,
+			secure: true,
+			auth: {
+				user: env.GMAIL_APP_USER,
+				pass: env.GMAIL_APP_PASS,
+			},
+		});
+	}
 
-  async verify() {
-    try {
-      await this.transporter.verify();
-      return { status: "success" as const, id: "gmail" };
-    } catch (err) {
-      return { status: "error" as const, error: err instanceof Error ? err.message : String(err) };
-    }
-  }
+	async verify() {
+		try {
+			await this.transporter.verify();
+			return { status: "success" as const, id: "gmail" };
+		} catch (err) {
+			return {
+				status: "error" as const,
+				error: err instanceof Error ? err.message : String(err),
+			};
+		}
+	}
 
-  async send({ from, to, subject, text, html }) {
-    try {
-      const info = await this.transporter.sendMail({
-        from,
-        to,
-        subject,
-        text,
-        html,
-      });
+	async send({ from, to, subject, text, html }) {
+		try {
+			const info = await this.transporter.sendMail({
+				from,
+				to,
+				subject,
+				text,
+				html,
+			});
 
-      return {
-        status: "success" as const,
-        id: info.messageId,
-      };
-    } catch (err) {
-      return {
-        status: "error" as const,
-        error: err instanceof Error ? err.message : String(err),
-      };
-    }
-  }
+			return {
+				status: "success" as const,
+				id: info.messageId,
+			};
+		} catch (err) {
+			return {
+				status: "error" as const,
+				error: err instanceof Error ? err.message : String(err),
+			};
+		}
+	}
 }

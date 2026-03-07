@@ -1,53 +1,62 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { zodResolver } from "@/lib/zod-resolver"
-import { Input } from "@/components/ui/input"
-import { useState, useRef } from "react"
-import { Loader2 } from "lucide-react"
-import { IoMdEye, IoMdEyeOff } from "react-icons/io"
-import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
-import FileInput from "@/components/ui/FileInput"
-import { FaGoogle } from "react-icons/fa"
-import { handleGoogleOAuthRedirect } from "@/utils/googleOAuthRedirect"
-import { Separator } from "@/components/ui/separator"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { authApi } from "@/services/api/auth"
-import { authClient } from "@/lib/auth-client"
-import { ocrApi } from "@/services/api/ocr"
-import { toastError } from "@/utils/toast-error"
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@/lib/zod-resolver";
+import { Input } from "@/components/ui/input";
+import { useState, useRef } from "react";
+import { Loader2 } from "lucide-react";
+import { IoMdEye, IoMdEyeOff } from "react-icons/io";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import FileInput from "@/components/ui/FileInput";
+import { FaGoogle } from "react-icons/fa";
+import { handleGoogleOAuthRedirect } from "@/utils/googleOAuthRedirect";
+import { Separator } from "@/components/ui/separator";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { authApi } from "@/services/api/auth";
+import { authClient } from "@/lib/auth-client";
+import { ocrApi } from "@/services/api/ocr";
+import { toastError } from "@/utils/toast-error";
 
-const signUpSchema = z.object({
-  email: z.email("Email is invalid"),
-  password: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number")
-    .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
-  confirmPassword: z.string().min(8, "Confirm password must be at least 8 characters"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const signUpSchema = z
+  .object({
+    email: z.email("Email is invalid"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number")
+      .regex(
+        /[^A-Za-z0-9]/,
+        "Password must contain at least one special character",
+      ),
+    confirmPassword: z
+      .string()
+      .min(8, "Confirm password must be at least 8 characters"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
-type SignUpFormData = z.infer<typeof signUpSchema>
+type SignUpFormData = z.infer<typeof signUpSchema>;
 
 function SignUpPage() {
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordShowing, setIsPasswordShowing] = useState(false);
-  const [isConfirmPasswordShowing, setIsConfirmPasswordShowing] = useState(false);
+  const [isConfirmPasswordShowing, setIsConfirmPasswordShowing] =
+    useState(false);
   const isSubmittingRef = useRef(false);
 
-  const { data: session, isPending } = authClient.useSession()
-  const navigate = useRouter().push
+  const { data: session, isPending } = authClient.useSession();
+  const navigate = useRouter().push;
 
   if (!isPending && session) {
-    navigate('/')
-    return null
+    navigate("/");
+    return null;
   }
 
   const {
@@ -58,42 +67,41 @@ function SignUpPage() {
     formState: { errors },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
-  })
+  });
 
   const onSubmit = async (data: SignUpFormData) => {
-    if (isSubmittingRef.current) return
+    if (isSubmittingRef.current) return;
 
-    isSubmittingRef.current = true
-    setIsSubmitting(true)
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
     try {
-
       if (!data.email || !data.password) {
-        toast.error("Please fill all the fields")
-        isSubmittingRef.current = false
-        setIsSubmitting(false)
-        return
+        toast.error("Please fill all the fields");
+        isSubmittingRef.current = false;
+        setIsSubmitting(false);
+        return;
       }
 
       const response = await authApi.register.initialize(
         data.email,
-        data.password
-      )
+        data.password,
+      );
 
       if (!response.success) {
-        toast.error("Failed to initialize user")
-        isSubmittingRef.current = false
-        setIsSubmitting(false)
-        return
+        toast.error("Failed to initialize user");
+        isSubmittingRef.current = false;
+        setIsSubmitting(false);
+        return;
       }
 
-      sessionStorage.setItem("pending_signup_password", data.password)
-      navigate(`/auth/otp/${data.email}`)
+      sessionStorage.setItem("pending_signup_password", data.password);
+      navigate(`/auth/otp/${data.email}`);
     } catch (err: unknown) {
-      toastError(err, "Failed to initialize user")
-      isSubmittingRef.current = false
-      setIsSubmitting(false)
+      toastError(err, "Failed to initialize user");
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-md w-full mx-auto px-6 py-8 border dark:border-zinc-800 rounded-lg shadow-lg">
@@ -102,15 +110,15 @@ function SignUpPage() {
         <FileInput
           onFileInput={async (file) => {
             const formData = new FormData();
-            formData.append('studentId', file);
+            formData.append("studentId", file);
             const response = await ocrApi.extractStudentDetails(formData);
 
             return response.data;
           }}
           setData={(result) => {
             if (!result.data) {
-              toast.info("Please upload a valid college id card")
-              return
+              toast.info("Please upload a valid college id card");
+              return;
             }
             const { email } = result.data;
             if (email) setValue("email", email);
@@ -129,12 +137,16 @@ function SignUpPage() {
           required
           autoFocus
         />
-        {errors.email && <p className="text-red-500 text-sm mt-1!">{String(errors.email?.message)}</p>}
+        {errors.email && (
+          <p className="text-red-500 text-sm mt-1!">
+            {String(errors.email?.message)}
+          </p>
+        )}
         <div className="w-full flex relative">
           <Input
             id="password"
             onCopy={() => {
-              toast.warning("Copy password at your own risk!")
+              toast.warning("Copy password at your own risk!");
             }}
             type={isPasswordShowing ? "text" : "password"}
             disabled={isSubmitting}
@@ -151,7 +163,11 @@ function SignUpPage() {
             {isPasswordShowing ? <IoMdEyeOff /> : <IoMdEye />}
           </div>
         </div>
-        {errors.password && <p className="text-red-500 text-sm mt-1!">{String(errors.password?.message)}</p>}
+        {errors.password && (
+          <p className="text-red-500 text-sm mt-1!">
+            {String(errors.password?.message)}
+          </p>
+        )}
         <div className="w-full flex relative">
           <Input
             id="confirm-password"
@@ -170,21 +186,41 @@ function SignUpPage() {
             {isConfirmPasswordShowing ? <IoMdEyeOff /> : <IoMdEye />}
           </div>
         </div>
-        {errors.confirmPassword && <p className="text-red-500 text-sm mt-1!">{String(errors.confirmPassword?.message)}</p>}
-
+        {errors.confirmPassword && (
+          <p className="text-red-500 text-sm mt-1!">
+            {String(errors.confirmPassword?.message)}
+          </p>
+        )}
 
         <Button
           type="submit"
-          disabled={isSubmitting || (errors?.email && errors.email !== undefined) || (errors?.password && errors.password !== undefined) || (errors?.confirmPassword && errors.confirmPassword !== undefined)}
+          disabled={
+            isSubmitting ||
+            (errors?.email && errors.email !== undefined) ||
+            (errors?.password && errors.password !== undefined) ||
+            (errors?.confirmPassword && errors.confirmPassword !== undefined)
+          }
           className={`w-full py-2 font-semibold rounded-md dark:text-zinc-900 bg-zinc-800 dark:bg-zinc-200 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors ${isSubmitting && "bg-zinc-500 cursor-wait"}`}
         >
-          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait</> : "Create an Account"}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait
+            </>
+          ) : (
+            "Create an Account"
+          )}
         </Button>
       </form>
-      {errors.root && <p className="text-red-500 text-sm mt-1!">{String(errors.root?.message)}</p>}
+      {errors.root && (
+        <p className="text-red-500 text-sm mt-1!">
+          {String(errors.root?.message)}
+        </p>
+      )}
       <p className="flex justify-center items-center my-4">
         <Separator className="shrink" />
-        <span className="px-4 text-zinc-500 dark:text-zinc-500 text-sm">Or</span>
+        <span className="px-4 text-zinc-500 dark:text-zinc-500 text-sm">
+          Or
+        </span>
         <Separator className="shrink" />
       </p>
       <form onSubmit={handleGoogleOAuthRedirect}>
@@ -192,17 +228,23 @@ function SignUpPage() {
           <FaGoogle /> Signup with Google
         </Button>
       </form>
-      <p className={`text-center pt-4 ${isSubmitting && "text-zinc-900/50 dark:text-zinc-100/50"}`}>
+      <p
+        className={`text-center pt-4 ${isSubmitting && "text-zinc-900/50 dark:text-zinc-100/50"}`}
+      >
         Already have an account?{" "}
         <Link
           href="/auth/signin"
-          className={isSubmitting ? "pointer-events-none cursor-not-allowed text-blue-600/50 dark:text-blue-500/50" : "hover:underline text-blue-600 dark:text-blue-500 cursor-pointer"}
+          className={
+            isSubmitting
+              ? "pointer-events-none cursor-not-allowed text-blue-600/50 dark:text-blue-500/50"
+              : "hover:underline text-blue-600 dark:text-blue-500 cursor-pointer"
+          }
         >
           Signin
         </Link>
       </p>
     </div>
-  )
+  );
 }
 
-export default SignUpPage
+export default SignUpPage;

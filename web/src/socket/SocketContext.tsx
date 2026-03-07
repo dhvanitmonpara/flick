@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { createContext, useEffect, useState, ReactNode } from "react";
 import io, { Socket } from "socket.io-client";
@@ -37,9 +37,7 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   }, [profile?.id]);
 
   return (
-    <SocketContext.Provider value={socket}>
-      {children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
   );
 };
 

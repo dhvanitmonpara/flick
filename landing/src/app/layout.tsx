@@ -4,7 +4,8 @@ import { geistMono, geistSans } from "./fonts";
 
 export const metadata: Metadata = {
   title: "Flick - Your anonymous campus hangout",
-  description: "An anonymous reddit only for college students. You can vent, chill, hangout and all at one place",
+  description:
+    "An anonymous reddit only for college students. You can vent, chill, hangout and all at one place",
 };
 
 export default function RootLayout({

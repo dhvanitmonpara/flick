@@ -1,13 +1,13 @@
 import { Router } from "express";
 import multer from "multer";
+import { authenticate, ensureRatelimit, requireRole } from "@/core/middlewares";
 import AdminController from "./admin.controller";
 import BranchController from "./branch/branch.controller";
-import { authenticate, ensureRatelimit, requireRole } from "@/core/middlewares";
 
 const router = Router();
 const uploadCollegeProfile = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+	storage: multer.memoryStorage(),
+	limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 router.use(ensureRatelimit.api);
@@ -21,7 +21,11 @@ router.get("/manage/reports", AdminController.getReports);
 router.get("/colleges/get/all", AdminController.getAllColleges);
 router.post("/colleges/create", AdminController.createCollege);
 router.patch("/colleges/update/:id", AdminController.updateCollege);
-router.post("/colleges/upload/profile/:id", uploadCollegeProfile.single("profile"), AdminController.uploadCollegeProfile);
+router.post(
+	"/colleges/upload/profile/:id",
+	uploadCollegeProfile.single("profile"),
+	AdminController.uploadCollegeProfile,
+);
 
 router.get("/branches/all", BranchController.getAllBranches);
 router.post("/branches/create", BranchController.createBranch);

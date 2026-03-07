@@ -7,7 +7,11 @@ import {
 import { Button } from "../ui/button";
 import { useState } from "react";
 
-export const TermsForm = ({ showTerms, setShowTerms, onSubmitTerms }: {
+export const TermsForm = ({
+  showTerms,
+  setShowTerms,
+  onSubmitTerms,
+}: {
   showTerms: boolean;
   setShowTerms: React.Dispatch<React.SetStateAction<boolean>>;
   onSubmitTerms: () => void;
@@ -46,5 +50,5 @@ export const TermsForm = ({ showTerms, setShowTerms, onSubmitTerms }: {
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

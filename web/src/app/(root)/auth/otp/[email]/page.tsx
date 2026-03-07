@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { AxiosError } from "axios";
-import { toast } from 'sonner'
+import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import { authApi } from "@/services/api/auth";
 import { OtpVerification } from "@/components/general/OtpVerification";
@@ -21,9 +21,9 @@ const OtpVerificationPage = () => {
   const [isOtpInvalid, setIsOtpInvalid] = useState(false);
   const isVerifiedRef = useRef(false);
 
-  const { email } = useParams()
-  const decodedEmail = decodeURIComponent(email as string)
-  const navigate = useRouter().push
+  const { email } = useParams();
+  const decodedEmail = decodeURIComponent(email as string);
+  const navigate = useRouter().push;
 
   useEffect(() => {
     if (!email) {
@@ -46,7 +46,7 @@ const OtpVerificationPage = () => {
   }, [timeLeft]);
 
   const sendOtp = useCallback(async () => {
-    if (!email) navigate(onFailedRedirect)
+    if (!email) navigate(onFailedRedirect);
     try {
       setIsResending(true);
       const isMailSent = await authApi.otp.send(decodedEmail);
@@ -61,7 +61,7 @@ const OtpVerificationPage = () => {
     } finally {
       setIsResending(false);
     }
-  }, [email, navigate, onFailedRedirect, decodedEmail])
+  }, [email, navigate, onFailedRedirect, decodedEmail]);
 
   const handleResendOTP = () => {
     if (attempts >= MAX_ATTEMPTS) {
@@ -72,23 +72,23 @@ const OtpVerificationPage = () => {
   };
 
   const verify = async () => {
-    if (isVerifiedRef.current || isLoading) return
-    
+    if (isVerifiedRef.current || isLoading) return;
+
     try {
-      isVerifiedRef.current = true
-      setIsLoading(true)
+      isVerifiedRef.current = true;
+      setIsLoading(true);
 
       if (!email) {
-        navigate(onFailedRedirect)
-        return
+        navigate(onFailedRedirect);
+        return;
       }
 
       const isVerified = await authApi.otp.verify(otp);
 
       if (!isVerified) {
-        toast.error("failed to verify otp")
-        isVerifiedRef.current = false
-        return
+        toast.error("failed to verify otp");
+        isVerifiedRef.current = false;
+        return;
       }
 
       if (isVerified) {
@@ -96,22 +96,22 @@ const OtpVerificationPage = () => {
         navigate(`${onVerifiedRedirect}/${decodedEmail}`);
       }
     } catch (error) {
-      isVerifiedRef.current = false
+      isVerifiedRef.current = false;
       if (error instanceof AxiosError) {
         if (error.response?.status === 400) {
           toast.warning("wrong otp try again");
-          setIsOtpInvalid(true)
+          setIsOtpInvalid(true);
           setAttempts((prev) => prev + 1);
         } else {
-          toast.error(error.response?.data.message || "failed to verify otp")
+          toast.error(error.response?.data.message || "failed to verify otp");
         }
       } else {
         console.error("Error verifying OTP:", error);
       }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // More scoped, avoids unnecessary triggers
   useEffect(() => {

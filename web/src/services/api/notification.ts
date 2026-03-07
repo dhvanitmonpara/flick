@@ -8,4 +8,3 @@ export const notificationApi = {
     return http.patch("/notifications/mark-seen", { ids });
   },
 };
-

@@ -1,184 +1,187 @@
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import db from "@/infra/db/index";
-import type { DB } from "@/infra/db/types";
-import { feedbacks } from "@/infra/db/tables/feedback.table";
 import { platformUser as users } from "@/infra/db/tables/auth.table";
+import { feedbacks } from "@/infra/db/tables/feedback.table";
+import type { DB } from "@/infra/db/types";
 
 export const findById = async (id: string, dbTx?: DB) => {
-  const client = dbTx ?? db;
-  const feedback = await client.query.feedbacks.findFirst({
-    where: eq(feedbacks.id, id),
-  });
+	const client = dbTx ?? db;
+	const feedback = await client.query.feedbacks.findFirst({
+		where: eq(feedbacks.id, id),
+	});
 
-  return feedback;
+	return feedback;
 };
 
 export const findByIdWithUser = async (id: string, dbTx?: DB) => {
-  const client = dbTx ?? db;
-  const result = await client
-    .select({
-      feedbackId: feedbacks.id,
-      userId: feedbacks.userId,
-      type: feedbacks.type,
-      title: feedbacks.title,
-      content: feedbacks.content,
-      status: feedbacks.status,
-      createdAt: feedbacks.createdAt,
-      updatedAt: feedbacks.updatedAt,
+	const client = dbTx ?? db;
+	const result = await client
+		.select({
+			feedbackId: feedbacks.id,
+			userId: feedbacks.userId,
+			type: feedbacks.type,
+			title: feedbacks.title,
+			content: feedbacks.content,
+			status: feedbacks.status,
+			createdAt: feedbacks.createdAt,
+			updatedAt: feedbacks.updatedAt,
 
-      authorId: users.id,
-      authorUsername: users.username,
-    })
-    .from(feedbacks)
-    .leftJoin(users, eq(feedbacks.userId, users.id))
-    .where(eq(feedbacks.id, id))
-    .limit(1);
+			authorId: users.id,
+			authorUsername: users.username,
+		})
+		.from(feedbacks)
+		.leftJoin(users, eq(feedbacks.userId, users.id))
+		.where(eq(feedbacks.id, id))
+		.limit(1);
 
-  const row = result[0];
-  if (!row) return null;
+	const row = result[0];
+	if (!row) return null;
 
-  return {
-    id: row.feedbackId,
-    userId: row.userId,
-    type: row.type,
-    title: row.title,
-    content: row.content,
-    status: row.status,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
+	return {
+		id: row.feedbackId,
+		userId: row.userId,
+		type: row.type,
+		title: row.title,
+		content: row.content,
+		status: row.status,
+		createdAt: row.createdAt,
+		updatedAt: row.updatedAt,
 
-    user: row.authorId
-      ? {
-        id: row.authorId,
-        username: row.authorUsername,
-      }
-      : null,
-  };
+		user: row.authorId
+			? {
+					id: row.authorId,
+					username: row.authorUsername,
+				}
+			: null,
+	};
 };
 
 export const findAll = async (
-  options?: {
-    limit?: number;
-    skip?: number;
-    type?: string;
-    status?: string;
-  },
-  dbTx?: DB
+	options?: {
+		limit?: number;
+		skip?: number;
+		type?: string;
+		status?: string;
+	},
+	dbTx?: DB,
 ) => {
-  const client = dbTx ?? db;
-  const limit = options?.limit || 50;
-  const skip = options?.skip || 0;
+	const client = dbTx ?? db;
+	const limit = options?.limit || 50;
+	const skip = options?.skip || 0;
 
-  let whereConditions = [];
+	const whereConditions = [];
 
-  if (options?.type) {
-    whereConditions.push(eq(feedbacks.type, options.type));
-  }
+	if (options?.type) {
+		whereConditions.push(eq(feedbacks.type, options.type));
+	}
 
-  if (options?.status) {
-    whereConditions.push(eq(feedbacks.status, options.status));
-  }
+	if (options?.status) {
+		whereConditions.push(eq(feedbacks.status, options.status));
+	}
 
-  const results = await client
-    .select({
-      feedbackId: feedbacks.id,
-      userId: feedbacks.userId,
-      type: feedbacks.type,
-      title: feedbacks.title,
-      content: feedbacks.content,
-      status: feedbacks.status,
-      createdAt: feedbacks.createdAt,
-      updatedAt: feedbacks.updatedAt,
+	const results = await client
+		.select({
+			feedbackId: feedbacks.id,
+			userId: feedbacks.userId,
+			type: feedbacks.type,
+			title: feedbacks.title,
+			content: feedbacks.content,
+			status: feedbacks.status,
+			createdAt: feedbacks.createdAt,
+			updatedAt: feedbacks.updatedAt,
 
-      authorId: users.id,
-      authorUsername: users.username,
-    })
-    .from(feedbacks)
-    .leftJoin(users, eq(feedbacks.userId, users.id))
-    .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
-    .orderBy(desc(feedbacks.createdAt))
-    .limit(limit)
-    .offset(skip);
+			authorId: users.id,
+			authorUsername: users.username,
+		})
+		.from(feedbacks)
+		.leftJoin(users, eq(feedbacks.userId, users.id))
+		.where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+		.orderBy(desc(feedbacks.createdAt))
+		.limit(limit)
+		.offset(skip);
 
-  return results.map((row) => ({
-    id: row.feedbackId,
-    userId: row.userId,
-    type: row.type,
-    title: row.title,
-    content: row.content,
-    status: row.status,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-    user: row.authorId
-      ? {
-        id: row.authorId,
-        username: row.authorUsername,
-      }
-      : null,
-  }));
+	return results.map((row) => ({
+		id: row.feedbackId,
+		userId: row.userId,
+		type: row.type,
+		title: row.title,
+		content: row.content,
+		status: row.status,
+		createdAt: row.createdAt,
+		updatedAt: row.updatedAt,
+		user: row.authorId
+			? {
+					id: row.authorId,
+					username: row.authorUsername,
+				}
+			: null,
+	}));
 };
 
 export const countAll = async (
-  filters?: {
-    type?: string;
-    status?: string;
-  },
-  dbTx?: DB
+	filters?: {
+		type?: string;
+		status?: string;
+	},
+	dbTx?: DB,
 ) => {
-  const client = dbTx ?? db;
+	const client = dbTx ?? db;
 
-  let whereConditions = [];
+	const whereConditions = [];
 
-  if (filters?.type) {
-    whereConditions.push(eq(feedbacks.type, filters.type));
-  }
+	if (filters?.type) {
+		whereConditions.push(eq(feedbacks.type, filters.type));
+	}
 
-  if (filters?.status) {
-    whereConditions.push(eq(feedbacks.status, filters.status));
-  }
+	if (filters?.status) {
+		whereConditions.push(eq(feedbacks.status, filters.status));
+	}
 
-  const result = await client
-    .select({ count: feedbacks.id })
-    .from(feedbacks)
-    .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
+	const result = await client
+		.select({ count: feedbacks.id })
+		.from(feedbacks)
+		.where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
 
-  return result.length;
+	return result.length;
 };
 
-export const create = async (feedback: typeof feedbacks.$inferInsert, dbTx?: DB) => {
-  const client = dbTx ?? db;
-  const createdFeedback = await client
-    .insert(feedbacks)
-    .values(feedback)
-    .returning()
-    .then((r) => r?.[0] || null);
+export const create = async (
+	feedback: typeof feedbacks.$inferInsert,
+	dbTx?: DB,
+) => {
+	const client = dbTx ?? db;
+	const createdFeedback = await client
+		.insert(feedbacks)
+		.values(feedback)
+		.returning()
+		.then((r) => r?.[0] || null);
 
-  return createdFeedback;
+	return createdFeedback;
 };
 
 export const updateById = async (
-  id: string,
-  updates: Partial<typeof feedbacks.$inferInsert>,
-  dbTx?: DB
+	id: string,
+	updates: Partial<typeof feedbacks.$inferInsert>,
+	dbTx?: DB,
 ) => {
-  const client = dbTx ?? db;
-  const updatedFeedback = await client
-    .update(feedbacks)
-    .set({ ...updates, updatedAt: new Date() })
-    .where(eq(feedbacks.id, id))
-    .returning()
-    .then((r) => r?.[0] || null);
+	const client = dbTx ?? db;
+	const updatedFeedback = await client
+		.update(feedbacks)
+		.set({ ...updates, updatedAt: new Date() })
+		.where(eq(feedbacks.id, id))
+		.returning()
+		.then((r) => r?.[0] || null);
 
-  return updatedFeedback;
+	return updatedFeedback;
 };
 
 export const deleteById = async (id: string, dbTx?: DB) => {
-  const client = dbTx ?? db;
-  const deletedFeedback = await client
-    .delete(feedbacks)
-    .where(eq(feedbacks.id, id))
-    .returning()
-    .then((r) => r?.[0] || null);
+	const client = dbTx ?? db;
+	const deletedFeedback = await client
+		.delete(feedbacks)
+		.where(eq(feedbacks.id, id))
+		.returning()
+		.then((r) => r?.[0] || null);
 
-  return deletedFeedback;
+	return deletedFeedback;
 };

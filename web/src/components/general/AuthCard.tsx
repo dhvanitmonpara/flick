@@ -55,21 +55,28 @@ export default function AuthCard({ className }: AuthCardProps) {
         const user = await userApi.getMe();
 
         if (user.status !== 200) {
-          toast.error(user.data.message || "Something went wrong while fetching user");
+          toast.error(
+            user.data.message || "Something went wrong while fetching user",
+          );
           return;
         }
 
         setProfile(user.data);
       } catch (error: unknown) {
-        const handled = await handleOnboardingError(error, navigate, authClient, removeProfile)
-        if (handled) return
+        const handled = await handleOnboardingError(
+          error,
+          navigate,
+          authClient,
+          removeProfile,
+        );
+        if (handled) return;
 
         handleError(
           error as AxiosError | Error,
           "Something went wrong while fetching user",
           undefined,
           fetchUser,
-          "Failed to fetch user"
+          "Failed to fetch user",
         );
       } finally {
         setFetching(false);
@@ -100,9 +107,7 @@ export default function AuthCard({ className }: AuthCardProps) {
       );
     }
 
-    return (
-      <SignInButton />
-    );
+    return <SignInButton />;
   };
 
   return (

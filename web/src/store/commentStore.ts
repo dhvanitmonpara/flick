@@ -25,7 +25,7 @@ const useCommentStore = create<CommentState>((set) => ({
   updateComment: (id, updateComment) =>
     set((state) => ({
       comments: state.comments?.map((c) =>
-        c.id === id ? { ...c, ...updateComment } : c
+        c.id === id ? { ...c, ...updateComment } : c,
       ),
     })),
 }));

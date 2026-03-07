@@ -9,7 +9,7 @@ export const PostTopic = [
   "Help / Support",
   "Feedback / Suggestion",
   "News / Update",
-  "Guide / Resource"
+  "Guide / Resource",
 ] as const;
 
-export type PostTopic = typeof PostTopic[number];
+export type PostTopic = (typeof PostTopic)[number];

@@ -37,7 +37,10 @@ export default function ModeratedText({
   return (
     <p className={className}>
       {parts.map((part) => (
-        <span key={part.key} className={part.flagged ? highlightedClassName : undefined}>
+        <span
+          key={part.key}
+          className={part.flagged ? highlightedClassName : undefined}
+        >
           {part.flagged ? "*".repeat(part.value.length) : part.value}
         </span>
       ))}

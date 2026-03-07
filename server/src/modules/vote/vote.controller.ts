@@ -1,36 +1,51 @@
-import { Request, Response } from "express";
+import type { Request } from "express";
 import { Controller } from "@/core/http/controller.js";
-import HttpResponse from "@/core/http/response.js";
-import VoteService from "./vote.service.js";
 import HttpError from "@/core/http/error.js";
-import * as voteSchemas from "./vote.schema"
+import HttpResponse from "@/core/http/response.js";
+import * as voteSchemas from "./vote.schema";
+import VoteService from "./vote.service.js";
 
 @Controller()
 class VoteController {
-  static async createVote(req: Request) {
-    const userId = req.user.id
-    const { voteType, targetId, targetType } = voteSchemas.InsertVoteSchema.parse(req.body);
+	static async createVote(req: Request) {
+		const userId = req.user.id;
+		const { voteType, targetId, targetType } =
+			voteSchemas.InsertVoteSchema.parse(req.body);
 
-    const vote = await VoteService.createVote(userId, targetType, targetId, voteType)
-    return HttpResponse.created("Vote created successfully", vote);
-  };
+		const vote = await VoteService.createVote(
+			userId,
+			targetType,
+			targetId,
+			voteType,
+		);
+		return HttpResponse.created("Vote created successfully", vote);
+	}
 
-  static async deleteVote(req: Request) {
-    const { targetId, targetType } = voteSchemas.DeleteVoteSchema.parse(req.body);
-    const userId = req.user.id
+	static async deleteVote(req: Request) {
+		const { targetId, targetType } = voteSchemas.DeleteVoteSchema.parse(
+			req.body,
+		);
+		const userId = req.user.id;
 
-    const deletedVoteId = await VoteService.delete(userId, targetId, targetType)
-    return HttpResponse.ok("Vote deleted and karma updated successfully", { deletedVoteId });
-  };
+		const deletedVoteId = await VoteService.delete(
+			userId,
+			targetId,
+			targetType,
+		);
+		return HttpResponse.ok("Vote deleted and karma updated successfully", {
+			deletedVoteId,
+		});
+	}
 
-  static async patchVote(req: Request) {
-    const { voteType, targetId, targetType } = voteSchemas.InsertVoteSchema.parse(req.body);
+	static async patchVote(req: Request) {
+		const { voteType, targetId, targetType } =
+			voteSchemas.InsertVoteSchema.parse(req.body);
 
-    const userId = req.user.id;
-    if (!userId) throw HttpError.unauthorized();
+		const userId = req.user.id;
+		if (!userId) throw HttpError.unauthorized();
 
-    return await VoteService.patchVote(userId, targetType, targetId, voteType)
-  };
-};
+		return await VoteService.patchVote(userId, targetType, targetId, voteType);
+	}
+}
 
-export default VoteController
+export default VoteController;

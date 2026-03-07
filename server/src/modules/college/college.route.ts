@@ -1,7 +1,7 @@
 import { Router } from "express";
-import collegeController from "./college.controller";
 import { ensureRatelimit } from "@/core/middlewares";
 import { adminOnly } from "@/core/middlewares/pipelines";
+import collegeController from "./college.controller";
 
 const router = Router();
 

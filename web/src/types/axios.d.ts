@@ -6,12 +6,12 @@ declare module "axios" {
     post<T = any, R = ApiResponse<T>>(
       url: string,
       data?: any,
-      config?: any
+      config?: any,
     ): Promise<R>;
     put<T = any, R = ApiResponse<T>>(
       url: string,
       data?: any,
-      config?: any
+      config?: any,
     ): Promise<R>;
     delete<T = any, R = ApiResponse<T>>(url: string, config?: any): Promise<R>;
   }

@@ -1,41 +1,41 @@
-import { EmailProvider } from "./mail.interface";
 import type { SendResult } from "../types/mail.types";
+import type { EmailProvider } from "./mail.interface";
 
 export class ProviderManager {
-  constructor(private provider: EmailProvider) {
-    if (!provider) {
-      throw new Error("Email provider not configured");
-    }
-  }
+	constructor(private provider: EmailProvider) {
+		if (!provider) {
+			throw new Error("Email provider not configured");
+		}
+	}
 
-  async send(
-    data: {
-      from: string;
-      to: string;
-      subject: string;
-      text?: string;
-      html: string;
-    },
-    attempts: number = 1 // default = no retry
-  ): Promise<SendResult> {
-    let lastError: string | null = null;
+	async send(
+		data: {
+			from: string;
+			to: string;
+			subject: string;
+			text?: string;
+			html: string;
+		},
+		attempts: number = 1, // default = no retry
+	): Promise<SendResult> {
+		let lastError: string | null = null;
 
-    for (let attempt = 1; attempt <= attempts; attempt++) {
-      const res = await this.provider.send(data);
+		for (let attempt = 1; attempt <= attempts; attempt++) {
+			const res = await this.provider.send(data);
 
-      if (res.status === "success") {
-        return res;
-      }
+			if (res.status === "success") {
+				return res;
+			}
 
-      lastError = res.error;
+			lastError = res.error;
 
-      // no retry? return immediately.
-      if (attempt === attempts) break;
+			// no retry? return immediately.
+			if (attempt === attempts) break;
 
-      // small delay between retries (optional)
-      await new Promise((res) => setTimeout(res, attempt * 200));
-    }
+			// small delay between retries (optional)
+			await new Promise((res) => setTimeout(res, attempt * 200));
+		}
 
-    return { status: "error", error: lastError ?? "Send failed" };
-  }
+		return { status: "error", error: lastError ?? "Send failed" };
+	}
 }

@@ -1,42 +1,53 @@
-import { useErrorHandler } from "@/hooks/useErrorHandler"
-import { AxiosError } from "axios"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-import { authClient } from "@/lib/auth-client"
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { AxiosError } from "axios";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 
 function TerminateSessions() {
-  const navigate = useRouter().push
+  const navigate = useRouter().push;
 
-  const { handleError } = useErrorHandler()
+  const { handleError } = useErrorHandler();
 
   const handleTerminate = async () => {
-    let toastId
+    let toastId;
     try {
-      toastId = toast.loading("Terminating sessions...")
+      toastId = toast.loading("Terminating sessions...");
 
-      const { error } = await authClient.revokeOtherSessions()
+      const { error } = await authClient.revokeOtherSessions();
 
       if (error) {
-        throw new Error(error.message || "Failed to terminate sessions")
+        throw new Error(error.message || "Failed to terminate sessions");
       }
 
-      navigate("/")
-      toast.success("Sessions terminated successfully, You've been logged out from all devices")
+      navigate("/");
+      toast.success(
+        "Sessions terminated successfully, You've been logged out from all devices",
+      );
     } catch (error) {
-      handleError(error as AxiosError | Error, "Something went wrong while terminating sessions", undefined, () => handleTerminate(), "Failed to terminate sessions")
+      handleError(
+        error as AxiosError | Error,
+        "Something went wrong while terminating sessions",
+        undefined,
+        () => handleTerminate(),
+        "Failed to terminate sessions",
+      );
     } finally {
-      toast.dismiss(toastId)
+      toast.dismiss(toastId);
     }
-  }
+  };
 
   return (
-    <div
-      className="bg-red-500 text-zinc-100 fixed z-50 bottom-0 space-x-4 left-0 right-0 text-center py-2 font-semibold">
+    <div className="bg-red-500 text-zinc-100 fixed z-50 bottom-0 space-x-4 left-0 right-0 text-center py-2 font-semibold">
       <span>Do you want to terminate sessions in all devices?</span>
-      <button onClick={handleTerminate} className="font-semibold underline">Yes</button>
-      <button onClick={() => navigate("/")} className="font-semibold underline">No</button>
+      <button onClick={handleTerminate} className="font-semibold underline">
+        Yes
+      </button>
+      <button onClick={() => navigate("/")} className="font-semibold underline">
+        No
+      </button>
     </div>
-  )
+  );
 }
 
-export default TerminateSessions
+export default TerminateSessions;

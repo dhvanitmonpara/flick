@@ -1,8 +1,14 @@
+/** biome-ignore-all lint/suspicious/noArrayIndexKey: <i didn't want to use array index as key> */
 "use client";
 
+import {
+  AnimatePresence,
+  type MotionProps,
+  motion,
+  type Variants,
+} from "motion/react";
+import type { ElementType } from "react";
 import { cn } from "@/lib/utils";
-import { AnimatePresence, motion, MotionProps, Variants } from "motion/react";
-import { ElementType } from "react";
 
 type AnimationType = "text" | "word" | "character" | "line";
 type AnimationVariant =
@@ -324,7 +330,6 @@ export function TextAnimate({
     case "line":
       segments = children.split("\n");
       break;
-    case "text":
     default:
       segments = [children];
       break;

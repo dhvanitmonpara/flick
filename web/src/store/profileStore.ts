@@ -3,7 +3,7 @@ import { User } from "@/types/User";
 import { create } from "zustand";
 
 interface ProfileState {
-  theme: themeType
+  theme: themeType;
   profile: User;
   setProfile: (profile: User) => void;
   updateProfile: (updatedProfile: Partial<User>) => void;
@@ -35,7 +35,7 @@ const useProfileStore = create<ProfileState>((set) => ({
     }),
   // inside profileStore.js
   setTheme: (theme) => {
-    set(() => ({ theme }))
+    set(() => ({ theme }));
     localStorage.setItem("theme", theme);
     document.documentElement.setAttribute("data-theme", theme);
   },

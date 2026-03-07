@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { AxiosError } from "axios";
-import { toast } from 'sonner'
+import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import { authApi } from "@/services/api/auth";
 import { OtpVerification } from "@/components/general/OtpVerification";
@@ -19,9 +19,9 @@ const LoginOtpPage = () => {
   const [attempts, setAttempts] = useState(0);
   const [isOtpInvalid, setIsOtpInvalid] = useState(false);
 
-  const { email } = useParams()
-  const decodedEmail = decodeURIComponent(email as string)
-  const router = useRouter()
+  const { email } = useParams();
+  const decodedEmail = decodeURIComponent(email as string);
+  const router = useRouter();
 
   useEffect(() => {
     if (!email) {
@@ -84,7 +84,9 @@ const LoginOtpPage = () => {
     } catch (error) {
       if (error instanceof AxiosError) {
         if (error.response?.status === 403) {
-          toast.warning(error.response.data?.message || "Invalid OTP, try again");
+          toast.warning(
+            error.response.data?.message || "Invalid OTP, try again",
+          );
           setIsOtpInvalid(true);
           setAttempts((prev) => prev + 1);
         } else {

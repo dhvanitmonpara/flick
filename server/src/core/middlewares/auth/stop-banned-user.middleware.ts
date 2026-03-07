@@ -1,16 +1,22 @@
 import type { NextFunction, Request, Response } from "express";
 import { HttpError } from "@/core/http";
 
-const stopBannedUser = async (req: Request, _: Response, next: NextFunction) => {
-  if (!req.auth) {
-    throw HttpError.unauthorized("Unauthorized");
-  }
+const stopBannedUser = async (
+	req: Request,
+	_: Response,
+	next: NextFunction,
+) => {
+	if (!req.auth) {
+		throw HttpError.unauthorized("Unauthorized");
+	}
 
-  if (req.auth.isBanned) {
-    throw HttpError.forbidden("Banned users cannot perform this action", { code: "USER_BANNED" });
-  }
+	if (req.auth.isBanned) {
+		throw HttpError.forbidden("Banned users cannot perform this action", {
+			code: "USER_BANNED",
+		});
+	}
 
-  next();
+	next();
 };
 
 export default stopBannedUser;

@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { Separator } from "@/components/ui/separator"
-import Link from "next/link"
-import { FaGithub, FaLinkedin } from "react-icons/fa"
-import { FaXTwitter } from "react-icons/fa6"
+import Link from "next/link";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
+import { Separator } from "@/components/ui/separator";
 
 const Footer = () => {
   return (
@@ -16,9 +16,25 @@ const Footer = () => {
             Your anonymous campus hangout.
           </p>
           <div className="flex items-center space-x-3 pt-4 text-zinc-600">
-            <FaGithub onClick={() => window.open("https://github.com/Dhvanitmonpara/flick", "_blank")} className="hover:text-[#a86b4c] cursor-pointer" />
-            <FaXTwitter onClick={() => window.open("https://x.com/useFlick", "_blank")} className="hover:text-[#a86b4c] cursor-pointer" />
-            <FaLinkedin onClick={() => window.open("https://www.linkedin.com/in/dhvanitmonpara/", "_blank")} className="hover:text-[#a86b4c] cursor-pointer" />
+            <FaGithub
+              onClick={() =>
+                window.open("https://github.com/Dhvanitmonpara/flick", "_blank")
+              }
+              className="hover:text-[#a86b4c] cursor-pointer"
+            />
+            <FaXTwitter
+              onClick={() => window.open("https://x.com/useFlick", "_blank")}
+              className="hover:text-[#a86b4c] cursor-pointer"
+            />
+            <FaLinkedin
+              onClick={() =>
+                window.open(
+                  "https://www.linkedin.com/in/dhvanitmonpara/",
+                  "_blank",
+                )
+              }
+              className="hover:text-[#a86b4c] cursor-pointer"
+            />
           </div>
         </div>
 
@@ -34,12 +50,18 @@ const Footer = () => {
               </Link>
             </li>
             <li>
-              <Link href="/features" className="hover:text-neutral-900 transition">
+              <Link
+                href="/features"
+                className="hover:text-neutral-900 transition"
+              >
                 Features
               </Link>
             </li>
             <li>
-              <Link href="/how-it-works" className="hover:text-neutral-900 transition">
+              <Link
+                href="/how-it-works"
+                className="hover:text-neutral-900 transition"
+              >
                 How it works
               </Link>
             </li>
@@ -62,22 +84,42 @@ const Footer = () => {
           </h3>
           <ul className="space-y-2 text-sm text-neutral-600">
             <li>
-              <a href="https://www.linkedin.com/in/dhvanitmonpara/" target="_blank" className="hover:text-neutral-900 transition">
+              <a
+                href="https://www.linkedin.com/in/dhvanitmonpara/"
+                target="_blank"
+                className="hover:text-neutral-900 transition"
+                rel="noopener"
+              >
                 Linkedin
               </a>
             </li>
             <li>
-              <a href="https://x.com/dhvanitcantcode" target="_blank" className="hover:text-neutral-900 transition">
+              <a
+                href="https://x.com/dhvanitcantcode"
+                target="_blank"
+                className="hover:text-neutral-900 transition"
+                rel="noopener"
+              >
                 Twitter
               </a>
             </li>
             <li>
-              <a href="https://github.com/Dhvanitmonpara" target="_blank" className="hover:text-neutral-900 transition">
+              <a
+                href="https://github.com/Dhvanitmonpara"
+                target="_blank"
+                className="hover:text-neutral-900 transition"
+                rel="noopener"
+              >
                 Github
               </a>
             </li>
             <li>
-              <a href="mailto:monparadhvanit@gmail.com" target="_blank" className="hover:text-neutral-900 transition">
+              <a
+                href="mailto:monparadhvanit@gmail.com"
+                target="_blank"
+                className="hover:text-neutral-900 transition"
+                rel="noopener"
+              >
                 Email Us
               </a>
             </li>
@@ -95,19 +137,25 @@ const Footer = () => {
               </Link>
             </li>
             <li>
-              <Link href="/privacy" className="hover:text-neutral-900 transition">
+              <Link
+                href="/privacy"
+                className="hover:text-neutral-900 transition"
+              >
                 Privacy Policy
               </Link>
             </li>
           </ul>
           <Separator className="my-4 bg-neutral-300" />
-          <form onSubmit={e => e.preventDefault()} className="mt-4 flex">
+          <form onSubmit={(e) => e.preventDefault()} className="mt-4 flex">
             <input
               type="email"
               placeholder="Your email"
               className="px-3 py-2 text-sm border border-neutral-300 rounded-l-md focus:outline-none"
             />
-            <button className="bg-[#a86b4c] text-white px-4 py-2 text-sm rounded-r-md hover:bg-[#945c41]">
+            <button
+              type="button"
+              className="bg-[#a86b4c] text-white px-4 py-2 text-sm rounded-r-md hover:bg-[#945c41]"
+            >
               Subscribe
             </button>
           </form>
@@ -120,7 +168,7 @@ const Footer = () => {
         © {new Date().getFullYear()} Flick. All rights reserved.
       </div>
     </footer>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;

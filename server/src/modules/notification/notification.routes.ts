@@ -1,12 +1,10 @@
-import { Router } from "express";
-import { listNotifications, markAsSeen } from "./notification.controller.js";
-import { authenticate } from "@/core/middlewares/index.js";
+// import { Router } from "express";
+// import { authenticate } from "@/core/middlewares/index.js";
+// import { listNotifications, markAsSeen } from "./notification.controller.js";
 
-const router = Router();
+// const router = Router();
 
-router
-  .route("/list")
-  .get(authenticate, listNotifications);
-router.route("/mark-seen").patch(authenticate, markAsSeen);
+// router.route("/list").get(authenticate, listNotifications);
+// router.route("/mark-seen").patch(authenticate, markAsSeen);
 
-export default router;
+// export default router;

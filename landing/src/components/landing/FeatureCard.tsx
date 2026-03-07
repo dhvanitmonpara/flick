@@ -1,4 +1,4 @@
-import { JSX, ReactNode } from "react";
+import type { JSX, ReactNode } from "react";
 
 interface FeatureCardProps {
   icon: JSX.Element | string;
@@ -8,7 +8,7 @@ interface FeatureCardProps {
 
 export const FeatureCard = ({ icon, title, description }: FeatureCardProps) => {
   const renderIcon = () => {
-    if (typeof icon === 'string') {
+    if (typeof icon === "string") {
       return <span className="text-3xl">{icon}</span>;
     }
     return icon;

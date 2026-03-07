@@ -11,7 +11,7 @@ const getThemeModeAtRootElem = () =>
 
 const syncRootTheme = (theme: "light" | "dark") => {
   if (getThemeModeAtRootElem() !== theme) {
-    toggleThemeModeAtRootElem(theme)
+    toggleThemeModeAtRootElem(theme);
   }
 };
 

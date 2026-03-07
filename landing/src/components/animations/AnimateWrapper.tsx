@@ -1,7 +1,12 @@
 "use client";
 
-import { motion, AnimatePresence, Variants, MotionProps } from "motion/react";
-import { ReactNode, ElementType } from "react";
+import {
+  AnimatePresence,
+  type MotionProps,
+  motion,
+  type Variants,
+} from "motion/react";
+import type { ElementType, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type AnimationVariant =

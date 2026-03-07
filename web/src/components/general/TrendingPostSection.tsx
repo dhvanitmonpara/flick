@@ -1,44 +1,47 @@
-import TrendingPostCard from "./TrendingPostCard"
-import { useCallback, useEffect, useState } from "react"
-import { AxiosError } from "axios"
-import { TrendingPost } from "@/types/TrendingPost"
-import { toast } from "sonner"
+import TrendingPostCard from "./TrendingPostCard";
+import { useCallback, useEffect, useState } from "react";
+import { AxiosError } from "axios";
+import { TrendingPost } from "@/types/TrendingPost";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useErrorHandler } from "@/hooks/useErrorHandler"
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { postApi } from "@/services/api/post";
 import { PiFireFill } from "react-icons/pi";
 
 function TrendingPostSection() {
+  const [posts, setPosts] = useState<TrendingPost[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const [posts, setPosts] = useState<TrendingPost[]>([])
-  const [loading, setLoading] = useState(false)
-
-  const { handleError } = useErrorHandler()
+  const { handleError } = useErrorHandler();
 
   const fetchPosts = useCallback(async () => {
     try {
+      setLoading(true);
 
-      setLoading(true)
-
-      const res = await postApi.getTrending()
+      const res = await postApi.getTrending();
 
       if (!res.success) {
-        toast.error("Error fetching trending posts")
+        toast.error("Error fetching trending posts");
       }
 
-      setPosts(res.data.posts)
+      setPosts(res.data.posts);
     } catch (error) {
-      handleError(error as AxiosError, "Error fetching trending posts", undefined, fetchPosts, "Failed to fetch trending posts")
+      handleError(
+        error as AxiosError,
+        "Error fetching trending posts",
+        undefined,
+        fetchPosts,
+        "Failed to fetch trending posts",
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-
-  }, [handleError])
+  }, [handleError]);
 
   useEffect(() => {
-    fetchPosts()
-  }, [fetchPosts])
+    fetchPosts();
+  }, [fetchPosts]);
 
   return (
     <aside className="hidden lg:block w-full max-w-84 px-3 py-6">
@@ -53,31 +56,33 @@ function TrendingPostSection() {
           </div>
         </div>
         <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 divide-y divide-zinc-200 dark:divide-zinc-800">
-          {loading
-            ? [...Array(4)].map((_, index) => (
-              <CardSkeleton key={index} />
+          {loading ? (
+            [...Array(4)].map((_, index) => <CardSkeleton key={index} />)
+          ) : posts.length > 0 ? (
+            posts.map(({ time, views, category, title }, index) => (
+              <TrendingPostCard
+                key={`${title}-${index}`}
+                rank={index + 1}
+                time={time}
+                views={views}
+                category={category}
+                title={title}
+              />
             ))
-            : (posts.length > 0
-              ? posts.map(({ time, views, category, title }, index) => (
-                <TrendingPostCard
-                  key={`${title}-${index}`}
-                  rank={index + 1}
-                  time={time}
-                  views={views}
-                  category={category}
-                  title={title}
-                />
-              ))
-              : <div className="flex min-h-52 flex-col items-center justify-center gap-1 px-4 text-center">
-                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">No trending posts yet</p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-500">New popular posts will appear here</p>
-              </div>
-            )
-          }
+          ) : (
+            <div className="flex min-h-52 flex-col items-center justify-center gap-1 px-4 text-center">
+              <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                No trending posts yet
+              </p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-500">
+                New popular posts will appear here
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </aside>
-  )
+  );
 }
 
 export function CardSkeleton() {
@@ -104,4 +109,4 @@ export function CardSkeleton() {
   );
 }
 
-export default TrendingPostSection
+export default TrendingPostSection;

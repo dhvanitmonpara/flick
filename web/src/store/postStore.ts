@@ -12,7 +12,8 @@ interface PostState {
 const usePostStore = create<PostState>((set) => ({
   posts: null,
   setPosts: (posts) => set({ posts }),
-  addPost: (post) => set((state) => ({ posts: [...(state.posts || []), post] })),
+  addPost: (post) =>
+    set((state) => ({ posts: [...(state.posts || []), post] })),
   removePost: (id) =>
     set((state) => ({
       posts: state.posts?.filter((post) => post.id !== id),
@@ -20,7 +21,7 @@ const usePostStore = create<PostState>((set) => ({
   updatePost: (id, updatedPost) =>
     set((state) => ({
       posts: state.posts?.map((post) =>
-        post.id === id ? { ...post, ...updatedPost } : post
+        post.id === id ? { ...post, ...updatedPost } : post,
       ),
     })),
 }));

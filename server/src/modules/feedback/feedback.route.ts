@@ -1,7 +1,7 @@
 import { Router } from "express";
-import feedbackController from "./feedback.controller";
-import { ensureRatelimit, authenticate } from "@/core/middlewares";
+import { authenticate, ensureRatelimit } from "@/core/middlewares";
 import { adminOnly } from "@/core/middlewares/pipelines";
+import feedbackController from "./feedback.controller";
 
 const router = Router();
 
@@ -17,7 +17,9 @@ router.route("/").get(adminOnly, feedbackController.listFeedbacks);
 router.route("/:id").get(adminOnly, feedbackController.getFeedbackById);
 
 // Update feedback status (admin only)
-router.route("/:id/status").patch(adminOnly, feedbackController.updateFeedbackStatus);
+router
+	.route("/:id/status")
+	.patch(adminOnly, feedbackController.updateFeedbackStatus);
 
 // Delete feedback (admin only)
 router.route("/:id").delete(adminOnly, feedbackController.deleteFeedback);

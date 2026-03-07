@@ -9,15 +9,27 @@ import {
 } from "@/components/ui/dialog";
 import CreateComment from "../general/CreateComment";
 
-function CommentButton({ parentCommentId, className, children }: { parentCommentId?: string | null, className?: string, children?: React.ReactNode }) {
-  const [open, setOpen] = useState(false)
+function CommentButton({
+  parentCommentId,
+  className,
+  children,
+}: {
+  parentCommentId?: string | null;
+  className?: string;
+  children?: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children ? (
           children
         ) : (
-          <button onClick={(e) => e.stopPropagation()} aria-label={"comments"} className="p-0.5 cursor-pointer focus:outline-none">
+          <button
+            onClick={(e) => e.stopPropagation()}
+            aria-label={"comments"}
+            className="p-0.5 cursor-pointer focus:outline-none"
+          >
             <FaComment className={`text-gray-400 text-lg m-0.5 ${className}`} />
           </button>
         )}
@@ -29,10 +41,14 @@ function CommentButton({ parentCommentId, className, children }: { parentComment
         <DialogHeader>
           <DialogTitle>Comment</DialogTitle>
         </DialogHeader>
-        <CreateComment parentCommentId={parentCommentId} defaultIsWriting setOpen={setOpen} />
+        <CreateComment
+          parentCommentId={parentCommentId}
+          defaultIsWriting
+          setOpen={setOpen}
+        />
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
-export default CommentButton
+export default CommentButton;

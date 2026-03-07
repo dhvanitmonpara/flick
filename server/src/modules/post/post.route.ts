@@ -1,7 +1,14 @@
 import { Router } from "express";
+import {
+	ensureRatelimit,
+	requireTerms,
+	stopBannedUser,
+} from "@/core/middlewares";
+import {
+	checkUserContext,
+	withOptionalUserContext,
+} from "@/core/middlewares/pipelines";
 import postController from "./post.controller";
-import { checkUserContext, withOptionalUserContext } from "@/core/middlewares/pipelines";
-import { ensureRatelimit, requireTerms, stopBannedUser } from "@/core/middlewares";
 
 const router = Router();
 
@@ -19,6 +26,8 @@ router.use(checkUserContext);
 
 router.route("/").post(stopBannedUser, requireTerms, postController.createPost);
 router.route("/:id").delete(postController.deletePost);
-router.route("/:id").patch(stopBannedUser, requireTerms, postController.updatePost);
+router
+	.route("/:id")
+	.patch(stopBannedUser, requireTerms, postController.updatePost);
 
 export default router;

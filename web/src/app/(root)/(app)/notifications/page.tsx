@@ -1,53 +1,62 @@
-"use client"
+"use client";
 
-import NotificationCard from "@/components/general/NotificationCard"
-import { useErrorHandler } from "@/hooks/useErrorHandler"
-import { Notification } from "@/types/Notification"
-import { AxiosError } from "axios"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
-import { notificationApi } from "@/services/api/notification"
+import NotificationCard from "@/components/general/NotificationCard";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { Notification } from "@/types/Notification";
+import { AxiosError } from "axios";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { notificationApi } from "@/services/api/notification";
 
 function NotificationsPage() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [loading, setLoading] = useState(true)
-
-  const { handleError } = useErrorHandler()
+  const { handleError } = useErrorHandler();
 
   useEffect(() => {
     const load = async () => {
       try {
-        setLoading(true)
-        const res = await notificationApi.list()
+        setLoading(true);
+        const res = await notificationApi.list();
 
         if (res.status !== 200) {
-          toast.error("Failed to fetch notifications")
-          return
+          toast.error("Failed to fetch notifications");
+          return;
         }
 
-        setNotifications(res.data.notifications)
-        setLoading(false)
+        setNotifications(res.data.notifications);
+        setLoading(false);
 
         // Optional delay
-        await new Promise((res) => setTimeout(res, 3000))
+        await new Promise((res) => setTimeout(res, 3000));
 
-        const unseen: Notification[] = res.data.notifications.filter((n: Notification) => !n.seen)
+        const unseen: Notification[] = res.data.notifications.filter(
+          (n: Notification) => !n.seen,
+        );
         if (unseen.length) {
           await notificationApi.markSeen(
             unseen.map((n) => n.id).filter((id): id is string => Boolean(id)),
-          )
+          );
           setNotifications((prev) =>
-            prev.map((n) => (unseen.some((u) => u.id === n.id) ? { ...n, seen: true } : n))
-          )
+            prev.map((n) =>
+              unseen.some((u) => u.id === n.id) ? { ...n, seen: true } : n,
+            ),
+          );
         }
       } catch (err) {
-        handleError(err as AxiosError | Error, "Failed to load notifications", undefined, undefined, "Fetch failed")
+        handleError(
+          err as AxiosError | Error,
+          "Failed to load notifications",
+          undefined,
+          undefined,
+          "Fetch failed",
+        );
       }
-    }
+    };
 
-    load()
-  }, [])
+    load();
+  }, []);
 
   return (
     <div>
@@ -67,7 +76,7 @@ function NotificationsPage() {
         />
       ))}
     </div>
-  )
+  );
 }
 
-export default NotificationsPage
+export default NotificationsPage;

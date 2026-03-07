@@ -4,7 +4,10 @@ export const commentApi = {
   getByPostId: async (postId: string) => {
     return http.get(`/comments/post/${postId}`);
   },
-  create: async (postId: string, payload: { content: string; parentCommentId: string | null }) => {
+  create: async (
+    postId: string,
+    payload: { content: string; parentCommentId: string | null },
+  ) => {
     return http.post(`/comments/post/${postId}`, payload, {
       headers: { "Content-Type": "application/json" },
     });

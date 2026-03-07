@@ -63,13 +63,15 @@ function SettingsPage() {
   const MAX_ATTEMPTS = 5;
 
   const isConfirmationValid =
-    profile?.username && session?.user?.email &&
+    profile?.username &&
+    session?.user?.email &&
     confirmUsername === profile.username.substring(0, 6) &&
     confirmEmail === session.user.email;
 
   // Fetch password status on mount
   useEffect(() => {
-    authApi.password.status()
+    authApi.password
+      .status()
       .then((data) => setHasPassword(data.hasPassword))
       .catch(() => setHasPassword(null));
   }, []);
@@ -107,7 +109,10 @@ function SettingsPage() {
     if (!session?.user?.email || !session?.user?.id) return;
     try {
       setIsResending(true);
-      const isSent = await authApi.otp.sendForDeletion(session.user.email, session.user.id);
+      const isSent = await authApi.otp.sendForDeletion(
+        session.user.email,
+        session.user.id,
+      );
       if (isSent) {
         setTimeLeft(OTP_EXPIRE_TIME);
         toast.success("OTP sent to your email");
@@ -192,7 +197,11 @@ function SettingsPage() {
         hasPassword ? currentPassword : undefined,
       );
       if (result.success) {
-        toast.success(hasPassword ? "Password changed successfully!" : "Password set successfully!");
+        toast.success(
+          hasPassword
+            ? "Password changed successfully!"
+            : "Password set successfully!",
+        );
         setHasPassword(true);
         setCurrentPassword("");
         setNewPassword("");
@@ -201,7 +210,9 @@ function SettingsPage() {
       }
     } catch (error: any) {
       if (error?.response?.status === 400 || error?.response?.status === 401) {
-        toast.error(error?.response?.data?.message || "Incorrect current password");
+        toast.error(
+          error?.response?.data?.message || "Incorrect current password",
+        );
       } else {
         toastError(error, "Failed to save password");
       }
@@ -218,7 +229,9 @@ function SettingsPage() {
         {/* Account Preferences */}
         <section>
           <h2 className="text-xl font-semibold mb-4">Account Preferences</h2>
-          <p className="text-zinc-500 mb-4 text-sm">Update your account settings here.</p>
+          <p className="text-zinc-500 mb-4 text-sm">
+            Update your account settings here.
+          </p>
           <div className="p-4 border dark:border-zinc-800 rounded-lg">
             <p className="text-sm">More settings coming soon.</p>
           </div>
@@ -245,14 +258,13 @@ function SettingsPage() {
                   {hasPassword ? "Change Password" : "Set Password"}
                 </Button>
               ) : (
-                <form
-                  onSubmit={handlePasswordSubmit}
-                  className="space-y-4"
-                >
+                <form onSubmit={handlePasswordSubmit} className="space-y-4">
                   {/* Current password — only shown if user already has one */}
                   {hasPassword && (
                     <div className="space-y-1">
-                      <label className="text-sm font-medium">Current Password</label>
+                      <label className="text-sm font-medium">
+                        Current Password
+                      </label>
                       <div className="relative">
                         <Input
                           type={showCurrentPass ? "text" : "password"}
@@ -267,7 +279,11 @@ function SettingsPage() {
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500"
                           onClick={() => setShowCurrentPass((v) => !v)}
                         >
-                          {showCurrentPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          {showCurrentPass ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -291,13 +307,19 @@ function SettingsPage() {
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500"
                         onClick={() => setShowNewPass((v) => !v)}
                       >
-                        {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showNewPass ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Confirm Password</label>
+                    <label className="text-sm font-medium">
+                      Confirm Password
+                    </label>
                     <div className="relative">
                       <Input
                         type={showConfirmPass ? "text" : "password"}
@@ -312,16 +334,29 @@ function SettingsPage() {
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500"
                         onClick={() => setShowConfirmPass((v) => !v)}
                       >
-                        {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showConfirmPass ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                    <Button type="submit" disabled={isSavingPassword} className="w-full sm:w-auto">
+                    <Button
+                      type="submit"
+                      disabled={isSavingPassword}
+                      className="w-full sm:w-auto"
+                    >
                       {isSavingPassword ? (
-                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</>
-                      ) : "Save Password"}
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                          Saving…
+                        </>
+                      ) : (
+                        "Save Password"
+                      )}
                     </Button>
                     <Button
                       type="button"
@@ -351,7 +386,8 @@ function SettingsPage() {
             Blocked Users
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
-            Users you&apos;ve blocked won&apos;t be able to see your posts or comments, and you won&apos;t see theirs.
+            Users you&apos;ve blocked won&apos;t be able to see your posts or
+            comments, and you won&apos;t see theirs.
           </p>
           <div className="p-4 border dark:border-zinc-800 rounded-lg">
             {loadingBlocked ? (
@@ -359,18 +395,28 @@ function SettingsPage() {
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading…
               </div>
             ) : blockedUsers.length === 0 ? (
-              <p className="text-sm text-zinc-500">You haven&apos;t blocked anyone.</p>
+              <p className="text-sm text-zinc-500">
+                You haven&apos;t blocked anyone.
+              </p>
             ) : (
               <div className="space-y-3">
                 {blockedUsers.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between py-2 px-1 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between py-2 px-1 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-xs font-semibold">
                         {user.username?.slice(0, 2)?.toUpperCase() || "??"}
                       </div>
                       <div>
-                        <p className="text-sm font-medium">{user.username || "Unknown"}</p>
-                        <p className="text-xs text-zinc-500">{user.branch || ""}{user.collegeName ? ` · ${user.collegeName}` : ""}</p>
+                        <p className="text-sm font-medium">
+                          {user.username || "Unknown"}
+                        </p>
+                        <p className="text-xs text-zinc-500">
+                          {user.branch || ""}
+                          {user.collegeName ? ` · ${user.collegeName}` : ""}
+                        </p>
                       </div>
                     </div>
                     <Button
@@ -380,8 +426,13 @@ function SettingsPage() {
                       onClick={() => handleUnblock(user.id)}
                     >
                       {unblockingId === user.id ? (
-                        <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Unblocking…</>
-                      ) : "Unblock"}
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin mr-1" />{" "}
+                          Unblocking…
+                        </>
+                      ) : (
+                        "Unblock"
+                      )}
                     </Button>
                   </div>
                 ))}
@@ -392,44 +443,57 @@ function SettingsPage() {
 
         {/* Danger Zone */}
         <section className="pt-8 border-t dark:border-zinc-800">
-          <h2 className="text-xl font-semibold text-red-600 mb-4 tracking-tight">Danger Zone</h2>
+          <h2 className="text-xl font-semibold text-red-600 mb-4 tracking-tight">
+            Danger Zone
+          </h2>
           <div className="p-4 border border-red-200 dark:border-red-900/50 rounded-lg bg-red-50/50 dark:bg-red-950/10">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h3 className="font-medium text-red-800 dark:text-red-400">Delete Account</h3>
+                <h3 className="font-medium text-red-800 dark:text-red-400">
+                  Delete Account
+                </h3>
                 <p className="text-sm text-red-600/80 dark:text-red-400/80 mt-1">
-                  Permanently delete your account and all of your content. This action cannot be undone.
+                  Permanently delete your account and all of your content. This
+                  action cannot be undone.
                 </p>
               </div>
 
-              <Dialog open={isModalOpen} onOpenChange={(open) => {
-                setIsModalOpen(open);
-                if (!open) {
-                  setStep("confirm");
-                  setConfirmUsername("");
-                  setConfirmEmail("");
-                  setOtp("");
-                  setIsOtpInvalid(false);
-                  setAttempts(0);
-                }
-              }}>
+              <Dialog
+                open={isModalOpen}
+                onOpenChange={(open) => {
+                  setIsModalOpen(open);
+                  if (!open) {
+                    setStep("confirm");
+                    setConfirmUsername("");
+                    setConfirmEmail("");
+                    setOtp("");
+                    setIsOtpInvalid(false);
+                    setAttempts(0);
+                  }
+                }}
+              >
                 <DialogTrigger asChild>
-                  <Button variant="destructive">
-                    Delete Account
-                  </Button>
+                  <Button variant="destructive">Delete Account</Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
                   {step === "confirm" ? (
                     <>
                       <DialogHeader>
-                        <DialogTitle className="text-red-600">Delete Account Confirmation</DialogTitle>
+                        <DialogTitle className="text-red-600">
+                          Delete Account Confirmation
+                        </DialogTitle>
                         <DialogDescription>
-                          This action is permanent. Please type the first 6 characters of your username (<b>{profile?.username?.substring(0, 6)}</b>) and your full email to confirm.
+                          This action is permanent. Please type the first 6
+                          characters of your username (
+                          <b>{profile?.username?.substring(0, 6)}</b>) and your
+                          full email to confirm.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <label className="text-sm font-medium text-red-900/90 dark:text-red-400">Username (first 6 chars)</label>
+                          <label className="text-sm font-medium text-red-900/90 dark:text-red-400">
+                            Username (first 6 chars)
+                          </label>
                           <Input
                             value={confirmUsername}
                             onChange={(e) => setConfirmUsername(e.target.value)}
@@ -438,7 +502,9 @@ function SettingsPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-sm font-medium text-red-900/90 dark:text-red-400">Email Address</label>
+                          <label className="text-sm font-medium text-red-900/90 dark:text-red-400">
+                            Email Address
+                          </label>
                           <Input
                             value={confirmEmail}
                             onChange={(e) => setConfirmEmail(e.target.value)}
@@ -448,13 +514,20 @@ function SettingsPage() {
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsModalOpen(false)}
+                        >
+                          Cancel
+                        </Button>
                         <Button
                           variant="destructive"
                           disabled={!isConfirmationValid || isResending}
                           onClick={handleSendOtp}
                         >
-                          {isResending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                          {isResending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : null}
                           Send Verification Code
                         </Button>
                       </DialogFooter>

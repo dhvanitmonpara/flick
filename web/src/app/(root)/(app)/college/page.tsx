@@ -1,52 +1,65 @@
-"use client"
+"use client";
 
-import Post from "@/components/general/Post"
-import SkeletonCard from "@/components/skeletons/PostSkeleton"
-import { useErrorHandler } from "@/hooks/useErrorHandler"
-import usePostStore from "@/store/postStore"
-import useProfileStore from "@/store/profileStore"
-import type { Post as PostEntity } from "@/types/Post"
-import { formatDate, getAvatarUrl, getCollegeName, isUser } from "@/utils/helpers"
-import { AxiosError } from "axios"
-import { useCallback, useEffect, useState } from "react"
-import { postApi } from "@/services/api/post"
+import Post from "@/components/general/Post";
+import SkeletonCard from "@/components/skeletons/PostSkeleton";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import usePostStore from "@/store/postStore";
+import useProfileStore from "@/store/profileStore";
+import type { Post as PostEntity } from "@/types/Post";
+import {
+  formatDate,
+  getAvatarUrl,
+  getCollegeName,
+  isUser,
+} from "@/utils/helpers";
+import { AxiosError } from "axios";
+import { useCallback, useEffect, useState } from "react";
+import { postApi } from "@/services/api/post";
 
 function CollegePage() {
-
-  const [loading, setLoading] = useState(false)
-  const { handleError } = useErrorHandler()
-  const profile = useProfileStore(state => state.profile)
-  const posts = usePostStore(state => state.posts)
-  const setPosts = usePostStore(state => state.setPosts)
+  const [loading, setLoading] = useState(false);
+  const { handleError } = useErrorHandler();
+  const profile = useProfileStore((state) => state.profile);
+  const posts = usePostStore((state) => state.posts);
+  const setPosts = usePostStore((state) => state.setPosts);
 
   const fetchPosts = useCallback(async () => {
     try {
-      setLoading(true)
-      if (!profile.college) return
-      const collegeId = typeof profile.college === "string" ? profile.college : profile.college.id;
+      setLoading(true);
+      if (!profile.college) return;
+      const collegeId =
+        typeof profile.college === "string"
+          ? profile.college
+          : profile.college.id;
 
-      const res = await postApi.getByCollege(collegeId)
+      const res = await postApi.getByCollege(collegeId);
 
       if (res.status !== 200) {
-        throw new Error("Failed to fetch posts")
+        throw new Error("Failed to fetch posts");
       }
-      setPosts(res.data.posts)
+      setPosts(res.data.posts);
     } catch (error) {
-      await handleError(error as AxiosError | Error, "Error fetching posts", undefined, () => fetchPosts(), "Failed to fetch posts")
+      await handleError(
+        error as AxiosError | Error,
+        "Error fetching posts",
+        undefined,
+        () => fetchPosts(),
+        "Failed to fetch posts",
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [handleError, profile.college, setPosts])
+  }, [handleError, profile.college, setPosts]);
 
   useEffect(() => {
-    document.title = "Feed | Flick"
-    fetchPosts()
-  }, [fetchPosts])
+    document.title = "Feed | Flick";
+    fetchPosts();
+  }, [fetchPosts]);
 
   const removedPostOnAction = (id: string) => {
-    const updatedPost = posts?.filter(post => post.id !== id) as PostEntity[]
-    setPosts(updatedPost)
-  }
+    const updatedPost = posts?.filter((post) => post.id !== id) as PostEntity[];
+    setPosts(updatedPost);
+  };
 
   if (loading) {
     return (
@@ -55,7 +68,7 @@ function CollegePage() {
           <SkeletonCard key={index} />
         ))}
       </section>
-    )
+    );
   }
 
   return (
@@ -87,7 +100,7 @@ function CollegePage() {
                 downvoteCount={post.downvoteCount}
                 commentsCount={post.commentsCount ?? 0}
               />
-            )
+            );
           }
 
           // postedBy is a full User object here
@@ -114,7 +127,7 @@ function CollegePage() {
               commentsCount={post.commentsCount ?? 0}
               authorId={postedBy.id}
             />
-          )
+          );
         })
       ) : (
         <div className="flex justify-center items-center h-full">
@@ -122,7 +135,7 @@ function CollegePage() {
         </div>
       )}
     </section>
-  )
+  );
 }
 
-export default CollegePage
+export default CollegePage;

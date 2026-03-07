@@ -1,40 +1,40 @@
-import * as bookmarkAdapter from "./bookmark.adapter";
+import * as adminAdapter from "./admin.adapter";
 import * as authAdapter from "./auth.adapter";
+import * as bookmarkAdapter from "./bookmark.adapter";
 import * as collegeAdapter from "./college.adapter";
 import * as commentAdapter from "./comment.adapter";
 import * as feedbackAdapter from "./feedback.adapter";
 import * as postAdapter from "./post.adapter";
 import * as userAdapter from "./user.adapter";
-import * as adminAdapter from "./admin.adapter";
 
 export const AdminAdapter = {
-  ...adminAdapter,
+	...adminAdapter,
 };
 
 export const BookmarkAdapter = {
-  ...bookmarkAdapter,
+	...bookmarkAdapter,
 };
 
 export const AuthAdapter = {
-  ...authAdapter,
+	...authAdapter,
 };
 
 export const CollegeAdapter = {
-  ...collegeAdapter,
+	...collegeAdapter,
 };
 
 export const CommentAdapter = {
-  ...commentAdapter,
+	...commentAdapter,
 };
 
 export const FeedbackAdapter = {
-  ...feedbackAdapter,
+	...feedbackAdapter,
 };
 
 export const PostAdapter = {
-  ...postAdapter,
+	...postAdapter,
 };
 
 export const UserAdapter = {
-  ...userAdapter,
+	...userAdapter,
 };

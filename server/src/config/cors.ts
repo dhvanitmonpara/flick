@@ -2,11 +2,11 @@ import type { CorsOptions } from "cors";
 import { env } from "./env";
 
 const corsOptions: CorsOptions = {
-  origin: env.ACCESS_CONTROL_ORIGINS,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  optionsSuccessStatus: 200,
+	origin: env.ACCESS_CONTROL_ORIGINS,
+	credentials: true,
+	methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+	allowedHeaders: ["Content-Type", "Authorization"],
+	optionsSuccessStatus: 200,
 };
 
-export default corsOptions
+export default corsOptions;

@@ -4,8 +4,8 @@ import { getLocationFromIP } from "./location";
 import { parseUserAgent } from "./user-agent";
 
 export const device = {
-  fingerprint: generateDeviceFingerprint,
-  location: getLocationFromIP,
-  deviceName: getDeviceName,
-  parseUserAgent
+	fingerprint: generateDeviceFingerprint,
+	location: getLocationFromIP,
+	deviceName: getDeviceName,
+	parseUserAgent,
 };

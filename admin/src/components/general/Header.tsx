@@ -1,8 +1,8 @@
-import { Link, NavLink } from "react-router-dom"
-import UserProfile from "./UserProfile";
 import { useEffect } from "react";
-import useProfileStore from "@/store/profileStore";
+import { Link, NavLink } from "react-router-dom";
 import { authClient } from "@/lib/auth-client";
+import useProfileStore from "@/store/profileStore";
+import UserProfile from "./UserProfile";
 
 const navLinks = [
   { to: "/home", label: "Home" },
@@ -10,9 +10,8 @@ const navLinks = [
 ];
 
 function Header() {
-
-  const setProfile = useProfileStore(s => s.setProfile)
-  const removeProfile = useProfileStore(s => s.removeProfile)
+  const setProfile = useProfileStore((s) => s.setProfile);
+  const removeProfile = useProfileStore((s) => s.removeProfile);
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -30,7 +29,7 @@ function Header() {
     };
 
     fetchSession();
-  }, [setProfile, removeProfile])
+  }, [setProfile, removeProfile]);
 
   return (
     <>
@@ -59,7 +58,7 @@ function Header() {
       </nav>
       <div className="h-14"></div>
     </>
-  )
+  );
 }
 
-export default Header
+export default Header;

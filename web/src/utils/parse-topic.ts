@@ -1,5 +1,5 @@
 function parseTopic(topic: string) {
-  return topic.toLocaleLowerCase().replace(" / ", "_").replace(" ", "+")
+  return topic.toLocaleLowerCase().replace(" / ", "_").replace(" ", "+");
 }
 
-export default parseTopic
+export default parseTopic;

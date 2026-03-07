@@ -8,7 +8,7 @@ import type { FieldValues, Resolver } from "react-hook-form";
  * across different installed library versions.
  */
 export function zodResolver<T extends FieldValues>(
-  schema: z.ZodType<any, any, any>
+  schema: z.ZodType<any, any, any>,
 ): Resolver<T> {
   return originalZodResolver(schema as any);
 }

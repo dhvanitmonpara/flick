@@ -1,14 +1,21 @@
-export { bookmarks } from "./bookmark.table";
-export { comments } from "./comment.table";
-export { feedbacks } from "./feedback.table";
 export { auditLogs } from "./audit-log.table";
-export { posts } from "./post.table";
-export { votes } from "./vote.table";
-export { colleges } from "./college.table";
-export { contentReports } from "./content-report.table";
-export { platformUser as users, session, account, verification, twoFactor, auth } from "./auth.table";
-export { notifications } from "./notification.table";
+export {
+	account,
+	auth,
+	platformUser as users,
+	session,
+	twoFactor,
+	verification,
+} from "./auth.table";
 export { bannedWords } from "./banned-word.table";
-export { userBlocks } from "./user-block.table";
+export { bookmarks } from "./bookmark.table";
 export { branches } from "./branch.table";
+export { colleges } from "./college.table";
 export { collegeBranches } from "./college-branch.table";
+export { comments } from "./comment.table";
+export { contentReports } from "./content-report.table";
+export { feedbacks } from "./feedback.table";
+export { notifications } from "./notification.table";
+export { posts } from "./post.table";
+export { userBlocks } from "./user-block.table";
+export { votes } from "./vote.table";

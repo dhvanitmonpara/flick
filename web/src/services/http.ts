@@ -15,7 +15,7 @@ http.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 let getAccessToken: () => string | null = () => null;
@@ -47,7 +47,7 @@ const processQueue = (error: any, token: string | null = null) => {
 
 export function setAuthCallbacks(
   onSuccess: (accessToken: string) => void,
-  onFailure: () => void
+  onFailure: () => void,
 ) {
   onRefreshSuccess = onSuccess;
   onRefreshFailure = onFailure;
@@ -63,14 +63,16 @@ http.interceptors.response.use(
         // If we're already refreshing, queue this request
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(token => {
-          if (original.headers) {
-            original.headers.Authorization = `Bearer ${token}`;
-          }
-          return http(original);
-        }).catch(err => {
-          return Promise.reject(err);
-        });
+        })
+          .then((token) => {
+            if (original.headers) {
+              original.headers.Authorization = `Bearer ${token}`;
+            }
+            return http(original);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       }
 
       original._retry = true;
@@ -105,7 +107,7 @@ http.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 http.interceptors.response.use(
@@ -128,5 +130,5 @@ http.interceptors.response.use(
 
     return normalized;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );

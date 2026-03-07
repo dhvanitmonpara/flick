@@ -1,12 +1,18 @@
-import { BsEye } from "react-icons/bs"
-import { Card } from "../ui/card"
-import { TrendingPost } from "@/types/TrendingPost"
+import { BsEye } from "react-icons/bs";
+import { Card } from "../ui/card";
+import { TrendingPost } from "@/types/TrendingPost";
 
 interface TrendingPostCardProps extends TrendingPost {
-  rank: number
+  rank: number;
 }
 
-function TrendingPostCard({ title, category, time, views, rank }: TrendingPostCardProps) {
+function TrendingPostCard({
+  title,
+  category,
+  time,
+  views,
+  rank,
+}: TrendingPostCardProps) {
   return (
     <Card className="group rounded-none border-0 bg-transparent p-3 transition-colors hover:bg-zinc-100/80 dark:hover:bg-zinc-900/70">
       <div className="space-y-2">
@@ -17,7 +23,9 @@ function TrendingPostCard({ title, category, time, views, rank }: TrendingPostCa
             </span>
             <p className="truncate text-xs text-zinc-600 dark:text-zinc-400">
               {category}
-              <span className="ml-1 text-zinc-500 dark:text-zinc-500">{time}</span>
+              <span className="ml-1 text-zinc-500 dark:text-zinc-500">
+                {time}
+              </span>
             </p>
           </div>
           <div className="flex items-center gap-1 rounded-full bg-zinc-200/80 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
@@ -30,7 +38,7 @@ function TrendingPostCard({ title, category, time, views, rank }: TrendingPostCa
         </h5>
       </div>
     </Card>
-  )
+  );
 }
 
-export default TrendingPostCard
+export default TrendingPostCard;

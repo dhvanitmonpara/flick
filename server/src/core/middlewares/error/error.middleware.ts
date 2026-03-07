@@ -1,81 +1,67 @@
 import type { NextFunction, Request, Response } from "express";
+import { ZodError } from "zod";
 import { env } from "@/config/env";
 import HttpError from "@/core/http/error";
 import HttpResponse from "@/core/http/response";
 import logger from "@/core/logger";
-import { ZodError } from "zod";
 import { handleZodError } from "./zod-error";
 
 const errorHandlers = {
-  general: (
-    err: unknown,
-    req: Request,
-    res: Response,
-    _next: NextFunction
-  ): void => {
-    const isDev = env.NODE_ENV === "development";
-    const fallbackMessage = "Internal Server Error";
+	general: (
+		err: unknown,
+		req: Request,
+		res: Response,
+		_next: NextFunction,
+	): void => {
+		const isDev = env.NODE_ENV === "development";
+		const fallbackMessage = "Internal Server Error";
 
-    let error: HttpError;
+		let error: HttpError;
 
-    if (err instanceof ZodError) {
-      error = handleZodError(err, req)
-    } else if (err instanceof HttpError) {
-      logger.warn("request.failed", {
-        statusCode: err.statusCode,
-        code: err.code,
-      });
-      error = err;
-    } else {
-      logger.error("request.unhandled_exception", err);
+		if (err instanceof ZodError) {
+			error = handleZodError(err, req);
+		} else if (err instanceof HttpError) {
+			logger.warn("request.failed", {
+				statusCode: err.statusCode,
+				code: err.code,
+			});
+			error = err;
+		} else {
+			logger.error("request.unhandled_exception", err);
 
-      error = new HttpError({
-        statusCode: 500,
-        message: fallbackMessage,
-        code: "UNHANDLED_ERROR",
-      });
-    }
+			error = new HttpError({
+				statusCode: 500,
+				message: fallbackMessage,
+				code: "UNHANDLED_ERROR",
+			});
+		}
 
-    const message =
-      error.isOperational || isDev
-        ? error.message
-        : fallbackMessage;
+		const message =
+			error.isOperational || isDev ? error.message : fallbackMessage;
 
-    const stack =
-      err instanceof Error ? err.stack : undefined;
+		const stack = err instanceof Error ? err.stack : undefined;
 
-    HttpResponse.error(
-      {
-        message,
-        statusCode: error.statusCode,
-        errors: error.errors,
-        code: error.code,
-        meta: isDev
-          ? { ...error.meta, stack }
-          : error.meta as Record<string, unknown> | undefined,
-      }
-    ).send(res);
-  },
+		HttpResponse.error({
+			message,
+			statusCode: error.statusCode,
+			errors: error.errors,
+			code: error.code,
+			meta: isDev
+				? { ...error.meta, stack }
+				: (error.meta as Record<string, unknown> | undefined),
+		}).send(res);
+	},
 
-  notFound: (
-    req: Request,
-    _res: Response,
-    next: NextFunction
-  ): void => {
-    const message = `Route ${req.method} ${req.originalUrl} not found`;
+	notFound: (req: Request, _res: Response, next: NextFunction): void => {
+		const message = `Route ${req.method} ${req.originalUrl} not found`;
 
-    logger.warn(message, {
-      method: req.method,
-      path: req.originalUrl,
-    });
+		logger.warn(message, {
+			method: req.method,
+			path: req.originalUrl,
+		});
 
-    next(
-      HttpError.notFound(
-        message,
-        { code: "NOT_FOUND" }
-      )
-    );
-  }
-}
+		next(HttpError.notFound(message, { code: "NOT_FOUND" }));
+	},
+};
 
-export default errorHandlers
+export default errorHandlers;

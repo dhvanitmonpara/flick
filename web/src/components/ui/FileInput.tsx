@@ -1,23 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AlertCircleIcon, ImageUpIcon, XIcon } from "lucide-react"
-import { FileWithPreview, useFileUpload } from "@/hooks/use-file-upload"
-import { cn } from "@/lib/utils"
+import { AlertCircleIcon, ImageUpIcon, XIcon } from "lucide-react";
+import { FileWithPreview, useFileUpload } from "@/hooks/use-file-upload";
+import { cn } from "@/lib/utils";
 
 interface FileInputProps {
-  onFileInput?: (file: File) => Promise<any> | void
-  setData?: (data: any) => void
+  onFileInput?: (file: File) => Promise<any> | void;
+  setData?: (data: any) => void;
 
-  id?: string
-  name?: string
-  disabled?: boolean
-  required?: boolean
-  className?: string
-  accept?: string
-  maxSizeMB?: number
-  placeholder?: string
+  id?: string;
+  name?: string;
+  disabled?: boolean;
+  required?: boolean;
+  className?: string;
+  accept?: string;
+  maxSizeMB?: number;
+  placeholder?: string;
 
-  "aria-label"?: string
-  "aria-describedby"?: string
+  "aria-label"?: string;
+  "aria-describedby"?: string;
 }
 
 export default function FileInput({
@@ -34,7 +34,7 @@ export default function FileInput({
   "aria-label": ariaLabel = "Upload file",
   "aria-describedby": ariaDescribedBy,
 }: FileInputProps) {
-  const maxSize = maxSizeMB * 1024 * 1024
+  const maxSize = maxSizeMB * 1024 * 1024;
 
   const [
     { files, isDragging, errors },
@@ -51,25 +51,27 @@ export default function FileInput({
     accept,
     maxSize,
     onFilesAdded: async (addedFiles: FileWithPreview[]) => {
-      const file = addedFiles[0].file as File
-      if (!file) return
+      const file = addedFiles[0].file as File;
+      if (!file) return;
 
       try {
-        const result = await onFileInput?.(file)
+        const result = await onFileInput?.(file);
 
         if (setData && result !== undefined) {
-          setData(result)
+          setData(result);
         }
       } catch (error) {
-        console.error("Error handling file input:", error)
+        console.error("Error handling file input:", error);
       }
-    }
-  })
+    },
+  });
 
-  const previewUrl = files[0]?.preview ?? null
+  const previewUrl = files[0]?.preview ?? null;
 
   return (
-    <div className={`flex flex-col gap-2 bg-zinc-200 dark:bg-zinc-800 rounded-md ${className}`}>
+    <div
+      className={`flex flex-col gap-2 bg-zinc-200 dark:bg-zinc-800 rounded-md ${className}`}
+    >
       <div className="relative">
         <div
           role="button"
@@ -81,7 +83,7 @@ export default function FileInput({
           className={cn(
             "border-input hover:bg-accent/50 relative flex min-h-52 flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed p-4 transition-colors has-[img]:border-none has-[input:focus]:border-ring has-[input:focus]:ring-[3px]",
             isDragging && "bg-accent/50",
-            disabled && "pointer-events-none opacity-50"
+            disabled && "pointer-events-none opacity-50",
           )}
         >
           <input
@@ -104,7 +106,10 @@ export default function FileInput({
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center px-4 py-3 text-center">
-              <div className="bg-background mb-2 flex size-11 shrink-0 items-center justify-center rounded-full border" aria-hidden="true">
+              <div
+                className="bg-background mb-2 flex size-11 shrink-0 items-center justify-center rounded-full border"
+                aria-hidden="true"
+              >
                 <ImageUpIcon className="size-4 opacity-60" />
               </div>
               <p className="mb-1.5 text-sm font-medium">{placeholder}</p>
@@ -131,11 +136,15 @@ export default function FileInput({
       </div>
 
       {errors.length > 0 && (
-        <div className="text-destructive flex items-center gap-1 text-xs" role="alert" aria-describedby={ariaDescribedBy}>
+        <div
+          className="text-destructive flex items-center gap-1 text-xs"
+          role="alert"
+          aria-describedby={ariaDescribedBy}
+        >
           <AlertCircleIcon className="size-3 shrink-0" />
           <span>{errors[0]}</span>
         </div>
       )}
     </div>
-  )
+  );
 }

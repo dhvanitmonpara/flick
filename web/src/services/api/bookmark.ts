@@ -11,4 +11,3 @@ export const bookmarkApi = {
     return http.delete(`/bookmarks/delete/${postId}`);
   },
 };
-

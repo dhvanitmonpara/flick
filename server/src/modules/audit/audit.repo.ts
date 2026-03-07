@@ -1,9 +1,9 @@
-import * as authRepo from "@/infra/db/adapters/audit-log.adapter"
+import * as authRepo from "@/infra/db/adapters/audit-log.adapter";
 
 const AuditLogRepo = {
-  Write: {
-    create: authRepo.create
-  }
-}
+	Write: {
+		create: authRepo.create,
+	},
+};
 
-export default AuditLogRepo
+export default AuditLogRepo;

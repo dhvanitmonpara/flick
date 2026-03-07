@@ -1,41 +1,42 @@
-import { Request, Response, NextFunction } from "express";
-import { RateLimiter } from "./rate-limiter.interface";
-import { RateLimiterRes } from "rate-limiter-flexible";
+import type { NextFunction, Request, Response } from "express";
+import type { RateLimiterRes } from "rate-limiter-flexible";
 import logger from "@/core/logger";
+import type { RateLimiter } from "./rate-limiter.interface";
 
 export const createRateLimiterMiddleware = (limiter: RateLimiter) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const key = req.ip;
+	return async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const key = req.ip;
 
-      await limiter.consume(key);
-      const info = await limiter.get(key);
+			await limiter.consume(key);
+			const info = await limiter.get(key);
 
-      if (info) {
-        res.set("X-RateLimit-Limit", String(limiter.limit));
-        res.set("X-RateLimit-Remaining", String(info.remaining));
-        res.set("X-RateLimit-Reset", String(info.resetAt));
-      }
+			if (info) {
+				res.set("X-RateLimit-Limit", String(limiter.limit));
+				res.set("X-RateLimit-Remaining", String(info.remaining));
+				res.set("X-RateLimit-Reset", String(info.resetAt));
+			}
 
-      next();
-    } catch (err: unknown) {
-      // Check if this is a RateLimiterRes by checking for msBeforeNext
-      const isRateLimitExceeded = err && typeof err === 'object' && 'msBeforeNext' in err;
+			next();
+		} catch (err: unknown) {
+			// Check if this is a RateLimiterRes by checking for msBeforeNext
+			const isRateLimitExceeded =
+				err && typeof err === "object" && "msBeforeNext" in err;
 
-      if (!isRateLimitExceeded) {
-        // This is an internal error (e.g. Redis connection issue)
-        return next(err);
-      }
+			if (!isRateLimitExceeded) {
+				// This is an internal error (e.g. Redis connection issue)
+				return next(err);
+			}
 
-      const rejRes = err as RateLimiterRes;
+			const rejRes = err as RateLimiterRes;
 
-      logger.warn("rate_limit.exceeded", {
-        key: req.ip,
-        retry_after_ms: rejRes.msBeforeNext,
-      });
+			logger.warn("rate_limit.exceeded", {
+				key: req.ip,
+				retry_after_ms: rejRes.msBeforeNext,
+			});
 
-      res.set("Retry-After", String(Math.ceil(rejRes.msBeforeNext / 1000)));
-      res.status(429).json({ message: "Too Many Requests" });
-    }
-  };
+			res.set("Retry-After", String(Math.ceil(rejRes.msBeforeNext / 1000)));
+			res.status(429).json({ message: "Too Many Requests" });
+		}
+	};
 };

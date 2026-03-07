@@ -1,14 +1,26 @@
 import { Router } from "express";
-import ReportsController from "./reports-moderation.controller";
-import { authenticate, requireAuth, requireOnboardedUser, requireRole, stopBannedUser } from "@/core/middlewares";
+import {
+	authenticate,
+	requireAuth,
+	requireOnboardedUser,
+	requireRole,
+	stopBannedUser,
+} from "@/core/middlewares";
 import injectUser from "@/core/middlewares/auth/inject-user.middleware";
+import ReportsController from "./reports-moderation.controller";
 
 const router = Router();
 
 router.use(authenticate);
 router.use(requireAuth);
 
-router.post("/", injectUser, requireOnboardedUser, stopBannedUser, ReportsController.create);
+router.post(
+	"/",
+	injectUser,
+	requireOnboardedUser,
+	stopBannedUser,
+	ReportsController.create,
+);
 
 router.use(requireRole("admin", "superadmin"));
 

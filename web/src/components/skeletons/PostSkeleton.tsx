@@ -1,4 +1,9 @@
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton"; // Assuming you have a Skeleton component
 
 export default function SkeletonCard() {

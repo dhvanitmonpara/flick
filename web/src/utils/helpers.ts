@@ -8,16 +8,32 @@ export function formatDate(dateString: string) {
 }
 
 export function isUser(obj: unknown): obj is User {
-  return typeof obj === "object" && obj !== null && "college" in obj && "branch" in obj;
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "college" in obj &&
+    "branch" in obj
+  );
 }
 
 export function isCollege(obj: unknown): obj is College {
-  return typeof obj === "object" && obj !== null && "profile" in obj && "name" in obj;
+  return (
+    typeof obj === "object" && obj !== null && "profile" in obj && "name" in obj
+  );
 }
 
 export function isPost(obj: unknown): obj is Post {
-  return typeof obj === "object" && obj !== null && "title" in obj && "content" in obj;
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "title" in obj &&
+    "content" in obj
+  );
 }
 
-export const getAvatarUrl = (user: User | string | null) => isUser(user) && isCollege(user.college) ? user.college.profile : "";
-export const getCollegeName = (user: User | string | null) => isUser(user) && isCollege(user.college) ? user.college.name : "Unknown College";
+export const getAvatarUrl = (user: User | string | null) =>
+  isUser(user) && isCollege(user.college) ? user.college.profile : "";
+export const getCollegeName = (user: User | string | null) =>
+  isUser(user) && isCollege(user.college)
+    ? user.college.name
+    : "Unknown College";

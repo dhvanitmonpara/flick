@@ -1,35 +1,38 @@
-'use client'
+"use client";
 
-import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
 function AuthSuccessContent() {
   const [showFallback, setShowFallback] = useState(false);
   const searchParams = useSearchParams();
-  const error = searchParams.get('error');
+  const error = searchParams.get("error");
 
   useEffect(() => {
     if (error) {
       if (window.opener) {
-        window.opener.postMessage({ type: 'oauth-error', error }, window.location.origin);
+        window.opener.postMessage(
+          { type: "oauth-error", error },
+          window.location.origin,
+        );
       }
       setShowFallback(true);
       return;
     }
 
-    localStorage.setItem('oauth_login_success', 'true');
+    localStorage.setItem("oauth_login_success", "true");
 
     if (window.opener) {
-      window.opener.postMessage('oauth-success', window.location.origin);
+      window.opener.postMessage("oauth-success", window.location.origin);
     }
 
     try {
       window.close();
-    } catch (e) { }
+    } catch (e) {}
 
     const timer = setTimeout(() => {
-      if (!window.opener && !localStorage.getItem('oauth_login_success')) {
-        window.location.href = '/';
+      if (!window.opener && !localStorage.getItem("oauth_login_success")) {
+        window.location.href = "/";
       } else {
         setShowFallback(true);
       }
@@ -49,7 +52,9 @@ function AuthSuccessContent() {
         ) : (
           <>
             <p className="text-lg">Authentication successful!</p>
-            <p className="text-sm text-zinc-500">You can safely close this window.</p>
+            <p className="text-sm text-zinc-500">
+              You can safely close this window.
+            </p>
           </>
         )}
         <button
@@ -71,8 +76,14 @@ function AuthSuccessContent() {
 
 export default function AuthSuccess() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-zinc-500 animate-pulse">Loading...</p></div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-zinc-500 animate-pulse">Loading...</p>
+        </div>
+      }
+    >
       <AuthSuccessContent />
     </Suspense>
-  )
+  );
 }

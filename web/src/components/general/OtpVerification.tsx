@@ -46,8 +46,20 @@ export function OtpVerification({
   isDanger = false,
 }: OtpVerificationProps) {
   return (
-    <div className={cn("max-w-md w-full mx-auto px-6 py-8 border dark:border-zinc-800 rounded-lg shadow-lg", className)}>
-      <h1 className={cn("font-semibold mb-6 text-center", isDanger ? "text-2xl text-red-600" : "text-3xl")}>{title}</h1>
+    <div
+      className={cn(
+        "max-w-md w-full mx-auto px-6 py-8 border dark:border-zinc-800 rounded-lg shadow-lg",
+        className,
+      )}
+    >
+      <h1
+        className={cn(
+          "font-semibold mb-6 text-center",
+          isDanger ? "text-2xl text-red-600" : "text-3xl",
+        )}
+      >
+        {title}
+      </h1>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -115,7 +127,7 @@ export function OtpVerification({
             "w-full py-2 font-semibold rounded-md transition-colors disabled:bg-zinc-500 disabled:cursor-wait flex justify-center items-center gap-2",
             isDanger
               ? "bg-red-600 text-white hover:bg-red-700"
-              : "dark:text-zinc-900 bg-zinc-800 dark:bg-zinc-200 hover:bg-zinc-700 dark:hover:bg-zinc-300"
+              : "dark:text-zinc-900 bg-zinc-800 dark:bg-zinc-200 hover:bg-zinc-700 dark:hover:bg-zinc-300",
           )}
         >
           {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}

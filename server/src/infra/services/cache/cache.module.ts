@@ -1,31 +1,32 @@
-import { CacheProvider } from "./cache.interface";
+import { env } from "@/config/env";
+import type { CacheProvider } from "./cache.interface";
+import { redisClient } from "./clients/redis.client";
+import { MultiTierCacheProvider } from "./providers/multi-tier.provider";
 import { NodeCacheProvider } from "./providers/node-cache.provider";
 import { RedisCacheProvider } from "./providers/redis.provider";
-import { MultiTierCacheProvider } from "./providers/multi-tier.provider";
-import { env } from "@/config/env";
-import { redisClient } from "./clients/redis.client";
 import { RedisSessionStore } from "./providers/redis-session.store";
 
 export function createCacheProvider(): CacheProvider {
-  const driver = env.CACHE_DRIVER ?? "memory";
-  const ttl = Number(env.CACHE_TTL ?? 3600);
+	const driver = env.CACHE_DRIVER ?? "memory";
+	const ttl = Number(env.CACHE_TTL ?? 3600);
 
-  switch (driver) {
-    case "redis":
-      return new RedisCacheProvider(redisClient);
+	switch (driver) {
+		case "redis":
+			return new RedisCacheProvider(redisClient);
 
-    case "multi":
-      const l1 = new NodeCacheProvider(ttl);
-      const l2 = new RedisCacheProvider(redisClient);
-      return new MultiTierCacheProvider(l1, l2, ttl);
+		case "multi": {
+			const l1 = new NodeCacheProvider(ttl);
+			const l2 = new RedisCacheProvider(redisClient);
+			return new MultiTierCacheProvider(l1, l2, ttl);
+		}
 
-    case "memory":
-      return new NodeCacheProvider(ttl);
-    default:
-      return new NodeCacheProvider(ttl);
-  }
+		case "memory":
+			return new NodeCacheProvider(ttl);
+		default:
+			return new NodeCacheProvider(ttl);
+	}
 }
 
 export function createSessionStore() {
-  return new RedisSessionStore(redisClient);
+	return new RedisSessionStore(redisClient);
 }

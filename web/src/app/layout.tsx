@@ -1,7 +1,7 @@
 import { geistMono, geistSans } from "./fonts";
 import "./globals.css";
 
-export { metadata } from "./meta"
+export { metadata } from "./meta";
 
 export default function RootLayout({
   children,

@@ -1,26 +1,19 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from 'react'
-import { Toaster } from 'sonner'
+import { useEffect, useState } from "react";
+import { Toaster } from "sonner";
 
-type Theme = "light" | "dark"
+type Theme = "light" | "dark";
 
 function ThemedToaster() {
-
-  const [theme, setTheme] = useState<Theme>("light")
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
-    const themeData = document.getElementById("theme-data") as HTMLElement
-    setTheme(themeData.dataset.theme as Theme || "light")
-  }, [])
+    const themeData = document.getElementById("theme-data") as HTMLElement;
+    setTheme((themeData.dataset.theme as Theme) || "light");
+  }, []);
 
-  return (
-    <Toaster
-      richColors
-      theme={theme}
-      containerAriaLabel='toaster'
-    />
-  )
+  return <Toaster richColors theme={theme} containerAriaLabel="toaster" />;
 }
 
-export default ThemedToaster
+export default ThemedToaster;
