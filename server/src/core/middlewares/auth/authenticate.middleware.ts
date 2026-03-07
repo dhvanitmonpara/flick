@@ -17,7 +17,7 @@ export const authenticate = async (
 
 	const session = await auth.api.getSession({ headers });
 
-	if (session.session) {
+	if (session?.session?.userId) {
 		req.session = session.session;
 		req.auth = toInternalAuth(session.user as AuthSelect);
 	}
