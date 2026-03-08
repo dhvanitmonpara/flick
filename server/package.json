@@ -11,7 +11,6 @@
 		"seed": "bun scripts/seed.ts",
 		"scripts:create-admin": "bun scripts/create-admin.ts",
 		"scripts:seed": "bun scripts/seed.ts",
-		"prebuild": "bun run format && bun run db:migrate",
 		"db:up": "docker compose -f infra/docker-compose.yml up -d",
 		"db:down": "docker compose -f infra/docker-compose.yml down",
 		"db:migrate": "npx drizzle-kit migrate",

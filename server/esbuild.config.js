@@ -9,7 +9,7 @@ await build({
 	format: "esm",
 	sourcemap: true,
 	target: ["node18"],
-	outdir: "dist",
+	outfile: "dist/server.js",
 	plugins: [
 		alias({
 			"@/": `${path.join(process.cwd(), "src")}/`,

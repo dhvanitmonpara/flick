@@ -18,6 +18,8 @@ import voteRouter from "@/modules/vote/vote.route";
 import { registerHealthRoutes } from "./health.routes";
 
 export const registerRoutes = (app: Application) => {
+	registerHealthRoutes(app);
+
 	app.use("/api/v1/posts", postRouter);
 	app.use("/api/v1/auth", authRouter);
 	app.use("/api/v1/users", userRouter);
@@ -33,6 +35,4 @@ export const registerRoutes = (app: Application) => {
 	app.use("/api/v1/votes", voteRouter);
 	app.use("/api/v1/admin", adminRouter);
 	app.all("/api/auth/{*any}", toNodeHandler(auth));
-
-	registerHealthRoutes(app);
 };
