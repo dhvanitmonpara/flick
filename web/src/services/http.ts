@@ -1,5 +1,5 @@
-import { env } from "@/config/env";
 import axios from "axios";
+import { env } from "@/config/env";
 import type { ApiResponse, BackendEnvelope } from "@/types/api";
 
 export const http = axios.create({

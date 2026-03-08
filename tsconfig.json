@@ -9,5 +9,9 @@
     "skipLibCheck": true,
     "sourceMap": true
   },
-  "include": ["web", "server", "shared"]
+  "include": [
+    "web",
+    "server",
+    "shared"
+  ]
 }

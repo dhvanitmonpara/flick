@@ -87,10 +87,10 @@ class AuthService {
 		res.cookie("pending_signup", signupId, {
 			httpOnly: true,
 			secure: true,
-			sameSite: "strict",
+			sameSite: "none",
 			maxAge: 900 * 1000,
 			path: "/",
-			domain: env.COOKIE_DOMAIN,
+			// domain: env.COOKIE_DOMAIN,
 		});
 
 		await recordAudit({
@@ -224,9 +224,9 @@ class AuthService {
 		res.clearCookie("pending_signup", {
 			httpOnly: true,
 			secure: true,
-			sameSite: "strict",
+			sameSite: "none",
 			path: "/",
-			domain: env.COOKIE_DOMAIN,
+			// domain: env.COOKIE_DOMAIN,
 		});
 
 		if (isNewAuth) {
@@ -323,16 +323,16 @@ class AuthService {
 			res.clearCookie("better-auth.session_token", {
 				httpOnly: true,
 				secure: true,
-				sameSite: "strict",
+				sameSite: "none",
 				path: "/",
-				domain: env.COOKIE_DOMAIN,
+				// domain: env.COOKIE_DOMAIN,
 			});
 			res.clearCookie("better-auth.session_data", {
 				httpOnly: true,
 				secure: true,
-				sameSite: "strict",
+				sameSite: "none",
 				path: "/",
-				domain: env.COOKIE_DOMAIN,
+				// domain: env.COOKIE_DOMAIN,
 			});
 		}
 	};
@@ -722,10 +722,10 @@ class AuthService {
 		res.cookie("better-auth.session_token", sessionToken, {
 			httpOnly: true,
 			secure: env.NODE_ENV === "production",
-			sameSite: "lax",
+			sameSite: "none",
 			expires: expiresAt,
 			path: "/",
-			domain: env.COOKIE_DOMAIN,
+			// domain: env.COOKIE_DOMAIN,
 		});
 	}
 }

@@ -30,6 +30,8 @@ const envSchema = z.object({
 	HMAC_SECRET: z.string().min(32),
 	ADMIN_EMAIL: z.email(),
 	ADMIN_PASSWORD: z.string().min(8),
+	BETTER_AUTH_URL: z.string(),
+	BETTER_AUTH_SECRET: z.string(),
 	CLOUDINARY_CLOUD_NAME: z.string().optional(),
 	CLOUDINARY_API_KEY: z.string().optional(),
 	CLOUDINARY_API_SECRET: z.string().optional(),

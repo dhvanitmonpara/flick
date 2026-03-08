@@ -9,6 +9,9 @@ import { auth as authTable } from "@/infra/db/tables/auth.table";
 import mailService from "@/infra/services/mail";
 
 export const auth = betterAuth({
+	baseUrl: env.BETTER_AUTH_URL, // Remove this if you getting OAuth issues
+	secret: env.BETTER_AUTH_SECRET,
+
 	trustedOrigins: env.ACCESS_CONTROL_ORIGINS,
 	database: drizzleAdapter(db, {
 		provider: "pg",
@@ -62,6 +65,16 @@ export const auth = betterAuth({
 			strategy: "jwe", // can be "jwt" or "compact"
 			refreshCache: true, // Enable stateless refresh
 		},
+	},
+	advanced: {
+		crossSubDomainCookies: {
+			enabled: true,
+		},
+		defaultCookieAttributes: {
+			sameSite: "none",
+			secure: env.NODE_ENV === "production",
+			httpOnly: true
+		}
 	},
 	account: {
 		storeStateStrategy: "cookie",

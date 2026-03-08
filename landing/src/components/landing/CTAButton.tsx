@@ -18,6 +18,7 @@ const CTAButton = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       variant="primary"
+      onClick={() => window.open("https://flick.dhvanitm.in", "_blank")}
       className={`group transition-all font-inter hover:scale-105 hover:shadow-xl hover:bg-red-500/90 ${className}`}
     >
       <span>Join Anonymously</span>

@@ -1,8 +1,11 @@
 "use client";
 
+import type { AxiosError } from "axios";
+import { useCallback, useEffect, useState } from "react";
 import Post from "@/components/general/Post";
 import SkeletonCard from "@/components/skeletons/PostSkeleton";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { postApi } from "@/services/api/post";
 import usePostStore from "@/store/postStore";
 import useProfileStore from "@/store/profileStore";
 import type { Post as PostEntity } from "@/types/Post";
@@ -12,9 +15,6 @@ import {
   getCollegeName,
   isUser,
 } from "@/utils/helpers";
-import { AxiosError } from "axios";
-import { useCallback, useEffect, useState } from "react";
-import { postApi } from "@/services/api/post";
 
 function CollegePage() {
   const [loading, setLoading] = useState(false);
