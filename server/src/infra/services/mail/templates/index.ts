@@ -1,5 +1,6 @@
 import { render } from "@react-email/render";
 import type { MailPayloadMap } from "../types/template.types";
+import CollegeNowAvailableEmail from "./college-now-available";
 import FeedbackReceivedEmail from "./feedback/Recieved";
 import FeedbackSentEmail from "./feedback/Send";
 import NewDeviceLoginEmail from "./new-device-login";
@@ -88,6 +89,21 @@ export const mailTemplates: {
 		return {
 			subject: `Reset your ${d.projectName} password`,
 			text: `Reset your password at: ${d.url}`,
+			html,
+		};
+	},
+
+	"COLLEGE-NOW-AVAILABLE": async (d) => {
+		const html = await render(
+			CollegeNowAvailableEmail({
+				projectName: d.projectName,
+				collegeName: d.collegeName,
+			}),
+		);
+
+		return {
+			subject: `${d.collegeName} is now available on ${d.projectName}`,
+			text: `${d.collegeName} has been added to ${d.projectName}. You can now sign up with your college email.`,
 			html,
 		};
 	},

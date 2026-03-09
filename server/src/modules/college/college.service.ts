@@ -3,7 +3,11 @@ import logger from "@/core/logger";
 import recordAudit from "@/lib/record-audit";
 import { invalidateCollegeCaches } from "./college.cache-invalidation";
 import CollegeRepo from "./college.repo";
-import type { CollegeUpdates } from "./college.types";
+import type {
+	CollegeUpdates,
+	CreateCollegeRequestInput,
+	UpdateCollegeRequestInput,
+} from "./college.types";
 
 @Controller()
 class CollegeService {
@@ -111,6 +115,72 @@ class CollegeService {
 			count: branches.length,
 		});
 		return branches;
+	}
+
+	async createCollegeRequest(requestData: CreateCollegeRequestInput) {
+		logger.info("Creating college request", {
+			emailDomain: requestData.emailDomain,
+		});
+
+		const existingCollege = await CollegeRepo.CachedRead.findByEmailDomain(
+			requestData.emailDomain,
+		);
+		if (existingCollege) {
+			throw HttpError.badRequest("College already exists", {
+				code: "COLLEGE_ALREADY_EXISTS",
+			});
+		}
+
+		const existingRequest = await CollegeRepo.Read.findRequestByEmailDomain(
+			requestData.emailDomain,
+		);
+		if (existingRequest) {
+			throw HttpError.badRequest("A request for this college already exists", {
+				code: "COLLEGE_REQUEST_ALREADY_EXISTS",
+			});
+		}
+
+		const createdRequest = await CollegeRepo.Write.createRequest({
+			...requestData,
+			emailDomain: requestData.emailDomain.toLowerCase(),
+			requestedByEmail: requestData.requestedByEmail.toLowerCase(),
+		});
+
+		logger.info("College request created", {
+			requestId: createdRequest?.id,
+			emailDomain: requestData.emailDomain,
+		});
+
+		return createdRequest;
+	}
+
+	async getCollegeRequests() {
+		logger.info("Fetching college requests");
+		const requests = await CollegeRepo.Read.findAllRequests();
+		logger.info("College requests fetched", { count: requests.length });
+		return requests;
+	}
+
+	async updateCollegeRequest(
+		id: string,
+		updates: UpdateCollegeRequestInput,
+	) {
+		const updatedRequest = await CollegeRepo.Write.updateRequestById(id, {
+			status: updates.status,
+			resolvedCollegeId: updates.resolvedCollegeId ?? null,
+			resolvedAt:
+				updates.status === "approved" || updates.status === "rejected"
+					? new Date()
+					: null,
+		});
+
+		if (!updatedRequest) {
+			throw HttpError.notFound("College request not found", {
+				code: "COLLEGE_REQUEST_NOT_FOUND",
+			});
+		}
+
+		return updatedRequest;
 	}
 
 	async updateCollege(id: string, updates: CollegeUpdates) {

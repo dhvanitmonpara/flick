@@ -56,6 +56,36 @@ class CollegeController {
 		});
 	}
 
+	static async createCollegeRequest(req: Request) {
+		const request =
+			collegeSchemas.CreateCollegeRequestSchema.parse(req.body);
+
+		const createdRequest = await collegeService.createCollegeRequest(request);
+
+		return HttpResponse.created("College request submitted successfully", {
+			request: createdRequest,
+		});
+	}
+
+	static async getCollegeRequests() {
+		const requests = await collegeService.getCollegeRequests();
+
+		return HttpResponse.ok("College requests retrieved successfully", {
+			requests,
+		});
+	}
+
+	static async updateCollegeRequest(req: Request) {
+		const { id } = collegeSchemas.CollegeIdSchema.parse(req.params);
+		const updates = collegeSchemas.UpdateCollegeRequestSchema.parse(req.body);
+
+		const request = await collegeService.updateCollegeRequest(id, updates);
+
+		return HttpResponse.ok("College request updated successfully", {
+			request,
+		});
+	}
+
 	static async updateCollege(req: Request) {
 		const { id } = collegeSchemas.CollegeIdSchema.parse(req.params);
 		const updates = collegeSchemas.UpdateCollegeSchema.parse(req.body);

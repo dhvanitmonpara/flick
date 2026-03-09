@@ -8,6 +8,9 @@ const AdminRepo = {
 		getReports: (page: number, limit: number, statuses: string[], dbTx?: DB) =>
 			AdminAdapter.getReports(page, limit, statuses, dbTx),
 		getAllColleges: (dbTx?: DB) => AdminAdapter.getAllColleges(dbTx),
+		getCollegeRequests: (dbTx?: DB) => AdminAdapter.getCollegeRequests(dbTx),
+		getCollegeRequestById: (id: string, dbTx?: DB) =>
+			AdminAdapter.getCollegeRequestById(id, dbTx),
 		getLogs: (
 			page: number,
 			limit: number,
@@ -41,6 +44,15 @@ const AdminRepo = {
 			}>,
 			dbTx?: DB,
 		) => AdminAdapter.updateCollege(id, updates, dbTx),
+		updateCollegeRequest: (
+			id: string,
+			updates: Partial<{
+				status: "pending" | "approved" | "rejected";
+				resolvedCollegeId: string | null;
+				resolvedAt: Date | null;
+			}>,
+			dbTx?: DB,
+		) => AdminAdapter.updateCollegeRequest(id, updates, dbTx),
 	},
 };
 

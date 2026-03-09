@@ -39,6 +39,13 @@ class AdminController {
 		return HttpResponse.ok("Colleges fetched successfully", { colleges });
 	}
 
+	static async getCollegeRequests() {
+		const requests = await adminService.getCollegeRequests();
+		return HttpResponse.ok("College requests fetched successfully", {
+			requests,
+		});
+	}
+
 	static async getLogs(req: Request) {
 		const { page, limit, sortBy, sortOrder } =
 			adminSchemas.GetLogsQuerySchema.parse(req.query);
@@ -75,6 +82,22 @@ class AdminController {
 		}
 
 		return HttpResponse.ok("College updated successfully", updatedCollege);
+	}
+
+	static async updateCollegeRequest(req: Request) {
+		const { id } = adminSchemas.CollegeIdSchema.parse(req.params);
+		const updates = adminSchemas.UpdateCollegeRequestSchema.parse(req.body);
+
+		const updatedRequest = await adminService.updateCollegeRequest(id, updates);
+
+		if (!updatedRequest) {
+			throw HttpError.notFound("College request not found");
+		}
+
+		return HttpResponse.ok(
+			"College request updated successfully",
+			updatedRequest,
+		);
 	}
 
 	static async uploadCollegeProfile(req: Request) {

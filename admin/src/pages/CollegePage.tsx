@@ -2,25 +2,33 @@ import { useCallback, useEffect, useState } from "react";
 import { http } from "@/services/http";
 import { toast } from "sonner";
 import { College } from "@/types/College";
+import { CollegeRequest } from "@/types/CollegeRequest";
 import { CollegeTable } from "@/components/general/CollegeTable";
+import { CollegeRequestTable } from "@/components/general/CollegeRequestTable";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import CollegeForm from "@/components/forms/CollegeForm";
 
 function CollegePage() {
   const [colleges, setColleges] = useState<College[]>([]);
+  const [requests, setRequests] = useState<CollegeRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const fetchColleges = useCallback(async () => {
     try {
-      const res = await http.get(`/colleges/get/all`);
-      if (res.status !== 200) {
+      const [collegesRes, requestsRes] = await Promise.all([
+        http.get(`/colleges/get/all`),
+        http.get(`/college-requests`),
+      ]);
+
+      if (collegesRes.status !== 200 || requestsRes.status !== 200) {
         toast.error("Failed to fetch colleges.");
         return;
       }
-      setColleges(res.data.colleges);
+      setColleges(collegesRes.data.colleges);
+      setRequests(requestsRes.data.requests);
     } catch (error) {
       console.error("Error fetching colleges:", error);
       toast.error("Failed to fetch colleges.");
@@ -63,6 +71,25 @@ function CollegePage() {
           <div className="p-4 text-center text-zinc-400">No colleges found.</div>
         </div>
       )}
+
+      <div className="flex flex-col gap-3">
+        <div>
+          <h3 className="text-xl font-semibold tracking-tight">College requests</h3>
+          <p className="text-sm text-zinc-400">Requests submitted from the client when a college is missing.</p>
+        </div>
+
+        {requests.length > 0 ? (
+          <CollegeRequestTable
+            data={requests}
+            setCollege={setColleges}
+            setRequests={setRequests}
+          />
+        ) : (
+          <div className="bg-zinc-800/50 px-3 w-full min-h-32 rounded-md">
+            <div className="p-4 text-center text-zinc-400">No college requests yet.</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

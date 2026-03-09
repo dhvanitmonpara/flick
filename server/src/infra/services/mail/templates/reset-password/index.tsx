@@ -1,8 +1,5 @@
 import { Button, Section, Text } from "@react-email/components";
-import React from "react";
 import BaseLayout from "../components/BaseLayout.js";
-
-void React;
 
 export default function ResetPasswordEmail({
 	url,

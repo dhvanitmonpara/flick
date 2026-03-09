@@ -31,6 +31,11 @@ interface ResetPasswordDetails {
 	projectName: string;
 }
 
+interface CollegeNowAvailableDetails {
+	projectName: string;
+	collegeName: string;
+}
+
 export type MailPayloadMap = {
 	OTP: OTPDetails;
 	WELCOME: WelcomeDetails;
@@ -38,4 +43,5 @@ export type MailPayloadMap = {
 	"FEEDBACK-SENT": FeedbackSentDetails;
 	"NEW-DEVICE-LOGIN": NewDeviceLoginDetails;
 	"RESET-PASSWORD": ResetPasswordDetails;
+	"COLLEGE-NOW-AVAILABLE": CollegeNowAvailableDetails;
 };

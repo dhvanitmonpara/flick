@@ -9,13 +9,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { Loader2 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { College } from "@/types/College";
 import { http } from "@/services/http";
 import { Label } from "@/components/ui/label";
-
-const availableCities = ["Ahmedabad"] as const;
-const availableStates = ["Gujarat"] as const;
 
 const collegeSchema = z.object({
   name: z.string().min(3, { message: "Name must be at least 3 characters" }),
@@ -27,8 +23,8 @@ const collegeSchema = z.object({
       message: "Invalid URL",
     }),
   emailDomain: z.string().min(3, { message: "Email domain must be at least 3 characters" }),
-  city: z.enum(availableCities),
-  state: z.enum(availableStates),
+  city: z.string().min(2, { message: "City is required" }),
+  state: z.string().min(2, { message: "State is required" }),
   branches: z.array(z.string()).min(1, { message: "Select at least one branch" }),
 });
 
@@ -36,9 +32,11 @@ type CollegeFormValues = z.infer<typeof collegeSchema>;
 
 type Branch = { id: string; name: string; code: string };
 
-function CollegeForm({ defaultData, id, setOpen, setCollege }: {
+function CollegeForm({ defaultData, id, initialValues, onSuccess, setOpen, setCollege }: {
   defaultData?: College | null,
   id?: string,
+  initialValues?: Partial<College> | null,
+  onSuccess?: (college: College) => Promise<void> | void,
   setOpen?: (open: boolean) => void,
   setCollege: React.Dispatch<React.SetStateAction<College[]>>
 }) {
@@ -64,23 +62,24 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isUpdating = !!defaultData;
+  const isUpdating = !!id;
+  const defaults = defaultData ?? initialValues ?? null;
 
   const form = useForm<CollegeFormValues>({
     resolver: zodResolver(collegeSchema),
-    defaultValues: defaultData ? {
-      name: defaultData.name,
-      emailDomain: defaultData.emailDomain,
-      profile: defaultData.profile,
-      city: availableCities.includes(defaultData.city as any) ? defaultData.city as (typeof availableCities)[number] : availableCities[0],
-      state: availableStates.includes(defaultData.state as any) ? defaultData.state as (typeof availableStates)[number] : availableStates[0],
-      branches: defaultData.branches || [],
+    defaultValues: defaults ? {
+      name: defaults.name || "",
+      emailDomain: defaults.emailDomain || "",
+      profile: defaults.profile || "",
+      city: defaults.city || "",
+      state: defaults.state || "",
+      branches: defaults.branches || [],
     } : {
       name: "",
       emailDomain: "",
       profile: "",
-      city: availableCities[0],
-      state: availableStates[0],
+      city: "",
+      state: "",
       branches: [],
     }
   });
@@ -239,6 +238,8 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
         setCollege((prev) => [...prev, finalCollege]);
       }
 
+      await onSuccess?.(finalCollege);
+
       if (setOpen) setOpen(false);
     } catch (error) {
       console.log(error);
@@ -346,26 +347,16 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
         <FormField
           control={form.control}
           name="city"
+          disabled={loading}
           render={({ field }) => (
             <FormItem>
-              <Select
-                onValueChange={(value) => field.onChange(value as typeof availableCities[number])}
-                value={field.value}
-                disabled={loading}
-              >
-                <FormControl>
-                  <SelectTrigger className="border-zinc-700 bg-zinc-700 focus:border-zinc-200 focus-visible:ring-zinc-200">
-                    <SelectValue placeholder="Select a city" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {availableCities.map((city) => (
-                    <SelectItem key={city} value={city}>
-                      {city}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <Input
+                  className="border-zinc-700 bg-zinc-700 focus:border-zinc-200 focus-visible:ring-zinc-200"
+                  placeholder="Enter city"
+                  {...field}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -376,20 +367,13 @@ function CollegeForm({ defaultData, id, setOpen, setCollege }: {
           disabled={loading}
           render={({ field }) => (
             <FormItem>
-              <Select value={field.value} onValueChange={field.onChange} disabled={loading}>
-                <FormControl>
-                  <SelectTrigger className="border-zinc-700 bg-zinc-700 focus:border-zinc-200 focus-visible:ring-zinc-200">
-                    <SelectValue placeholder="Select a state" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {availableStates.map((state) => (
-                    <SelectItem key={state} value={state}>
-                      {state}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <Input
+                  className="border-zinc-700 bg-zinc-700 focus:border-zinc-200 focus-visible:ring-zinc-200"
+                  placeholder="Enter state"
+                  {...field}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

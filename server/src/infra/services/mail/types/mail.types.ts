@@ -6,7 +6,8 @@ export type MailType =
 	| "FEEDBACK-RECEIVED"
 	| "FEEDBACK-SENT"
 	| "NEW-DEVICE-LOGIN"
-	| "RESET-PASSWORD";
+	| "RESET-PASSWORD"
+	| "COLLEGE-NOW-AVAILABLE";
 
 export type MailDetails<T extends MailType = MailType> = MailPayloadMap[T];
 

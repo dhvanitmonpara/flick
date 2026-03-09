@@ -6,6 +6,7 @@ import {
 	bannedWords,
 	bookmarks,
 	branches,
+	collegeRequests,
 	colleges,
 	comments,
 	feedbacks,
@@ -29,6 +30,7 @@ const db = drizzle(env.DATABASE_URL, {
 		votes,
 		bannedWords,
 		branches,
+		collegeRequests,
 	},
 });
 

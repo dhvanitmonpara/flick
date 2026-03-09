@@ -6,6 +6,7 @@ import { zodResolver } from "@/lib/zod-resolver";
 import { Input } from "@/components/ui/input";
 import { useState, useRef } from "react";
 import { Loader2 } from "lucide-react";
+import { AxiosError } from "axios";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -18,6 +19,14 @@ import Link from "next/link";
 import { authApi } from "@/services/api/auth";
 import { authClient } from "@/lib/auth-client";
 import { ocrApi } from "@/services/api/ocr";
+import { collegeApi } from "@/services/api/college";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toastError } from "@/utils/toast-error";
 
 const signUpSchema = z
@@ -44,11 +53,38 @@ const signUpSchema = z
 
 type SignUpFormData = z.infer<typeof signUpSchema>;
 
+const requestCollegeSchema = z
+  .object({
+    name: z.string().min(2, "College name is required"),
+    emailDomain: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(/^[\w.-]+\.[a-z]{2,}$/i, "Enter a valid college email domain"),
+    city: z.string().min(2, "City is required"),
+    state: z.string().min(2, "State is required"),
+    requestedByEmail: z.email("Enter a valid college email"),
+  })
+  .superRefine((value, ctx) => {
+    const requesterDomain = value.requestedByEmail.split("@")[1]?.toLowerCase();
+    if (requesterDomain !== value.emailDomain.toLowerCase()) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["requestedByEmail"],
+        message: "Requester email must match the college email domain",
+      });
+    }
+  });
+
+type RequestCollegeFormData = z.infer<typeof requestCollegeSchema>;
+
 function SignUpPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
   const [isPasswordShowing, setIsPasswordShowing] = useState(false);
   const [isConfirmPasswordShowing, setIsConfirmPasswordShowing] =
     useState(false);
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const isSubmittingRef = useRef(false);
 
   const { data: session, isPending } = authClient.useSession();
@@ -68,6 +104,51 @@ function SignUpPage() {
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
   });
+
+  const {
+    register: registerRequest,
+    handleSubmit: handleRequestSubmit,
+    setValue: setRequestValue,
+    reset: resetRequestForm,
+    formState: { errors: requestErrors },
+  } = useForm<RequestCollegeFormData>({
+    resolver: zodResolver(requestCollegeSchema),
+    defaultValues: {
+      name: "",
+      emailDomain: "",
+      city: "",
+      state: "",
+      requestedByEmail: "",
+    },
+  });
+
+  const openCollegeRequestDialog = (email: string) => {
+    const emailDomain = email.split("@")[1]?.toLowerCase() ?? "";
+    setRequestValue("requestedByEmail", email, { shouldValidate: true });
+    setRequestValue("emailDomain", emailDomain, { shouldValidate: true });
+    setIsRequestDialogOpen(true);
+  };
+
+  const onRequestCollegeSubmit = async (data: RequestCollegeFormData) => {
+    setIsSubmittingRequest(true);
+
+    try {
+      await collegeApi.requestCollege(data);
+      toast.success("College request submitted. We’ll review it soon.");
+      setIsRequestDialogOpen(false);
+      resetRequestForm({
+        name: "",
+        emailDomain: data.emailDomain,
+        city: "",
+        state: "",
+        requestedByEmail: data.requestedByEmail,
+      });
+    } catch (err: unknown) {
+      toastError(err, "Failed to submit college request");
+    } finally {
+      setIsSubmittingRequest(false);
+    }
+  };
 
   const onSubmit = async (data: SignUpFormData) => {
     if (isSubmittingRef.current) return;
@@ -97,7 +178,15 @@ function SignUpPage() {
       sessionStorage.setItem("pending_signup_password", data.password);
       navigate(`/auth/otp/${data.email}`);
     } catch (err: unknown) {
-      toastError(err, "Failed to initialize user");
+      if (
+        err instanceof AxiosError &&
+        err.response?.data?.code === "COLLEGE_NOT_FOUND"
+      ) {
+        openCollegeRequestDialog(data.email);
+        toast.info("College not found. Submit a request for admin review.");
+      } else {
+        toastError(err, "Failed to initialize user");
+      }
       isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
@@ -243,6 +332,86 @@ function SignUpPage() {
           Signin
         </Link>
       </p>
+      <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Request your college</DialogTitle>
+            <DialogDescription>
+              If your college is missing, send the details here and an admin can
+              add it.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={handleRequestSubmit(onRequestCollegeSubmit)}
+            className="space-y-4"
+          >
+            <Input
+              placeholder="College name"
+              disabled={isSubmittingRequest}
+              {...registerRequest("name")}
+            />
+            {requestErrors.name && (
+              <p className="text-red-500 text-sm mt-1!">
+                {String(requestErrors.name.message)}
+              </p>
+            )}
+            <Input
+              placeholder="College email domain"
+              disabled={isSubmittingRequest}
+              {...registerRequest("emailDomain")}
+            />
+            {requestErrors.emailDomain && (
+              <p className="text-red-500 text-sm mt-1!">
+                {String(requestErrors.emailDomain.message)}
+              </p>
+            )}
+            <Input
+              placeholder="City"
+              disabled={isSubmittingRequest}
+              {...registerRequest("city")}
+            />
+            {requestErrors.city && (
+              <p className="text-red-500 text-sm mt-1!">
+                {String(requestErrors.city.message)}
+              </p>
+            )}
+            <Input
+              placeholder="State"
+              disabled={isSubmittingRequest}
+              {...registerRequest("state")}
+            />
+            {requestErrors.state && (
+              <p className="text-red-500 text-sm mt-1!">
+                {String(requestErrors.state.message)}
+              </p>
+            )}
+            <Input
+              placeholder="Your college email"
+              disabled={isSubmittingRequest}
+              {...registerRequest("requestedByEmail")}
+            />
+            {requestErrors.requestedByEmail && (
+              <p className="text-red-500 text-sm mt-1!">
+                {String(requestErrors.requestedByEmail.message)}
+              </p>
+            )}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmittingRequest}
+            >
+              {isSubmittingRequest ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending request
+                </>
+              ) : (
+                "Submit request"
+              )}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

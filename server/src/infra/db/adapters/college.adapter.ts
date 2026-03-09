@@ -1,7 +1,12 @@
-import { and, eq, ilike, inArray } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray } from "drizzle-orm";
 import db from "@/infra/db/index";
 import type { DB } from "@/infra/db/types";
-import { branches, collegeBranches, colleges } from "../tables";
+import {
+	branches,
+	collegeBranches,
+	collegeRequests,
+	colleges,
+} from "../tables";
 
 export const findById = async (id: string, dbTx?: DB) => {
 	const client = dbTx ?? db;
@@ -193,4 +198,55 @@ export const setCollegeBranches = async (
 			await tx.insert(collegeBranches).values(values);
 		}
 	});
+};
+
+export const findRequestByEmailDomain = async (
+	emailDomain: string,
+	dbTx?: DB,
+) => {
+	const client = dbTx ?? db;
+
+	return client.query.collegeRequests.findFirst({
+		where: and(
+			eq(collegeRequests.emailDomain, emailDomain),
+			eq(collegeRequests.status, "pending"),
+		),
+	});
+};
+
+export const createRequest = async (
+	request: typeof collegeRequests.$inferInsert,
+	dbTx?: DB,
+) => {
+	const client = dbTx ?? db;
+
+	return client
+		.insert(collegeRequests)
+		.values(request)
+		.returning()
+		.then((rows) => rows?.[0] ?? null);
+};
+
+export const findAllRequests = async (dbTx?: DB) => {
+	const client = dbTx ?? db;
+
+	return client
+		.select()
+		.from(collegeRequests)
+		.orderBy(desc(collegeRequests.createdAt));
+};
+
+export const updateRequestById = async (
+	id: string,
+	updates: Partial<typeof collegeRequests.$inferInsert>,
+	dbTx?: DB,
+) => {
+	const client = dbTx ?? db;
+
+	return client
+		.update(collegeRequests)
+		.set({ ...updates, updatedAt: new Date() })
+		.where(eq(collegeRequests.id, id))
+		.returning()
+		.then((rows) => rows?.[0] ?? null);
 };

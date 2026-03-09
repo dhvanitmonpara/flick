@@ -61,3 +61,8 @@ export type UpdateCollegeType = z.infer<typeof UpdateCollegeSchema>;
 export const CollegeIdSchema = z.object({
 	id: z.string().uuid("Invalid college ID format"),
 });
+
+export const UpdateCollegeRequestSchema = z.object({
+	status: z.enum(["pending", "approved", "rejected"]),
+	resolvedCollegeId: z.string().uuid("Invalid college ID format").optional(),
+});

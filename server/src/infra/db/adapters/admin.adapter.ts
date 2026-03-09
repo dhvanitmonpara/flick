@@ -6,6 +6,7 @@ import {
 	auditLogs,
 	auth,
 	collegeBranches,
+	collegeRequests,
 	colleges,
 	comments,
 	contentReports,
@@ -203,6 +204,39 @@ export const getAllColleges = async (dbTx?: DB) => {
 	}));
 };
 
+export const getCollegeRequests = async (dbTx?: DB) => {
+	const client = dbTx ?? db;
+
+	return client
+		.select({
+			id: collegeRequests.id,
+			name: collegeRequests.name,
+			emailDomain: collegeRequests.emailDomain,
+			city: collegeRequests.city,
+			state: collegeRequests.state,
+			requestedByEmail: collegeRequests.requestedByEmail,
+			status: collegeRequests.status,
+			resolvedCollegeId: collegeRequests.resolvedCollegeId,
+			resolvedAt: collegeRequests.resolvedAt,
+			createdAt: collegeRequests.createdAt,
+			updatedAt: collegeRequests.updatedAt,
+		})
+		.from(collegeRequests)
+		.orderBy(desc(collegeRequests.createdAt));
+};
+
+export const getCollegeRequestById = async (id: string, dbTx?: DB) => {
+	const client = dbTx ?? db;
+
+	const [request] = await client
+		.select()
+		.from(collegeRequests)
+		.where(eq(collegeRequests.id, id))
+		.limit(1);
+
+	return request ?? null;
+};
+
 export const getLogs = async (
 	page: number,
 	limit: number,
@@ -344,4 +378,20 @@ export const updateCollege = async (
 		state: updatedCollege.state,
 		profile: updatedCollege.profile,
 	};
+};
+
+export const updateCollegeRequest = async (
+	id: string,
+	updates: Partial<typeof collegeRequests.$inferInsert>,
+	dbTx?: DB,
+) => {
+	const client = dbTx ?? db;
+
+	const [updatedRequest] = await client
+		.update(collegeRequests)
+		.set({ ...updates, updatedAt: new Date() })
+		.where(eq(collegeRequests.id, id))
+		.returning();
+
+	return updatedRequest ?? null;
 };

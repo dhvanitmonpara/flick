@@ -1,4 +1,5 @@
 import logger from "@/core/logger";
+import mailService from "@/infra/services/mail";
 import { invalidateCollegeCaches } from "@/modules/college/college.cache-invalidation";
 import CollegeRepo from "@/modules/college/college.repo";
 import AdminRepo from "./admin.repo";
@@ -38,6 +39,15 @@ class AdminService {
 			count: colleges.length,
 		});
 		return colleges;
+	}
+
+	async getCollegeRequests() {
+		logger.info("Fetching college requests");
+		const requests = await AdminRepo.Read.getCollegeRequests();
+		logger.info("College requests fetched successfully", {
+			count: requests.length,
+		});
+		return requests;
 	}
 
 	async getLogs(
@@ -139,6 +149,61 @@ class AdminService {
 					? existingCollege.branches
 					: []),
 		};
+	}
+
+	async updateCollegeRequest(
+		id: string,
+		updates: Partial<{
+			status: "pending" | "approved" | "rejected";
+			resolvedCollegeId: string;
+		}>,
+	) {
+		logger.info("Updating college request", { id, updates });
+		const existingRequest = await AdminRepo.Read.getCollegeRequestById(id);
+
+		const updatedRequest = await AdminRepo.Write.updateCollegeRequest(id, {
+			status: updates.status,
+			resolvedCollegeId: updates.resolvedCollegeId ?? null,
+			resolvedAt:
+				updates.status === "approved" || updates.status === "rejected"
+					? new Date()
+					: null,
+		});
+
+		if (!updatedRequest) {
+			logger.warn("Attempted to update non-existent college request", { id });
+			return null;
+		}
+
+		const shouldSendApprovalEmail =
+			existingRequest?.status !== "approved" &&
+			updatedRequest.status === "approved" &&
+			!!updatedRequest.requestedByEmail;
+
+		if (shouldSendApprovalEmail) {
+			const requesterEmail = updatedRequest.requestedByEmail;
+			if (!requesterEmail) {
+				return updatedRequest;
+			}
+
+			try {
+				await mailService.send(
+					requesterEmail,
+					"COLLEGE-NOW-AVAILABLE",
+					{
+						projectName: "Flick",
+						collegeName: updatedRequest.name,
+					},
+				);
+			} catch (error) {
+				logger.error("Failed to send college approval email", {
+					requestId: updatedRequest.id,
+					error: error instanceof Error ? error.message : String(error),
+				});
+			}
+		}
+
+		return updatedRequest;
 	}
 }
 

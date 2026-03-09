@@ -29,12 +29,15 @@ const CollegeRepo = {
 
 		findByEmailDomain: (emailDomain: string, dbTx?: DB) =>
 			CollegeAdapter.findByEmailDomain(emailDomain, dbTx),
+		findRequestByEmailDomain: (emailDomain: string, dbTx?: DB) =>
+			CollegeAdapter.findRequestByEmailDomain(emailDomain, dbTx),
 
 		findAll: (filters?: { city?: string; state?: string }, dbTx?: DB) =>
 			CollegeAdapter.findAll(filters, dbTx),
 
 		findBranchesByCollegeId: (collegeId: string, dbTx?: DB) =>
 			CollegeAdapter.findBranchesByCollegeId(collegeId, dbTx),
+		findAllRequests: (dbTx?: DB) => CollegeAdapter.findAllRequests(dbTx),
 	},
 
 	Write: {
@@ -42,6 +45,8 @@ const CollegeRepo = {
 		updateById: CollegeAdapter.updateById,
 		deleteById: CollegeAdapter.deleteById,
 		setCollegeBranches: CollegeAdapter.setCollegeBranches,
+		createRequest: CollegeAdapter.createRequest,
+		updateRequestById: CollegeAdapter.updateRequestById,
 	},
 };
 

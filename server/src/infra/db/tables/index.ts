@@ -10,6 +10,7 @@ export {
 export { bannedWords } from "./banned-word.table";
 export { bookmarks } from "./bookmark.table";
 export { branches } from "./branch.table";
+export { collegeRequests } from "./college-request.table";
 export { colleges } from "./college.table";
 export { collegeBranches } from "./college-branch.table";
 export { comments } from "./comment.table";

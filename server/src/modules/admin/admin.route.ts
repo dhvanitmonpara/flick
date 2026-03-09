@@ -19,8 +19,10 @@ router.get("/manage/users/query", AdminController.manageUsersQuery);
 router.get("/manage/reports", AdminController.getReports);
 
 router.get("/colleges/get/all", AdminController.getAllColleges);
+router.get("/college-requests", AdminController.getCollegeRequests);
 router.post("/colleges/create", AdminController.createCollege);
 router.patch("/colleges/update/:id", AdminController.updateCollege);
+router.patch("/college-requests/:id", AdminController.updateCollegeRequest);
 router.post(
 	"/colleges/upload/profile/:id",
 	uploadCollegeProfile.single("profile"),
