@@ -16,6 +16,7 @@ router.use(ensureRatelimit.api);
 router.use(withOptionalUserContext);
 
 router.route("/").get(postController.getPosts);
+router.route("/search").get(postController.searchPosts);
 router.route("/:id").get(postController.getPostById);
 router.route("/:id/view").post(postController.incrementPostViews);
 router.route("/college/:collegeId").get(postController.getPostsByCollege);

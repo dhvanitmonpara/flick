@@ -11,7 +11,9 @@ export default function CollegeNowAvailableEmail({
 	return (
 		<BaseLayout projectName={projectName}>
 			<Section>
-				<Text style={style.topText}>Your college is now available on Flick</Text>
+				<Text style={style.topText}>
+					Your college is now available on Flick
+				</Text>
 				<Text>
 					Good news. <strong>{collegeName}</strong> has been added to Flick and
 					you can now continue signup using your college email.

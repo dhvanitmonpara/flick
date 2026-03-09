@@ -161,10 +161,7 @@ class CollegeService {
 		return requests;
 	}
 
-	async updateCollegeRequest(
-		id: string,
-		updates: UpdateCollegeRequestInput,
-	) {
+	async updateCollegeRequest(id: string, updates: UpdateCollegeRequestInput) {
 		const updatedRequest = await CollegeRepo.Write.updateRequestById(id, {
 			status: updates.status,
 			resolvedCollegeId: updates.resolvedCollegeId ?? null,

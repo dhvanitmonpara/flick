@@ -1,19 +1,22 @@
 import { http } from "../http";
 
 type PostQuery = {
-  branch?: string;
-  topic?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: "createdAt" | "updatedAt" | "views";
-  sortOrder?: "asc" | "desc";
-  collegeId?: string;
+	branch?: string;
+	topic?: string;
+	page?: number;
+	limit?: number;
+	sortBy?: "createdAt" | "updatedAt" | "views";
+	sortOrder?: "asc" | "desc";
+	collegeId?: string;
 };
 
 export const postApi = {
-  getPosts: async (params?: PostQuery) => {
-    return http.get("/posts", { params });
-  },
+	getPosts: async (params?: PostQuery) => {
+		return http.get("/posts", { params });
+	},
+	search: async (query: string, params?: { page?: number; limit?: number }) => {
+		return http.get("/posts/search", { params: { q: query, ...params } });
+	},
   getByCollege: async (collegeId: string) => {
     return http.get(`/posts/college/${collegeId}`);
   },

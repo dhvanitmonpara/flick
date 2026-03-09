@@ -1,25 +1,16 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@/lib/zod-resolver";
-import { Input } from "@/components/ui/input";
-import { useState, useRef } from "react";
-import { Loader2 } from "lucide-react";
 import { AxiosError } from "axios";
-import { IoMdEye, IoMdEyeOff } from "react-icons/io";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import FileInput from "@/components/ui/FileInput";
-import { FaGoogle } from "react-icons/fa";
-import { handleGoogleOAuthRedirect } from "@/utils/googleOAuthRedirect";
-import { Separator } from "@/components/ui/separator";
-import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { authApi } from "@/services/api/auth";
-import { authClient } from "@/lib/auth-client";
-import { ocrApi } from "@/services/api/ocr";
-import { collegeApi } from "@/services/api/college";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { FaGoogle } from "react-icons/fa";
+import { IoMdEye, IoMdEyeOff } from "react-icons/io";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +18,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import FileInput from "@/components/ui/FileInput";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { authClient } from "@/lib/auth-client";
+import { zodResolver } from "@/lib/zod-resolver";
+import { authApi } from "@/services/api/auth";
+import { collegeApi } from "@/services/api/college";
+import { ocrApi } from "@/services/api/ocr";
+import { handleGoogleOAuthRedirect } from "@/utils/googleOAuthRedirect";
 import { toastError } from "@/utils/toast-error";
 
 const signUpSchema = z
@@ -88,17 +88,11 @@ function SignUpPage() {
   const isSubmittingRef = useRef(false);
 
   const { data: session, isPending } = authClient.useSession();
-  const navigate = useRouter().push;
-
-  if (!isPending && session) {
-    navigate("/");
-    return null;
-  }
+  const router = useRouter();
 
   const {
     register,
     handleSubmit,
-    control,
     setValue,
     formState: { errors },
   } = useForm<SignUpFormData>({
@@ -122,6 +116,16 @@ function SignUpPage() {
     },
   });
 
+  useEffect(() => {
+    if (!isPending && session) {
+      router.push("/");
+    }
+  }, [isPending, session, router]);
+
+  if (!isPending && session) {
+    return null;
+  }
+
   const openCollegeRequestDialog = (email: string) => {
     const emailDomain = email.split("@")[1]?.toLowerCase() ?? "";
     setRequestValue("requestedByEmail", email, { shouldValidate: true });
@@ -144,7 +148,11 @@ function SignUpPage() {
         requestedByEmail: data.requestedByEmail,
       });
     } catch (err: unknown) {
-      toastError(err, "Failed to submit college request");
+      if (err instanceof AxiosError && err.response?.data?.code === "COLLEGE_REQUEST_ALREADY_EXISTS") {
+        toast.info("College already requested. Please wait for admin approval. You can check again in a few hours.", { duration: 5000 });
+      } else {
+        toastError(err, "Failed to submit college request");
+      }
     } finally {
       setIsSubmittingRequest(false);
     }
@@ -176,7 +184,7 @@ function SignUpPage() {
       }
 
       sessionStorage.setItem("pending_signup_password", data.password);
-      navigate(`/auth/otp/${data.email}`);
+      router.push(`/auth/otp/${data.email}`);
     } catch (err: unknown) {
       if (
         err instanceof AxiosError &&
@@ -243,14 +251,15 @@ function SignUpPage() {
             {...register("password")}
             required
           />
-          <div
-            className="w-12 absolute right-0 flex justify-center items-center h-full cursor-pointer"
+          <button
+            type="button"
+            className="w-12 absolute right-0 flex justify-center items-center h-full cursor-pointer bg-transparent border-none"
             onClick={() => {
               setIsPasswordShowing((prev) => !prev);
             }}
           >
             {isPasswordShowing ? <IoMdEyeOff /> : <IoMdEye />}
-          </div>
+          </button>
         </div>
         {errors.password && (
           <p className="text-red-500 text-sm mt-1!">
@@ -266,14 +275,15 @@ function SignUpPage() {
             {...register("confirmPassword")}
             required
           />
-          <div
-            className="w-12 absolute right-0 flex justify-center items-center h-full cursor-pointer"
+          <button
+            type="button"
+            className="w-12 absolute right-0 flex justify-center items-center h-full cursor-pointer bg-transparent border-none"
             onClick={() => {
               setIsConfirmPasswordShowing((prev) => !prev);
             }}
           >
             {isConfirmPasswordShowing ? <IoMdEyeOff /> : <IoMdEye />}
-          </div>
+          </button>
         </div>
         {errors.confirmPassword && (
           <p className="text-red-500 text-sm mt-1!">
@@ -285,11 +295,11 @@ function SignUpPage() {
           type="submit"
           disabled={
             isSubmitting ||
-            (errors?.email && errors.email !== undefined) ||
-            (errors?.password && errors.password !== undefined) ||
-            (errors?.confirmPassword && errors.confirmPassword !== undefined)
+            !!errors?.email ||
+            !!errors?.password ||
+            !!errors?.confirmPassword
           }
-          className={`w-full py-2 font-semibold rounded-md dark:text-zinc-900 bg-zinc-800 dark:bg-zinc-200 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors ${isSubmitting && "bg-zinc-500 cursor-wait"}`}
+          className={`w-full py-2 font-semibold rounded-md dark:text-zinc-900 bg-zinc-800 dark:bg-zinc-200 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors ${isSubmitting ? "bg-zinc-500 cursor-wait" : ""}`}
         >
           {isSubmitting ? (
             <>

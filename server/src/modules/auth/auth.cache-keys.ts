@@ -1,6 +1,6 @@
 const authCacheKeys = {
 	id: (id: string) => `user:id:${id}`,
-	email: (email: string) => `user:email:${email}`,
+	email: (email: string) => `user:email:${email.toLowerCase()}`,
 	username: (u: string) => `user:username:${u}`,
 	search: (q: string) => `user:search:${q}`,
 };

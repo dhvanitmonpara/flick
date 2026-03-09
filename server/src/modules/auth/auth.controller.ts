@@ -8,7 +8,7 @@ class AuthController {
 	static async loginUser(req: Request, res: Response) {
 		const { email, password } = authSchemas.loginSchema.parse(req.body);
 
-		const user = await authService.loginAuth(email, password, res);
+		const user = await authService.loginAuth(email, password, res, req);
 
 		return HttpResponse.ok("User logged in successfully!", {
 			...user,
@@ -221,6 +221,14 @@ class AuthController {
 				: "Password set successfully",
 			{ hasPassword: true },
 		);
+	}
+
+	static async terminateAllOtherSessions(req: Request) {
+		const { sessionId, email } = authSchemas.terminateSessionsSchema.parse(
+			req.query,
+		);
+		await authService.terminateAllOtherSessions(req, sessionId, email);
+		return HttpResponse.ok("All other sessions terminated successfully");
 	}
 }
 

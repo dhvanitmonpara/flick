@@ -33,7 +33,17 @@ export const mailTemplates: {
 	},
 
 	WELCOME: async (d) => {
-		const html = await render(WelcomeEmail(d));
+		const html = await render(
+			WelcomeEmail({
+				username: d.username,
+				projectName: d.projectName,
+				email: d.email,
+				ipAddress: d.ipAddress,
+				device: d.device,
+				location: d.location,
+				createdAt: d.createdAt,
+			}),
+		);
 
 		return {
 			subject: `Welcome to ${d.projectName}!`,
@@ -65,9 +75,14 @@ export const mailTemplates: {
 	"NEW-DEVICE-LOGIN": async (d) => {
 		const html = await render(
 			NewDeviceLoginEmail({
-				deviceName: d.device,
+				username: d.username,
+				email: d.email,
+				device: d.device,
 				location: d.location,
+				ipAddress: d.ipAddress,
 				projectName: d.projectName,
+				existingSessionId: d.existingSessionId,
+				allSessions: d.allSessions,
 			}),
 		);
 

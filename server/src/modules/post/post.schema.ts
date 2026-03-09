@@ -104,3 +104,18 @@ export const CollegeIdSchema = z.object({
 export const BranchSchema = z.object({
 	branch: z.string().min(1, "Branch is required"),
 });
+
+export const SearchPostsQuerySchema = z.object({
+	q: z
+		.string()
+		.min(1, "Search query is required")
+		.max(100, "Search query too long"),
+	page: z
+		.string()
+		.transform((val) => Math.max(1, parseInt(val, 10) || 1))
+		.optional(),
+	limit: z
+		.string()
+		.transform((val) => Math.max(1, Math.min(50, parseInt(val, 10) || 10)))
+		.optional(),
+});

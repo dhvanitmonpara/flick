@@ -192,6 +192,49 @@ class PostService {
 		return result;
 	}
 
+	async searchPosts(
+		query: string,
+		options?: {
+			page?: number;
+			limit?: number;
+			userId?: string;
+			userCollegeId?: string;
+			blockerAuthId?: string;
+		},
+	) {
+		logger.info("Searching posts", { query, ...options });
+
+		const result = await PostRepo.Search.searchPosts(query, {
+			page: options?.page || 1,
+			limit: options?.limit || 10,
+			userId: options?.userId,
+			userCollegeId: options?.userCollegeId,
+			blockerAuthId: options?.blockerAuthId,
+		});
+
+		const page = options?.page || 1;
+		const limit = options?.limit || 10;
+
+		logger.info("Search results", {
+			query,
+			count: result.posts.length,
+			total: result.total,
+			page,
+			limit,
+		});
+
+		return {
+			posts: result.posts,
+			meta: {
+				total: result.total,
+				page,
+				limit,
+				totalPages: Math.ceil(result.total / limit),
+				hasMore: page * limit < result.total,
+			},
+		};
+	}
+
 	async updatePost(
 		id: string,
 		userId: string,

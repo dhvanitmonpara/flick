@@ -15,7 +15,7 @@ export const findByEmail = async (email: string, dbTx?: DB) => {
 	const client = dbTx ?? db;
 
 	return client.query.auth.findFirst({
-		where: eq(auth.email, email.toLowerCase()),
+		where: ilike(auth.email, email.toLowerCase()),
 	});
 };
 

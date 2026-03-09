@@ -57,8 +57,7 @@ class CollegeController {
 	}
 
 	static async createCollegeRequest(req: Request) {
-		const request =
-			collegeSchemas.CreateCollegeRequestSchema.parse(req.body);
+		const request = collegeSchemas.CreateCollegeRequestSchema.parse(req.body);
 
 		const createdRequest = await collegeService.createCollegeRequest(request);
 

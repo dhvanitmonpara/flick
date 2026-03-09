@@ -8,9 +8,6 @@ const UserRepo = {
 		findById: (userId: string, include: userAdapter.UserInclude, dbTx?: DB) =>
 			userAdapter.findById(userId, include, dbTx),
 
-		findByEmail: (email: string, include: userAdapter.UserInclude, dbTx?: DB) =>
-			userAdapter.findByAuthId(email, include, dbTx),
-
 		findByAuthId: (
 			authId: string,
 			include: userAdapter.UserInclude,
@@ -37,11 +34,6 @@ const UserRepo = {
 		) =>
 			cached(userCacheKeys.authId(authId), () =>
 				userAdapter.findByAuthId(authId, include, dbTx),
-			),
-
-		findByEmail: (email: string, include: userAdapter.UserInclude, dbTx?: DB) =>
-			cached(userCacheKeys.email(email), () =>
-				userAdapter.findByAuthId(email, include, dbTx),
 			),
 
 		findByUsername: (

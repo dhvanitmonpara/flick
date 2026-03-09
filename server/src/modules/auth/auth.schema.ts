@@ -94,3 +94,8 @@ export const setPasswordSchema = z.object({
 		.min(6, "Password must be at least 6 characters"),
 	currentPassword: z.string().optional(),
 });
+
+export const terminateSessionsSchema = z.object({
+	sessionId: z.string("Session ID is required"),
+	email: EmailSchema,
+});

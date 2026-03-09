@@ -127,6 +127,20 @@ const PostRepo = {
 		deleteById: PostAdapter.deleteById,
 		incrementViews: PostAdapter.incrementViews,
 	},
+
+	Search: {
+		searchPosts: (
+			query: string,
+			options?: {
+				page?: number;
+				limit?: number;
+				userId?: string;
+				userCollegeId?: string;
+				blockerAuthId?: string;
+			},
+			dbTx?: DB,
+		) => PostAdapter.searchPosts(query, options, dbTx),
+	},
 };
 
 export default PostRepo;

@@ -187,14 +187,10 @@ class AdminService {
 			}
 
 			try {
-				await mailService.send(
-					requesterEmail,
-					"COLLEGE-NOW-AVAILABLE",
-					{
-						projectName: "Flick",
-						collegeName: updatedRequest.name,
-					},
-				);
+				await mailService.send(requesterEmail, "COLLEGE-NOW-AVAILABLE", {
+					projectName: "Flick",
+					collegeName: updatedRequest.name,
+				});
 			} catch (error) {
 				logger.error("Failed to send college approval email", {
 					requestId: updatedRequest.id,

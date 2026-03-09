@@ -23,6 +23,8 @@ export const auditActions = [
 	"user:finished:onboarding",
 	"user:logged:in:self",
 	"user:logged:out:self",
+	"user:logged:in:new:device",
+	"user:session:terminated:other",
 	"user:created:feedback",
 	"user:updated:feedback",
 	"user:deleted:feedback",

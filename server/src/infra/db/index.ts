@@ -12,6 +12,7 @@ import {
 	feedbacks,
 	notifications,
 	posts,
+	session,
 	users,
 	votes,
 } from "./tables";
@@ -31,6 +32,7 @@ const db = drizzle(env.DATABASE_URL, {
 		bannedWords,
 		branches,
 		collegeRequests,
+		session,
 	},
 });
 

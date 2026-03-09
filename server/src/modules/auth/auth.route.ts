@@ -19,6 +19,7 @@ router.post("/password/forgot", AuthController.forgotPassword);
 router.post("/password/reset", AuthController.resetPassword);
 router.post("/otp/login/send", AuthController.sendLoginOtp);
 router.post("/otp/login/verify", AuthController.verifyLoginOtp);
+router.get("/terminate-sessions", AuthController.terminateAllOtherSessions);
 
 // Protected routes
 router.use(authenticated);

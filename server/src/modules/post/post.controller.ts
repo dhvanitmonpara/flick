@@ -156,6 +156,26 @@ class PostController {
 
 		return HttpResponse.ok("Posts retrieved successfully by user", result);
 	}
+
+	static async searchPosts(req: Request) {
+		const { q, page, limit } = postSchemas.SearchPostsQuerySchema.parse(
+			req.query,
+		);
+
+		const userId = req.user?.id;
+		const userCollegeId = req.user?.collegeId;
+		const blockerAuthId = req.user?.authId;
+
+		const result = await postService.searchPosts(q, {
+			page,
+			limit,
+			userId,
+			userCollegeId,
+			blockerAuthId,
+		});
+
+		return HttpResponse.ok("Posts search results", result);
+	}
 }
 
 export default PostController;

@@ -16,6 +16,7 @@ import {
 } from "@/infra/db/tables/auth.table";
 import { notifications } from "@/infra/db/tables/notification.table";
 import cache, { redis } from "@/infra/services/cache/index";
+import mailService from "@/infra/services/mail";
 import { forwardSetCookieHeaders } from "@/lib/better-auth/http-helpers";
 import parseHeaders from "@/lib/better-auth/parse-headers";
 import CryptoTools from "@/lib/crypto-tools";
@@ -237,6 +238,13 @@ class AuthService {
 				after: { id: createdUser.id },
 				metadata: { registrationMethod: "email" },
 			});
+
+			await this.sendWelcomeEmail(
+				decryptedEmail,
+				profile?.username || username,
+				req?.ip || (req?.headers["x-forwarded-for"] as string),
+				req?.headers["user-agent"] || "Unknown Device",
+			);
 		}
 
 		return { user: createdUser, profile };
@@ -337,24 +345,104 @@ class AuthService {
 		}
 	};
 
-	loginAuth = async (email: string, password: string, res: Response) => {
-		const response = await auth.api.signInEmail({
-			body: { email, password },
-			asResponse: true,
-			returnHeaders: true,
-		});
+	loginAuth = async (
+		email: string,
+		password: string,
+		res: Response,
+		req?: Request,
+	) => {
+		const ipAddress = req?.ip || (req?.headers["x-forwarded-for"] as string);
+		const userAgent = req?.headers["user-agent"] || "Unknown Device";
+		const device = userAgent.split(" ")[0] || "Unknown Device";
 
-		forwardSetCookieHeaders(response.headers, res);
+		try {
+			const response = await auth.api.signInEmail({
+				body: { email, password },
+				asResponse: true,
+				returnHeaders: true,
+			});
 
-		const data = await response.json();
+			forwardSetCookieHeaders(response.headers, res);
 
-		await recordAudit({
-			action: "user:logged:in:self",
-			entityType: "auth",
-			entityId: data.user.id,
-		});
+			const data = await response.json();
 
-		return data;
+			const userProfile = await UserRepo.CachedRead.findByAuthId(data.user.id, {
+				college: true,
+			});
+
+			if (!userProfile) {
+				logger.error("User profile not found - orphan user", {
+					authId: data.user.id,
+					email: email.toLowerCase(),
+					source: "loginAuth",
+				});
+				await this.cleanupOrphanedAuthUser(data.user.id, res);
+				throw HttpError.forbidden(
+					"Account setup incomplete. Please contact support.",
+				);
+			}
+
+			const college = await CollegeRepo.CachedRead.findById(
+				userProfile.collegeId,
+			);
+
+			if (!college) {
+				logger.error("User's college no longer exists - orphan user", {
+					authId: data.user.id,
+					collegeId: userProfile.collegeId,
+					email: email.toLowerCase(),
+					source: "loginAuth",
+				});
+				await this.cleanupOrphanedAuthUser(data.user.id, res);
+				throw HttpError.forbidden(
+					"Your college is no longer available on Flick. Please contact support.",
+				);
+			}
+
+			const existingSessions = await db.query.session.findMany({
+				where: eq(session.userId, data.user.id),
+			});
+
+			const isNewDevice = existingSessions.length === 1;
+
+			if (isNewDevice) {
+				await this.sendNewDeviceLoginEmail(
+					email.toLowerCase(),
+					userProfile.username,
+					device,
+					ipAddress || "Unknown",
+					undefined,
+					existingSessions[0]?.id,
+					existingSessions.map((s) => ({
+						id: s.id,
+						device: s.userAgent?.split(" ")[0] || "Unknown",
+						ipAddress: s.ipAddress || undefined,
+						createdAt: s.createdAt,
+					})),
+				);
+			}
+
+			await recordAudit({
+				action: "user:logged:in:self",
+				entityType: "auth",
+				entityId: data.user.id,
+			});
+
+			return data;
+		} catch (_error) {
+			const existingUser = await AuthRepo.Read.findByEmail(email);
+
+			if (!existingUser) {
+				logger.warn("Login attempt for non-existent user", {
+					email: email.toLowerCase(),
+					source: "loginAuth",
+				});
+			}
+
+			throw HttpError.unauthorized("Invalid email or password", {
+				meta: { source: "loginAuth" },
+			});
+		}
 	};
 
 	logoutAuth = async (req: Request, res: Response) => {
@@ -492,6 +580,31 @@ class AuthService {
 		});
 
 		return result;
+	};
+
+	terminateAllOtherSessions = async (
+		_req: Request,
+		sessionId: string,
+		email: string,
+	) => {
+		const user = await AuthRepo.Read.findByEmail(email);
+
+		if (!user) {
+			throw HttpError.notFound("User not found");
+		}
+
+		await db
+			.delete(session)
+			.where(and(eq(session.userId, user.id), eq(session.id, sessionId)));
+
+		await cache.del(`session:${user.id}`);
+
+		await recordAudit({
+			action: "user:session:terminated:other",
+			entityType: "auth",
+			entityId: user.id,
+			metadata: { source: "authService.terminateAllOtherSessions" },
+		});
 	};
 
 	getAllAdmins = async (options: {
@@ -728,6 +841,80 @@ class AuthService {
 			// domain: env.COOKIE_DOMAIN,
 		});
 	}
+
+	sendWelcomeEmail = async (
+		email: string,
+		username: string,
+		ipAddress?: string,
+		device?: string,
+		location?: string,
+	) => {
+		try {
+			await mailService.send(email, "WELCOME", {
+				username,
+				projectName: "Flick",
+				email,
+				ipAddress,
+				device,
+				location,
+				createdAt: new Date(),
+			});
+
+			await recordAudit({
+				action: "auth:created:account",
+				entityType: "auth",
+				entityId: email,
+				metadata: { source: "sendWelcomeEmail", method: "email" },
+			});
+		} catch (error) {
+			logger.error("Failed to send welcome email", {
+				email,
+				error,
+				source: "sendWelcomeEmail",
+			});
+		}
+	};
+
+	sendNewDeviceLoginEmail = async (
+		email: string,
+		username: string,
+		device: string,
+		ipAddress: string,
+		location?: string,
+		existingSessionId?: string,
+		allSessions: Array<{
+			id: string;
+			device?: string;
+			ipAddress?: string;
+			createdAt: Date;
+		}> = [],
+	) => {
+		try {
+			await mailService.send(email, "NEW-DEVICE-LOGIN", {
+				username,
+				email,
+				device,
+				ipAddress,
+				location,
+				projectName: "Flick",
+				existingSessionId,
+				allSessions,
+			});
+
+			await recordAudit({
+				action: "user:logged:in:new:device",
+				entityType: "auth",
+				entityId: email,
+				metadata: { source: "sendNewDeviceLoginEmail", device, ipAddress },
+			});
+		} catch (error) {
+			logger.error("Failed to send new device login email", {
+				email,
+				error,
+				source: "sendNewDeviceLoginEmail",
+			});
+		}
+	};
 }
 
 export default new AuthService();

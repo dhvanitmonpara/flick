@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <reason> */
-import { and, asc, desc, eq, notExists, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, notExists, or, sql } from "drizzle-orm";
 import db from "@/infra/db/index";
 import type { DB } from "@/infra/db/types";
 import { bookmarks, colleges, comments, posts, users, votes } from "../tables";
@@ -493,4 +493,168 @@ export const incrementViews = async (id: string, dbTx?: DB) => {
 		.where(eq(posts.id, id))
 		.returning()
 		.then((r) => r?.[0] || null);
+};
+
+export const searchPosts = async (
+	query: string,
+	options?: {
+		page?: number;
+		limit?: number;
+		userId?: string;
+		userCollegeId?: string;
+		blockerAuthId?: string;
+	},
+	dbTx?: DB,
+) => {
+	const client = dbTx ?? db;
+	const page = options?.page || 1;
+	const limit = options?.limit || 10;
+	const offset = (page - 1) * limit;
+	const userId = options?.userId;
+	const searchTerm = `%${query}%`;
+
+	const voteAgg = client.$with("vote_agg").as(
+		client
+			.select({
+				targetId: votes.targetId,
+				upvoteCount: sql<number>`
+          (COUNT(*) FILTER (WHERE ${votes.voteType}::text = 'upvote'))::int
+        `.as("upvoteCount"),
+				downvoteCount: sql<number>`
+          (COUNT(*) FILTER (WHERE ${votes.voteType}::text = 'downvote'))::int
+        `.as("downvoteCount"),
+				userVote: userId
+					? sql<string | null>`
+              MAX(
+                CASE
+                  WHEN ${votes.userId} = ${userId}
+                  THEN ${votes.voteType}::text
+                END
+              )
+            `.as("userVote")
+					: sql<null>`NULL::text`.as("userVote"),
+			})
+			.from(votes)
+			.where(sql`${votes.targetType}::text = 'post'`)
+			.groupBy(votes.targetId),
+	);
+
+	const commentCount = client.$with("comment_count").as(
+		client
+			.select({
+				postId: comments.postId,
+				count: sql<number>`COUNT(*)::int`.as("count"),
+			})
+			.from(comments)
+			.where(eq(comments.isBanned, false))
+			.groupBy(comments.postId),
+	);
+
+	const bookmarkCheck = client.$with("bookmark_check").as(
+		client
+			.select({
+				postId: bookmarks.postId,
+				bookmarked: sql<boolean>`TRUE::boolean`.as("bookmarked"),
+			})
+			.from(bookmarks)
+			.where(userId ? eq(bookmarks.userId, userId) : sql`FALSE`),
+	);
+
+	const whereConditions = [
+		eq(posts.isBanned, false),
+		eq(posts.isShadowBanned, false),
+		or(ilike(posts.title, searchTerm), ilike(posts.content, searchTerm)),
+	];
+
+	if (options?.userCollegeId) {
+		whereConditions.push(
+			or(
+				eq(posts.isPrivate, false),
+				and(
+					eq(posts.isPrivate, true),
+					eq(users.collegeId, options.userCollegeId),
+				),
+			),
+		);
+	} else {
+		whereConditions.push(eq(posts.isPrivate, false));
+	}
+
+	if (options?.blockerAuthId) {
+		whereConditions.push(
+			notExists(
+				db
+					.select({ id: userBlocks.id })
+					.from(userBlocks)
+					.where(
+						or(
+							and(
+								eq(userBlocks.blockerId, options.blockerAuthId),
+								eq(userBlocks.blockedId, users.authId),
+							),
+							and(
+								eq(userBlocks.blockerId, users.authId),
+								eq(userBlocks.blockedId, options.blockerAuthId),
+							),
+						),
+					),
+			),
+		);
+	}
+
+	const results = await client
+		.with(voteAgg, commentCount, bookmarkCheck)
+		.select({
+			postId: posts.id,
+			title: posts.title,
+			content: posts.content,
+			topic: posts.topic,
+			isPrivate: posts.isPrivate,
+			views: posts.views,
+			createdAt: posts.createdAt,
+			updatedAt: posts.updatedAt,
+			upvoteCount: sql<number>`COALESCE(${voteAgg.upvoteCount}, 0)`.as(
+				"upvoteCount",
+			),
+			downvoteCount: sql<number>`COALESCE(${voteAgg.downvoteCount}, 0)`.as(
+				"downvoteCount",
+			),
+			commentCount: sql<number>`COALESCE(${commentCount.count}, 0)`.as(
+				"commentCount",
+			),
+			bookmarked: sql<boolean>`COALESCE(${bookmarkCheck.bookmarked}, false)`.as(
+				"bookmarked",
+			),
+			userVote: voteAgg.userVote,
+			postedBy: users.id,
+			username: users.username,
+			userBranch: users.branch,
+			userKarma: users.karma,
+			collegeId: colleges.id,
+			collegeName: colleges.name,
+			collegeProfile: colleges.profile,
+		})
+		.from(posts)
+		.innerJoin(users, eq(users.id, posts.postedBy))
+		.innerJoin(colleges, eq(colleges.id, users.collegeId))
+		.leftJoin(voteAgg, eq(voteAgg.targetId, posts.id))
+		.leftJoin(commentCount, eq(commentCount.postId, posts.id))
+		.leftJoin(bookmarkCheck, eq(bookmarkCheck.postId, posts.id))
+		.where(and(...whereConditions))
+		.orderBy(desc(posts.createdAt))
+		.limit(limit)
+		.offset(offset);
+
+	const countResult = await client
+		.select({ count: sql<number>`count(*)::int` })
+		.from(posts)
+		.innerJoin(users, eq(users.id, posts.postedBy))
+		.where(and(...whereConditions));
+
+	return {
+		posts: results,
+		total: countResult[0]?.count || 0,
+		page,
+		limit,
+	};
 };

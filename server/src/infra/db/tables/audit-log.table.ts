@@ -28,13 +28,13 @@ import { entityEnum, roleEnum } from "./enums";
 
 /**
 CREATE INDEX idx_audit_logs_entity
-  ON audit_logs (entity_type, entity_id);
+	ON audit_logs (entity_type, entity_id);
 
 CREATE INDEX idx_audit_logs_actor
-  ON audit_logs (actor_id);
+	ON audit_logs (actor_id);
 
 CREATE INDEX idx_audit_logs_occurred_at
-  ON audit_logs (occurred_at DESC);
+	ON audit_logs (occurred_at DESC);
  */
 
 export const auditLogs = pgTable(
@@ -45,14 +45,14 @@ export const auditLogs = pgTable(
 			.defaultNow()
 			.notNull(),
 
-		actorId: uuid("actor_id"),
+		actorId: text("actor_id"),
 		actorType: roleEnum("actor_type").notNull(),
 
 		// can be improved
 		action: text().notNull(),
 
 		entityType: entityEnum("entity_type").notNull(),
-		entityId: uuid("entity_id"),
+		entityId: text("entity_id"),
 
 		before: jsonb(),
 		after: jsonb(),

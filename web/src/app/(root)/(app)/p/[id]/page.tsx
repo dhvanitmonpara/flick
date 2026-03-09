@@ -184,12 +184,40 @@ function PostPage() {
               <SkeletonCard key={index} />
             ))}
           </>
-        ) : comments ? (
+        ) : comments && comments.length > 0 ? (
           comments.map((comment) => (
             <Comment key={comment.id} comment={comment} />
           ))
         ) : (
-          <p>Comments not found</p>
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+            <div className="w-16 h-16 mb-4 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-zinc-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+              No comments yet
+            </h3>
+            <p className="text-zinc-500 dark:text-zinc-400 max-w-sm mb-4">
+              Be the first to share your thoughts on this post!
+            </p>
+            {isLoggedIn && (
+              <p className="text-sm text-zinc-400 dark:text-zinc-500">
+                Start the conversation below
+              </p>
+            )}
+          </div>
         )}
       </div>
     </div>
