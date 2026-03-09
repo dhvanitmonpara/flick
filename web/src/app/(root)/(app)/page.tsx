@@ -117,28 +117,28 @@ function Feed() {
   }
 
   return (
-    <section className="w-full max-h-screen overflow-y-auto no-scrollbar py-6">
-      {/* Search Bar */}
-      <div className="px-4">
-        <form onSubmit={handleSearch} className="relative">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+    <section className="w-full max-h-dvh overflow-y-auto no-scrollbar py-2 md:py-6">
+      {/* Search Bar Container */}
+      <div className="sticky top-0 z-20 px-3 md:px-4 pt-2 md:pt-0">
+        <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
+          <div className="relative group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-zinc-400 group-focus-within:text-zinc-900 dark:group-focus-within:text-zinc-100 transition-colors" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search posts..."
-              className="w-full pl-11 pr-20 py-2.5 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-2xl text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700 transition-all"
+              className="w-full pl-[42px] pr-12 py-2.5 bg-zinc-200/50 hover:bg-zinc-200/50 focus:bg-zinc-200/40 dark:bg-zinc-800/50 dark:hover:bg-zinc-800/50 dark:focus:bg-zinc-800/40 border border-transparent focus:border-zinc-300 dark:focus:border-zinc-700 rounded-full text-[15px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-4 focus:ring-zinc-900/5 dark:focus:ring-white/5 transition-all shadow-sm"
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
               {isSearching && (
-                <div className="w-4 h-4 border-2 border-zinc-300 border-t-zinc-600 rounded-full animate-spin" />
+                <div className="w-[18px] h-[18px] mr-2 border-[2.5px] border-zinc-300 border-t-zinc-600 rounded-full animate-spin" />
               )}
               {searchQuery && (
                 <button
                   type="button"
                   onClick={clearSearch}
-                  className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                  className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 rounded-full transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
