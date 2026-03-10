@@ -36,145 +36,298 @@ export default function NewDeviceLoginEmail({
 		timeZone: "IST",
 	});
 
-	const terminateAllUrl = `${baseUrl}/api/auth/terminate-all-sessions?session=${existingSessionId}&email=${encodeURIComponent(email)}`;
+	const terminateThisSessionUrl = `${baseUrl}/api/auth/terminate-sessions?session=${existingSessionId}&email=${encodeURIComponent(email)}`;
+	const terminateAllSessionsUrl = `${baseUrl}/api/auth/terminate-all-sessions?email=${encodeURIComponent(email)}`;
 	const resetPasswordUrl = `${baseUrl}/forgot-password`;
 
 	return (
 		<BaseLayout projectName={projectName}>
-			<Section>
-				<Text style={style.topText}>Hi {username},</Text>
-				<Text style={style.text}>⚠️ New Device Login Detected</Text>
-				<Text>
+			{/* Alert Banner */}
+			<Section style={styles.alertSection}>
+				<Text style={styles.alertIcon}>🔔</Text>
+				<Text style={styles.alertTitle}>New Device Login Detected</Text>
+			</Section>
+
+			<Section style={styles.greetingSection}>
+				<Text style={styles.greetingText}>Hi {username},</Text>
+				<Text style={styles.mainText}>
 					We noticed a new sign-in to your account from an unrecognized device.
+					If this was you, you can safely ignore this email.
 				</Text>
 			</Section>
 
-			<Section style={style.detailsBox}>
-				<Text style={style.detailLabel}>
-					<b>Device:</b> {device || "Unknown"}
-				</Text>
+			{/* Device Details */}
+			<Section style={styles.detailsCard}>
+				<Text style={styles.cardTitle}>Login Details</Text>
+				<Section style={styles.detailRow}>
+					<Text style={styles.detailIcon}>💻</Text>
+					<Section>
+						<Text style={styles.detailLabel}>Device</Text>
+						<Text style={styles.detailValue}>{device || "Unknown"}</Text>
+					</Section>
+				</Section>
 				{location && (
-					<Text style={style.detailLabel}>
-						<b>Location:</b> {location}
-					</Text>
+					<Section style={styles.detailRow}>
+						<Text style={styles.detailIcon}>📍</Text>
+						<Section>
+							<Text style={styles.detailLabel}>Location</Text>
+							<Text style={styles.detailValue}>{location}</Text>
+						</Section>
+					</Section>
 				)}
 				{ipAddress && (
-					<Text style={style.detailLabel}>
-						<b>IP Address:</b> {ipAddress}
-					</Text>
+					<Section style={styles.detailRow}>
+						<Text style={styles.detailIcon}>🌐</Text>
+						<Section>
+							<Text style={styles.detailLabel}>IP Address</Text>
+							<Text style={styles.detailValue}>{ipAddress}</Text>
+						</Section>
+					</Section>
 				)}
-				<Text style={style.detailLabel}>
-					<b>Time:</b> {formattedDate}
+				<Section style={styles.detailRow}>
+					<Text style={styles.detailIcon}>🕐</Text>
+					<Section>
+						<Text style={styles.detailLabel}>Time</Text>
+						<Text style={styles.detailValue}>{formattedDate}</Text>
+					</Section>
+				</Section>
+			</Section>
+
+			{/* Active Sessions */}
+			{allSessions.length > 0 && (
+				<Section style={styles.sessionsCard}>
+					<Text style={styles.cardTitle}>Your Active Sessions</Text>
+					{allSessions.map((session) => (
+						<Section key={session.id} style={styles.sessionRow}>
+							<Text style={styles.sessionBullet}>•</Text>
+							<Text style={styles.sessionText}>
+								{session.device || "Unknown Device"} -{" "}
+								{session.createdAt.toLocaleDateString()}
+								{session.id === existingSessionId && (
+									<Text style={styles.thisDeviceBadge}> (this device)</Text>
+								)}
+							</Text>
+						</Section>
+					))}
+				</Section>
+			)}
+
+			{/* Security Actions */}
+			<Section style={styles.actionSection}>
+				<Text style={styles.actionTitle}>Wasn't you?</Text>
+				<Text style={styles.actionSubtitle}>
+					If this login wasn't you, take immediate action to secure your
+					account:
 				</Text>
+
+				<Section style={styles.buttonGroup}>
+					<Button href={terminateThisSessionUrl} style={styles.terminateButton}>
+						Terminate This Session
+					</Button>
+					<Text style={styles.orDivider}>or</Text>
+					<Button
+						href={terminateAllSessionsUrl}
+						style={styles.terminateAllButton}
+					>
+						Terminate All Sessions
+					</Button>
+					<Text style={styles.orDivider}>or</Text>
+					<Button href={resetPasswordUrl} style={styles.resetButton}>
+						Reset Password
+					</Button>
+				</Section>
 			</Section>
 
-			<Section style={style.sessionsBox}>
-				<Text style={style.sectionTitle}>Your Active Sessions:</Text>
-				{allSessions.map((session) => (
-					<Text key={session.id} style={style.sessionText}>
-						• {session.device || "Unknown Device"} -{" "}
-						{session.createdAt.toLocaleDateString()}
-						{session.id === existingSessionId ? " (this device)" : ""}
-					</Text>
-				))}
-			</Section>
-
-			<Section style={style.actionsBox}>
-				<Text style={style.actionTitle}>Was this you?</Text>
-				<Text style={style.actionText}>
-					If this wasn't you, we recommend taking immediate action to secure
-					your account:
-				</Text>
-
-				<Button href={terminateAllUrl} style={style.terminateButton}>
-					Terminate All Other Sessions
-				</Button>
-
-				<Text style={style.orText}>or</Text>
-
-				<Button href={resetPasswordUrl} style={style.resetButton}>
-					Reset Password
-				</Button>
-			</Section>
-
-			<Section>
-				<Text style={style.helpText}>
-					If you have any concerns, please contact support immediately.
+			{/* Help Footer */}
+			<Section style={styles.helpSection}>
+				<Text style={styles.helpText}>
+					If you have any concerns, please contact our support team immediately.
 				</Text>
 			</Section>
 		</BaseLayout>
 	);
 }
 
-const style = {
-	topText: { fontSize: "16px", fontWeight: "bold" as const },
-	text: { fontSize: "18px", fontWeight: "bold" as const },
-	detailsBox: {
-		backgroundColor: "#f8f9fa",
-		borderRadius: "8px",
-		padding: "16px",
-		marginTop: "12px",
+const styles = {
+	// Alert Section
+	alertSection: {
+		backgroundColor: "#fee2e2",
+		borderRadius: "12px",
+		padding: "16px 20px",
+		textAlign: "center" as const,
+		marginBottom: "24px",
 	},
-	detailLabel: {
-		fontSize: "14px",
-		marginBottom: "4px",
-		color: "#333",
-	},
-	sessionsBox: {
-		marginTop: "16px",
-	},
-	sectionTitle: {
-		fontSize: "14px",
-		fontWeight: "bold" as const,
+	alertIcon: {
+		fontSize: "24px",
 		marginBottom: "8px",
 	},
-	sessionText: {
-		fontSize: "13px",
-		color: "#666",
-		marginBottom: "4px",
+	alertTitle: {
+		fontSize: "20px",
+		fontWeight: "bold" as const,
+		color: "#dc2626",
+		margin: "0",
 	},
-	actionsBox: {
-		marginTop: "20px",
-		textAlign: "center" as const,
+
+	// Greeting Section
+	greetingSection: {
+		marginBottom: "24px",
 	},
-	actionTitle: {
+	greetingText: {
+		fontSize: "18px",
+		fontWeight: "600" as const,
+		color: "#111827",
+		marginBottom: "8px",
+	},
+	mainText: {
+		fontSize: "15px",
+		color: "#4b5563",
+		lineHeight: "1.6",
+		margin: "0",
+	},
+
+	// Details Card
+	detailsCard: {
+		backgroundColor: "#f9fafb",
+		borderRadius: "12px",
+		padding: "20px",
+		marginBottom: "20px",
+		border: "1px solid #e5e7eb",
+	},
+	cardTitle: {
 		fontSize: "16px",
 		fontWeight: "bold" as const,
+		color: "#111827",
+		marginBottom: "16px",
+		paddingBottom: "8px",
+		borderBottom: "1px solid #e5e7eb",
+	},
+	detailRow: {
+		display: "flex",
+		alignItems: "flex-start",
+		marginBottom: "12px",
+	},
+	detailIcon: {
+		fontSize: "16px",
+		marginRight: "12px",
+		marginTop: "2px",
+	},
+	detailLabel: {
+		fontSize: "12px",
+		fontWeight: "600" as const,
+		color: "#6b7280",
+		textTransform: "uppercase" as const,
+		letterSpacing: "0.5px",
+		marginBottom: "2px",
+	},
+	detailValue: {
+		fontSize: "14px",
+		color: "#111827",
+		margin: "0",
+	},
+
+	// Sessions Card
+	sessionsCard: {
+		backgroundColor: "#f0fdf4",
+		borderRadius: "12px",
+		padding: "20px",
+		marginBottom: "24px",
+		border: "1px solid #bbf7d0",
+	},
+	sessionRow: {
+		display: "flex",
+		alignItems: "center",
 		marginBottom: "8px",
 	},
-	actionText: {
+	sessionBullet: {
 		fontSize: "14px",
-		color: "#666",
-		marginBottom: "16px",
+		marginRight: "8px",
+		color: "#16a34a",
+	},
+	sessionText: {
+		fontSize: "14px",
+		color: "#1f2937",
+		margin: "0",
+	},
+	thisDeviceBadge: {
+		color: "#16a34a",
+		fontWeight: "600" as const,
+	},
+
+	// Action Section
+	actionSection: {
+		backgroundColor: "#fef3c7",
+		borderRadius: "12px",
+		padding: "24px",
+		textAlign: "center" as const,
+		border: "1px solid #f59e0b",
+	},
+	actionTitle: {
+		fontSize: "18px",
+		fontWeight: "bold" as const,
+		color: "#92400e",
+		marginBottom: "8px",
+	},
+	actionSubtitle: {
+		fontSize: "14px",
+		color: "#92400e",
+		marginBottom: "20px",
+		lineHeight: "1.5",
+	},
+	buttonGroup: {
+		display: "flex",
+		flexDirection: "column" as const,
+		alignItems: "center",
 	},
 	terminateButton: {
-		backgroundColor: "#dc3545",
+		backgroundColor: "#dc2626",
 		color: "#ffffff",
-		padding: "12px 24px",
-		borderRadius: "6px",
-		fontSize: "14px",
-		fontWeight: "bold" as const,
+		padding: "14px 28px",
+		borderRadius: "8px",
+		fontSize: "15px",
+		fontWeight: "600" as const,
 		textDecoration: "none",
 		display: "inline-block",
+		width: "220px",
 	},
-	orText: {
-		fontSize: "12px",
-		color: "#999",
-		margin: "12px 0",
+	terminateAllButton: {
+		backgroundColor: "#6b7280",
+		color: "#ffffff",
+		padding: "14px 28px",
+		borderRadius: "8px",
+		fontSize: "15px",
+		fontWeight: "600" as const,
+		textDecoration: "none",
+		display: "inline-block",
+		width: "220px",
 	},
 	resetButton: {
-		backgroundColor: "#007bff",
+		backgroundColor: "#2563eb",
 		color: "#ffffff",
-		padding: "12px 24px",
-		borderRadius: "6px",
-		fontSize: "14px",
-		fontWeight: "bold" as const,
+		padding: "14px 28px",
+		borderRadius: "8px",
+		fontSize: "15px",
+		fontWeight: "600" as const,
 		textDecoration: "none",
 		display: "inline-block",
+		width: "220px",
+	},
+	orDivider: {
+		fontSize: "13px",
+		color: "#92400e",
+		margin: "12px 0",
+		fontWeight: "500" as const,
+	},
+
+	// Help Section
+	helpSection: {
+		marginTop: "28px",
+		paddingTop: "20px",
+		borderTop: "1px solid #e5e7eb",
+		textAlign: "center" as const,
 	},
 	helpText: {
-		fontSize: "12px",
-		color: "#999",
-		marginTop: "16px",
+		fontSize: "13px",
+		color: "#6b7280",
+		margin: "0",
 	},
 };

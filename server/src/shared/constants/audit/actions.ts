@@ -15,6 +15,7 @@ export const auditActions = [
 	"user:deleted:comment",
 	"user:reported:content",
 	"user:accepted:terms",
+	"user:session:terminated:all",
 	"user:initialized:account",
 	"auth:created:account",
 	"auth:otp:verify:success",

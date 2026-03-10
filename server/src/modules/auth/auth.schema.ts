@@ -99,3 +99,7 @@ export const terminateSessionsSchema = z.object({
 	sessionId: z.string("Session ID is required"),
 	email: EmailSchema,
 });
+
+export const terminateAllSessionsSchema = z.object({
+	email: EmailSchema,
+});

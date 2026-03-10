@@ -1,4 +1,5 @@
-import { Section, Text } from "@react-email/components";
+import { Button, Section, Text } from "@react-email/components";
+import { env } from "@/config/env";
 import BaseLayout from "../components/BaseLayout.js";
 
 export default function WelcomeEmail({
@@ -18,87 +19,208 @@ export default function WelcomeEmail({
 	location?: string;
 	createdAt: Date;
 }) {
+	const baseUrl =
+		env.SERVER_BASE_URI || env.BETTER_AUTH_URL || "https://flick.college";
 	const formattedDate = createdAt.toLocaleString("en-US", {
 		dateStyle: "long",
 		timeStyle: "short",
 		timeZone: "IST",
 	});
 
+	const resetPasswordUrl = `${baseUrl}/forgot-password`;
+
 	return (
 		<BaseLayout projectName={projectName}>
-			<Section>
-				<Text style={style.topText}>Welcome, {username}!</Text>
-				<Text>
-					Thanks for joining {projectName}. We're excited to have you 🚀
+			{/* Welcome Section */}
+			<Section style={styles.welcomeSection}>
+				<Text style={styles.emoji}>🎉</Text>
+				<Text style={styles.welcomeTitle}>
+					Welcome to {projectName}, {username}!
+				</Text>
+				<Text style={styles.welcomeText}>
+					Thanks for joining {projectName}. We're thrilled to have you as part
+					of our community!
 				</Text>
 			</Section>
 
-			<Section style={style.warningBox}>
-				<Text style={style.warningTitle}>Was this you?</Text>
-				<Text style={style.warningText}>
-					We noticed a new account was created with your email address.
+			{/* Security Warning Section */}
+			<Section style={styles.warningBox}>
+				<Section style={styles.warningHeader}>
+					<Text style={styles.warningIcon}>⚠️</Text>
+					<Text style={styles.warningTitle}>Was this you?</Text>
+				</Section>
+				<Text style={styles.warningText}>
+					A new account was created with your email address. Please verify that
+					this was indeed you.
 				</Text>
-				<Text style={style.detailText}>
-					<b>Email:</b> {email}
-				</Text>
-				{device && (
-					<Text style={style.detailText}>
-						<b>Device:</b> {device}
-					</Text>
-				)}
-				{location && (
-					<Text style={style.detailText}>
-						<b>Location:</b> {location}
-					</Text>
-				)}
-				{ipAddress && (
-					<Text style={style.detailText}>
-						<b>IP Address:</b> {ipAddress}
-					</Text>
-				)}
-				<Text style={style.detailText}>
-					<b>Time:</b> {formattedDate}
-				</Text>
+
+				<Section style={styles.detailsContainer}>
+					<Section style={styles.detailRow}>
+						<Text style={styles.detailLabel}>📧 Email</Text>
+						<Text style={styles.detailValue}>{email}</Text>
+					</Section>
+					{device && (
+						<Section style={styles.detailRow}>
+							<Text style={styles.detailLabel}>💻 Device</Text>
+							<Text style={styles.detailValue}>{device}</Text>
+						</Section>
+					)}
+					{location && (
+						<Section style={styles.detailRow}>
+							<Text style={styles.detailLabel}>📍 Location</Text>
+							<Text style={styles.detailValue}>{location}</Text>
+						</Section>
+					)}
+					{ipAddress && (
+						<Section style={styles.detailRow}>
+							<Text style={styles.detailLabel}>🌐 IP Address</Text>
+							<Text style={styles.detailValue}>{ipAddress}</Text>
+						</Section>
+					)}
+					<Section style={styles.detailRow}>
+						<Text style={styles.detailLabel}>🕐 Time</Text>
+						<Text style={styles.detailValue}>{formattedDate}</Text>
+					</Section>
+				</Section>
 			</Section>
 
-			<Section>
-				<Text style={style.helpText}>
-					If this wasn't you, please reset your password immediately or contact
-					support.
+			{/* Action Section */}
+			<Section style={styles.actionSection}>
+				<Text style={styles.actionText}>
+					If this wasn't you, please take immediate action:
+				</Text>
+				<Button href={resetPasswordUrl} style={styles.resetButton}>
+					Reset Your Password
+				</Button>
+			</Section>
+
+			{/* Help Section */}
+			<Section style={styles.helpSection}>
+				<Text style={styles.helpTitle}>Need help?</Text>
+				<Text style={styles.helpText}>
+					If you have any questions or concerns, don't hesitate to contact our
+					support team.
 				</Text>
 			</Section>
 		</BaseLayout>
 	);
 }
 
-const style = {
-	topText: { fontSize: "18px", fontWeight: "bold" as const },
-	warningBox: {
-		backgroundColor: "#fff3cd",
-		borderRadius: "8px",
-		padding: "16px",
-		marginTop: "16px",
-		border: "1px solid #ffc107",
+const styles = {
+	// Welcome Section
+	welcomeSection: {
+		padding: "20px 0",
+		textAlign: "center" as const,
 	},
-	warningTitle: {
-		fontSize: "16px",
+	emoji: {
+		fontSize: "48px",
+		margin: "0 0 16px 0",
+	},
+	welcomeTitle: {
+		fontSize: "24px",
 		fontWeight: "bold" as const,
-		color: "#856404",
-		marginBottom: "8px",
+		color: "#111827",
+		margin: "0 0 12px 0",
+		lineHeight: "1.3",
 	},
-	warningText: {
-		color: "#856404",
-		fontSize: "14px",
+	welcomeText: {
+		fontSize: "16px",
+		color: "#4b5563",
+		margin: "0",
+		lineHeight: "1.6",
+	},
+
+	// Warning Box
+	warningBox: {
+		backgroundColor: "#fef3c7",
+		borderRadius: "12px",
+		padding: "20px",
+		marginTop: "24px",
+		border: "1px solid #f59e0b",
+	},
+	warningHeader: {
+		display: "flex",
+		alignItems: "center",
 		marginBottom: "12px",
 	},
-	detailText: {
-		color: "#856404",
-		fontSize: "13px",
+	warningIcon: {
+		fontSize: "20px",
+		marginRight: "8px",
+	},
+	warningTitle: {
+		fontSize: "18px",
+		fontWeight: "bold" as const,
+		color: "#92400e",
+		margin: "0",
+	},
+	warningText: {
+		color: "#92400e",
+		fontSize: "14px",
+		marginBottom: "16px",
+		lineHeight: "1.5",
+	},
+
+	// Details Container
+	detailsContainer: {
+		backgroundColor: "#ffffff",
+		borderRadius: "8px",
+		padding: "12px",
+	},
+	detailRow: {
+		marginBottom: "8px",
+	},
+	detailLabel: {
+		fontSize: "12px",
+		fontWeight: "600" as const,
+		color: "#92400e",
+		marginBottom: "2px",
+		textTransform: "uppercase" as const,
+		letterSpacing: "0.5px",
+	},
+	detailValue: {
+		fontSize: "14px",
+		color: "#1f2937",
+		margin: "0",
+	},
+
+	// Action Section
+	actionSection: {
+		marginTop: "28px",
+		textAlign: "center" as const,
+		padding: "20px",
+	},
+	actionText: {
+		fontSize: "14px",
+		color: "#4b5563",
+		marginBottom: "16px",
+	},
+	resetButton: {
+		backgroundColor: "#dc2626",
+		color: "#ffffff",
+		padding: "14px 28px",
+		borderRadius: "8px",
+		fontSize: "15px",
+		fontWeight: "600" as const,
+		textDecoration: "none",
+		display: "inline-block",
+	},
+
+	// Help Section
+	helpSection: {
+		marginTop: "32px",
+		paddingTop: "20px",
+		borderTop: "1px solid #e5e7eb",
+		textAlign: "center" as const,
+	},
+	helpTitle: {
+		fontSize: "14px",
+		fontWeight: "600" as const,
+		color: "#374151",
 		marginBottom: "4px",
 	},
 	helpText: {
-		color: "#666",
 		fontSize: "13px",
-		marginTop: "16px",
+		color: "#6b7280",
+		margin: "0",
 	},
 };

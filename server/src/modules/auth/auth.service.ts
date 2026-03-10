@@ -295,6 +295,7 @@ class AuthService {
 
 	ensureEmailVerified = async (email: string) => {
 		this.validateStudentEmail(email);
+		this.checkPersonalOrCompanyEmail(email);
 
 		const college = await CollegeRepo.CachedRead.findByEmailDomain(
 			email.split("@")[1],
@@ -607,6 +608,25 @@ class AuthService {
 		});
 	};
 
+	terminateAllSessions = async (_req: Request, email: string) => {
+		const user = await AuthRepo.Read.findByEmail(email);
+
+		if (!user) {
+			throw HttpError.notFound("User not found");
+		}
+
+		await db.delete(session).where(eq(session.userId, user.id));
+
+		await cache.del(`session:${user.id}`);
+
+		await recordAudit({
+			action: "user:session:terminated:all",
+			entityType: "auth",
+			entityId: user.id,
+			metadata: { source: "authService.terminateAllSessions" },
+		});
+	};
+
 	getAllAdmins = async (options: {
 		query?: string;
 		limit?: number;
@@ -644,6 +664,86 @@ class AuthService {
 			throw HttpError.badRequest("Invalid email address format");
 		}
 	}
+
+	checkPersonalOrCompanyEmail = (email: string) => {
+		const domain = email.split("@")[1]?.toLowerCase();
+
+		if (!domain) {
+			throw HttpError.badRequest("Invalid email structure");
+		}
+
+		const personalEmailProviders = [
+			"gmail.com",
+			"googlemail.com",
+			"yahoo.com",
+			"ymail.com",
+			"hotmail.com",
+			"outlook.com",
+			"live.com",
+			"msn.com",
+			"mail.com",
+			"protonmail.com",
+			"proton.me",
+			"icloud.com",
+			"apple.com",
+			"yandex.com",
+			"zoho.com",
+			"gmx.com",
+			"gmx.de",
+			"gmx.net",
+			"aol.com",
+			"rediffmail.com",
+			"inbox.com",
+			"lycos.com",
+			"care2.com",
+			"me.com",
+			"mac.com",
+		];
+
+		if (personalEmailProviders.includes(domain)) {
+			throw HttpError.badRequest(
+				"Personal email addresses are not allowed. Please use your college email address.",
+			);
+		}
+
+		const companyTlds = [
+			".com",
+			".in",
+			".net",
+			".org",
+			".io",
+			".co",
+			".ai",
+			".tech",
+			".info",
+			".biz",
+			".us",
+			".uk",
+			".ca",
+			".au",
+			".de",
+			".fr",
+			".jp",
+			".cn",
+			".ru",
+			".br",
+			".mx",
+		];
+
+		const isCompanyTld = companyTlds.some((tld) => domain.endsWith(tld));
+		const looksLikeEducational =
+			domain.includes("edu") ||
+			domain.includes("ac.") ||
+			domain.includes("uni") ||
+			domain.includes("college") ||
+			domain.includes("school");
+
+		if (isCompanyTld && !looksLikeEducational) {
+			throw HttpError.badRequest(
+				"Only college email addresses are allowed. Please use your institutional email address.",
+			);
+		}
+	};
 
 	checkDisposableMail = (email: string) => {
 		const domain = email.split("@")[1];

@@ -228,7 +228,13 @@ class AuthController {
 			req.query,
 		);
 		await authService.terminateAllOtherSessions(req, sessionId, email);
-		return HttpResponse.ok("All other sessions terminated successfully");
+		return HttpResponse.ok("Session terminated successfully");
+	}
+
+	static async terminateAllSessions(req: Request) {
+		const { email } = authSchemas.terminateAllSessionsSchema.parse(req.query);
+		await authService.terminateAllSessions(req, email);
+		return HttpResponse.ok("All sessions terminated successfully");
 	}
 }
 
