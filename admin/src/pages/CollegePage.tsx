@@ -1,13 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
-import { http } from "@/services/http";
 import { toast } from "sonner";
-import { College } from "@/types/College";
-import { CollegeRequest } from "@/types/CollegeRequest";
-import { CollegeTable } from "@/components/general/CollegeTable";
-import { CollegeRequestTable } from "@/components/general/CollegeRequestTable";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import CollegeForm from "@/components/forms/CollegeForm";
+import { CollegeRequestTable } from "@/components/general/CollegeRequestTable";
+import { CollegeTable } from "@/components/general/CollegeTable";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { http } from "@/services/http";
+import type { College } from "@/types/College";
+import type { CollegeRequest } from "@/types/CollegeRequest";
 
 function CollegePage() {
   const [colleges, setColleges] = useState<College[]>([]);
@@ -23,6 +30,7 @@ function CollegePage() {
         http.get(`/college-requests`),
       ]);
 
+      console.log(collegesRes)
       if (collegesRes.status !== 200 || requestsRes.status !== 200) {
         toast.error("Failed to fetch colleges.");
         return;
@@ -41,7 +49,10 @@ function CollegePage() {
     fetchColleges();
   }, [fetchColleges]);
 
-  if (isLoading) return <div className="p-6  text-muted-foreground">Loading colleges...</div>;
+  if (isLoading)
+    return (
+      <div className="p-6  text-muted-foreground">Loading colleges...</div>
+    );
 
   return (
     <div className="p-6  flex flex-col gap-6">
@@ -50,7 +61,9 @@ function CollegePage() {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-zinc-100 text-zinc-900 hover:bg-zinc-200">Create College</Button>
+            <Button className="bg-zinc-100 text-zinc-900 hover:bg-zinc-200">
+              Create College
+            </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px] bg-zinc-900 border-zinc-800 text-white">
             <DialogHeader>
@@ -67,15 +80,23 @@ function CollegePage() {
       {colleges.length > 0 ? (
         <CollegeTable data={colleges} setCollege={setColleges} />
       ) : (
-        <div className={`bg-zinc-800/50 px-3 w-full ${colleges.length === 0 && "min-h-52"} rounded-md`}>
-          <div className="p-4 text-center text-zinc-400">No colleges found.</div>
+        <div
+          className={`bg-zinc-800/50 px-3 w-full ${colleges.length === 0 && "min-h-52"} rounded-md`}
+        >
+          <div className="p-4 text-center text-zinc-400">
+            No colleges found.
+          </div>
         </div>
       )}
 
       <div className="flex flex-col gap-3">
         <div>
-          <h3 className="text-xl font-semibold tracking-tight">College requests</h3>
-          <p className="text-sm text-zinc-400">Requests submitted from the client when a college is missing.</p>
+          <h3 className="text-xl font-semibold tracking-tight">
+            College requests
+          </h3>
+          <p className="text-sm text-zinc-400">
+            Requests submitted from the client when a college is missing.
+          </p>
         </div>
 
         {requests.length > 0 ? (
@@ -86,7 +107,9 @@ function CollegePage() {
           />
         ) : (
           <div className="bg-zinc-800/50 px-3 w-full min-h-32 rounded-md">
-            <div className="p-4 text-center text-zinc-400">No college requests yet.</div>
+            <div className="p-4 text-center text-zinc-400">
+              No college requests yet.
+            </div>
           </div>
         )}
       </div>

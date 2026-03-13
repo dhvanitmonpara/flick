@@ -1,3 +1,4 @@
+import axios from "axios";
 import { franc } from "franc";
 import NodeCache from "node-cache";
 import { env } from "@/config/env";
@@ -61,8 +62,6 @@ const moderationCache = new NodeCache({
 	maxKeys: 10000,
 	useClones: false,
 });
-
-const PERSPECTIVE_API_URL = `https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${env.PERSPECTIVE_API_KEY}`;
 
 const THRESHOLDS: Record<string, number> = {
 	TOXICITY: 0.8,
@@ -485,20 +484,6 @@ class ModeratorService {
 
 		const language = detectLanguage(normalized);
 
-		const body = {
-			comment: { text: normalized },
-			doNotStore: true,
-			languages: [language],
-			spanAnnotations: true,
-			requestedAttributes: {
-				TOXICITY: {},
-				INSULT: {},
-				IDENTITY_ATTACK: {},
-				THREAT: {},
-				PROFANITY: {},
-			},
-		};
-
 		// biome-ignore lint/suspicious/noExplicitAny: <reason>
 		let data: any;
 
@@ -506,28 +491,27 @@ class ModeratorService {
 			const controller = new AbortController();
 			const timeout = setTimeout(() => controller.abort(), 3000);
 
-			const res = await fetch(PERSPECTIVE_API_URL, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(body),
-				signal: controller.signal,
-			});
+			const res = await axios.post(
+				`${env.MODERATION_URL}/moderate`,
+				{
+					language,
+					text: normalized,
+				}
+			);
 
 			clearTimeout(timeout);
 
-			if (!res.ok) {
-				// Fail-closed behavior on API error as originally implemented
-				return { allowed: false, reasons: ["moderation service error"] };
+			if (res.status !== 200) {
+				return { allowed: false, reasons: ["moderation microservice error"] };
 			}
 
-			data = await res.json();
+			data = res.data;
 		} catch (err) {
-			console.error("Perspective API error:", err);
-			// Fail-closed behavior
+			console.error("Moderation microservice error:", err);
 			return { allowed: false, reasons: ["moderation service unavailable"] };
 		}
 
-		const scores = data.attributeScores as Record<
+		const scores = data as Record<
 			string,
 			{ summaryScore?: { value: number } }
 		>;

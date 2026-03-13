@@ -1,8 +1,12 @@
+import { AxiosError } from "axios";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@/lib/zod-resolver";
-import { z } from "zod";
 import { FaPlus } from "react-icons/fa";
+import { toast } from "sonner";
+import { z } from "zod";
+import ModeratedText from "@/components/general/ModeratedText";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -16,23 +20,19 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { AxiosError } from "axios";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { postApi } from "@/services/api/post";
+import { userApi } from "@/services/api/user";
+import usePostStore from "@/store/postStore";
 import useProfileStore from "@/store/profileStore";
+import { PostTopic } from "@/types/postTopics";
 import {
+  censorText,
   loadModerationConfig,
   validateText,
-  censorText,
 } from "@/utils/moderation";
-import { Textarea } from "../ui/textarea";
-import { Loader2 } from "lucide-react";
-import usePostStore from "@/store/postStore";
-import { TermsForm } from "./TermsForm";
 import {
   Select,
   SelectContent,
@@ -41,10 +41,8 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Switch } from "../ui/switch";
-import { PostTopic } from "@/types/postTopics";
-import { postApi } from "@/services/api/post";
-import { userApi } from "@/services/api/user";
-import ModeratedText from "@/components/general/ModeratedText";
+import { Textarea } from "../ui/textarea";
+import { TermsForm } from "./TermsForm";
 
 const postSchema = z.object({
   title: z
@@ -122,7 +120,6 @@ export const CreatePostForm = ({
   const isUpdating = !!defaultData;
 
   const form = useForm<PostFormValues>({
-    resolver: zodResolver(postSchema),
     defaultValues: defaultData
       ? {
           title: defaultData.title,
@@ -138,6 +135,28 @@ export const CreatePostForm = ({
         },
   });
 
+  const titleValue = form.watch("title");
+  const contentValue = form.watch("content");
+  const topicValue = form.watch("topic");
+  const titleModeration = validateText(titleValue);
+  const contentModeration = validateText(contentValue);
+  const hasRequiredContent =
+    titleValue.trim().length > 0 &&
+    contentValue.trim().length > 0 &&
+    Boolean(topicValue);
+  const isSchemaValid = hasRequiredContent
+    ? postSchema.safeParse({
+        title: titleValue,
+        content: contentValue,
+        topic: topicValue,
+        isPrivate: form.getValues("isPrivate"),
+      }).success
+    : false;
+  const hasValidationError =
+    !isSchemaValid ||
+    !titleModeration.allowed ||
+    !contentModeration.allowed;
+
   useEffect(() => {
     void loadModerationConfig();
   }, []);
@@ -146,22 +165,24 @@ export const CreatePostForm = ({
     form.reset(
       defaultData
         ? {
-            title: defaultData.title,
-            content: defaultData.content,
-            topic: defaultData.topic ?? PostTopic[0],
-            isPrivate: defaultData.isPrivate ?? false,
-          }
+          title: defaultData.title,
+          content: defaultData.content,
+          topic: defaultData.topic ?? PostTopic[0],
+          isPrivate: defaultData.isPrivate ?? false,
+        }
         : {
-            title: "",
-            content: "",
-            topic: PostTopic[0],
-            isPrivate: false,
-          },
+          title: "",
+          content: "",
+          topic: PostTopic[0],
+          isPrivate: false,
+        },
     );
   }, [defaultData, form]);
 
   const onSubmit = async (data: PostFormValues) => {
     try {
+      if (!postSchema.safeParse(data).success) return;
+
       setLoading(true);
 
       if (!profile?.id) throw new Error("User not found");
@@ -238,7 +259,6 @@ export const CreatePostForm = ({
             name="title"
             disabled={loading}
             render={({ field }) => {
-              const titleModeration = validateText(field.value);
               const hasTitleWarning = !titleModeration.allowed;
 
               return (
@@ -246,6 +266,10 @@ export const CreatePostForm = ({
                   <FormLabel>Title</FormLabel>
                   <FormControl>
                     <Input
+                      required
+                      minLength={3}
+                      maxLength={100}
+                      aria-invalid={hasTitleWarning}
                       className={
                         hasTitleWarning
                           ? "border-red-500 bg-zinc-100 dark:bg-zinc-800 focus-visible:ring-red-500"
@@ -253,6 +277,10 @@ export const CreatePostForm = ({
                       }
                       placeholder="Enter post title"
                       {...field}
+                      onChange={(e) => {
+                        setError("");
+                        field.onChange(e);
+                      }}
                     />
                   </FormControl>
                   {hasTitleWarning && (
@@ -266,7 +294,6 @@ export const CreatePostForm = ({
                       <ModeratedText text={field.value} />
                     </div>
                   )}
-                  <FormMessage />
                 </FormItem>
               );
             }}
@@ -302,7 +329,6 @@ export const CreatePostForm = ({
                       </SelectContent>
                     </Select>
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               );
             }}
@@ -313,23 +339,25 @@ export const CreatePostForm = ({
             disabled={loading}
             name="content"
             render={({ field }) => {
-              const banned = validateText(field.value);
-              const hasBanned = !banned.allowed;
+              const hasBanned = !contentModeration.allowed;
 
               return (
                 <FormItem>
                   <FormLabel>Content</FormLabel>
                   <FormControl>
-                    <>
+                    <div>
                       <Textarea
-                        maxLength={2000}
                         rows={6}
+                        required
+                        maxLength={2000}
+                        minLength={10}
                         placeholder="Write your post..."
                         {...field}
                         onChange={(e) => {
                           setError("");
                           field.onChange(e);
                         }}
+                        aria-invalid={hasBanned}
                         className={
                           hasBanned
                             ? "border-red-500 bg-zinc-100 dark:bg-zinc-800 focus-visible:ring-red-500"
@@ -344,12 +372,11 @@ export const CreatePostForm = ({
                       )}
                       {hasBanned && (
                         <p className="text-red-500 text-xs mt-1">
-                          {banned.reason}
+                          {contentModeration.reason}
                         </p>
                       )}
-                    </>
+                    </div>
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               );
             }}
@@ -381,16 +408,17 @@ export const CreatePostForm = ({
           />
 
           <Button
-            disabled={loading || Boolean(error)}
+            disabled={loading || hasValidationError || Boolean(error)}
             type="submit"
             className="w-full"
           >
             {loading ? (
               <>
-                <Loader2 className="animate-spin" /> Creating...
+                <Loader2 className="animate-spin" />{" "}
+                {isUpdating ? "Updating..." : "Creating..."}
               </>
             ) : (
-              "Create"
+              isUpdating ? "Update" : "Create"
             )}
           </Button>
           {error && <p className="text-red-500 text-sm">{error}</p>}

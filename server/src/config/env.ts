@@ -23,7 +23,7 @@ const envSchema = z.object({
 	MAILTRAP_TOKEN: z.string(),
 	MAIL_PROVIDER: z.enum(["gmail", "resend", "mailtrap"]),
 	SERVER_BASE_URI: z.string(),
-	PERSPECTIVE_API_KEY: z.string(),
+	MODERATION_URL: z.string(),
 	MAIL_FROM: z.string(),
 	EMAIL_ENCRYPTION_KEY: z.string().min(32),
 	EMAIL_SECRET: z.string().min(32),

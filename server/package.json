@@ -15,6 +15,7 @@
 		"db:down": "docker compose -f infra/docker-compose.yml down",
 		"db:migrate": "npx drizzle-kit migrate",
 		"db:generate": "npx drizzle-kit generate",
+		"db:push": "npx drizzle-kit push",
 		"db:check": "npx drizzle-kit check",
 		"lint": "biome check",
 		"format": "biome check --write",

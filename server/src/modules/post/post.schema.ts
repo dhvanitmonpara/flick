@@ -15,11 +15,11 @@ const topicEnum = [
 ] as const;
 
 export const CreatePostSchema = z.object({
-	title: z.string().min(1, "Title is required").max(300, "Title too long"),
+	title: z.string().min(3, "Title is required").max(100, "Title too long"),
 	content: z
 		.string()
-		.min(1, "Content is required")
-		.max(10000, "Content too long"),
+		.min(10, "Content is required")
+		.max(2000, "Content too long"),
 	topic: z.enum(topicEnum).refine((val) => topicEnum.includes(val), {
 		message: "Invalid topic selected",
 	}),

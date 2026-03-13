@@ -1,19 +1,13 @@
-import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Plus, Pencil, Trash2, Search, Loader2 } from "lucide-react";
+import { Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
-  BannedWord,
-  BannedWordSeverity,
-  moderationApi,
-  ModerationWordPayload,
-  ModerationWordUpdatePayload,
-} from "@/services/api/moderation";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+  type ColumnDefinition,
+  TableWrapper,
+} from "@/components/general/TableWrapper";
 import { Badge } from "@/components/ui/badge";
-import { TableWrapper, ColumnDefinition } from "@/components/general/TableWrapper";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -22,8 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -31,6 +25,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import {
+  type BannedWord,
+  type BannedWordSeverity,
+  type ModerationWordPayload,
+  type ModerationWordUpdatePayload,
+  moderationApi,
+} from "@/services/api/moderation";
 
 export default function BannedWordsPage() {
   const [words, setWords] = useState<BannedWord[]>([]);
@@ -55,9 +57,11 @@ export default function BannedWordsPage() {
     try {
       setLoading(true);
       const res = await moderationApi.listWords();
-      setWords(res?.data?.words ?? []);
+      setWords(res?.words ?? []);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Failed to fetch banned words");
+      toast.error(
+        error?.response?.data?.message || "Failed to fetch banned words",
+      );
     } finally {
       setLoading(false);
     }
@@ -92,44 +96,55 @@ export default function BannedWordsPage() {
       setSaving(true);
       if (editingWord) {
         const updatePayload: ModerationWordUpdatePayload = {};
-        if (formData.word !== editingWord.word) updatePayload.word = formData.word;
-        if (formData.severity !== editingWord.severity) updatePayload.severity = formData.severity;
-        if (formData.strictMode !== editingWord.strictMode) updatePayload.strictMode = formData.strictMode;
+        if (formData.word !== editingWord.word)
+          updatePayload.word = formData.word;
+        if (formData.severity !== editingWord.severity)
+          updatePayload.severity = formData.severity;
+        if (formData.strictMode !== editingWord.strictMode)
+          updatePayload.strictMode = formData.strictMode;
 
         if (Object.keys(updatePayload).length > 0) {
-          const res = await moderationApi.updateWord(editingWord.id, updatePayload);
+          const res = await moderationApi.updateWord(
+            editingWord.id,
+            updatePayload,
+          );
           setWords((prev) =>
-            prev.map((w) => (w.id === editingWord.id ? res.data!.word : w))
+            prev.map((w) => (w.id === editingWord.id ? res?.word : w)),
           );
           toast.success("Banned word updated successfully");
         }
       } else {
         const res = await moderationApi.createWord(formData);
-        setWords((prev) => [res.data!.word, ...prev]);
+        setWords((prev) => [res?.word ?? {}, ...prev]);
         toast.success("Banned word added successfully");
       }
       setDialogOpen(false);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Failed to save banned word");
+      toast.error(
+        error?.response?.data?.message || "Failed to save banned word",
+      );
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string, word: string) => {
-    if (!confirm(`Are you sure you want to delete the banned word "${word}"?`)) return;
+    if (!confirm(`Are you sure you want to delete the banned word "${word}"?`))
+      return;
 
     try {
       await moderationApi.deleteWord(id);
       setWords((prev) => prev.filter((w) => w.id !== id));
       toast.success("Banned word deleted successfully");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Failed to delete banned word");
+      toast.error(
+        error?.response?.data?.message || "Failed to delete banned word",
+      );
     }
   };
 
   const filteredWords = words.filter((w) =>
-    w.word.toLowerCase().includes(search.toLowerCase())
+    w.word.toLowerCase().includes(search.toLowerCase()),
   );
 
   const getSeverityBadgeColor = (severity: BannedWordSeverity) => {
@@ -185,7 +200,10 @@ export default function BannedWordsPage() {
             Manage words and phrases that are globally banned or restricted.
           </p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700">
+        <Button
+          onClick={() => handleOpenDialog()}
+          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700"
+        >
           <Plus className="mr-2 h-4 w-4" /> Add Word
         </Button>
       </div>
@@ -240,7 +258,9 @@ export default function BannedWordsPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="border-zinc-800 bg-zinc-950 text-zinc-100">
           <DialogHeader>
-            <DialogTitle className="text-zinc-100">{editingWord ? "Edit" : "Add"} Banned Word</DialogTitle>
+            <DialogTitle className="text-zinc-100">
+              {editingWord ? "Edit" : "Add"} Banned Word
+            </DialogTitle>
             <DialogDescription className="text-zinc-400">
               {editingWord
                 ? "Update the configuration for this banned word."
@@ -254,7 +274,9 @@ export default function BannedWordsPage() {
                 placeholder="e.g. badword123"
                 className="border-zinc-800 bg-zinc-900 text-zinc-100 focus:border-zinc-200 focus-visible:ring-zinc-200"
                 value={formData.word}
-                onChange={(e) => setFormData({ ...formData, word: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, word: e.target.value })
+                }
               />
             </div>
             <div className="space-y-2">
@@ -269,9 +291,24 @@ export default function BannedWordsPage() {
                   <SelectValue placeholder="Select severity" />
                 </SelectTrigger>
                 <SelectContent className="border-zinc-800 bg-zinc-900 text-zinc-100">
-                  <SelectItem value="mild" className="focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">Mild</SelectItem>
-                  <SelectItem value="moderate" className="focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">Moderate</SelectItem>
-                  <SelectItem value="severe" className="focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">Severe</SelectItem>
+                  <SelectItem
+                    value="mild"
+                    className="focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer"
+                  >
+                    Mild
+                  </SelectItem>
+                  <SelectItem
+                    value="moderate"
+                    className="focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer"
+                  >
+                    Moderate
+                  </SelectItem>
+                  <SelectItem
+                    value="severe"
+                    className="focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer"
+                  >
+                    Severe
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -279,7 +316,8 @@ export default function BannedWordsPage() {
               <div className="space-y-0.5">
                 <Label className="text-zinc-200">Strict Mode</Label>
                 <p className="text-sm text-zinc-400">
-                  Bypass leetspeak evasions (e.g. "@" for "a") and ignore punctuation.
+                  Bypass leetspeak evasions (e.g. "@" for "a") and ignore
+                  punctuation.
                 </p>
               </div>
               <Switch
@@ -291,10 +329,18 @@ export default function BannedWordsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" className="border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100" onClick={() => setDialogOpen(false)}>
+            <Button
+              variant="outline"
+              className="border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+              onClick={() => setDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button className="bg-zinc-100 text-zinc-900 hover:bg-zinc-200" onClick={handleSubmit} disabled={saving}>
+            <Button
+              className="bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+              onClick={handleSubmit}
+              disabled={saving}
+            >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editingWord ? "Save Changes" : "Add Word"}
             </Button>

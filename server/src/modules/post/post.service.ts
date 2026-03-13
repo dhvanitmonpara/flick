@@ -4,6 +4,7 @@ import logger from "@/core/logger";
 import cache from "@/infra/services/cache";
 import { moderationService } from "@/infra/services/moderator";
 import recordAudit from "@/lib/record-audit";
+import { shouldSampleLog } from "@/lib/should-sample-log";
 import { observabilityContext } from "../audit/audit-context";
 import { assertNoBlockRelationBetweenUsers } from "../user/block.guard";
 import postCacheKeys from "./post.cache-keys";
@@ -44,11 +45,13 @@ class PostService {
 		isPrivate?: boolean;
 		postedBy: string;
 	}) {
-		logger.info("Creating post", {
-			topic: postData.topic,
-			postedBy: postData.postedBy,
-			title: postData.title,
-		});
+		if (shouldSampleLog()) {
+			logger.info("Creating post", {
+				topic: postData.topic,
+				postedBy: postData.postedBy,
+				title: postData.title,
+			});
+		}
 
 		const moderationContext = `${postData.title}\n${postData.content}`;
 		const moderationResult = await moderationService.moderateText({
