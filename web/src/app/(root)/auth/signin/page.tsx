@@ -1,24 +1,16 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@/lib/zod-resolver";
-import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { isAxiosError } from "axios";
-import { toast } from "sonner";
-import { IoMdEye, IoMdEyeOff } from "react-icons/io";
-import { FaGoogle } from "react-icons/fa6";
-import { handleGoogleOAuthRedirect } from "@/utils/googleOAuthRedirect";
-import { Separator } from "@/components/ui/separator";
-import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
-import { userApi } from "@/services/api/user";
-import useProfileStore from "@/store/profileStore";
-import { handleOnboardingError } from "@/utils/onboarding-error-handler";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { FaGoogle } from "react-icons/fa6";
+import { IoMdEye, IoMdEyeOff } from "react-icons/io";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +18,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { authClient } from "@/lib/auth-client";
+import { zodResolver } from "@/lib/zod-resolver";
+import { userApi } from "@/services/api/user";
+import useProfileStore from "@/store/profileStore";
+import { handleGoogleOAuthRedirect } from "@/utils/googleOAuthRedirect";
+import { handleOnboardingError } from "@/utils/onboarding-error-handler";
 
 const signInSchema = z.object({
   email: z.email("Email is invalid"),
@@ -90,7 +90,7 @@ function SignInPage() {
     };
 
     validateSession();
-  }, [isPending, navigate, session]);
+  }, [isPending, navigate, session, removeProfile]);
 
   if (isPending || isValidatingSession) {
     return (

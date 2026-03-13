@@ -15,8 +15,6 @@ export const createEmailProvider = async (): Promise<EmailProvider> => {
 				`Email provider verification failed for ${provider.constructor.name}: ${v.error}`,
 			);
 		}
-
-		console.info(`Email provider ${provider.constructor.name} verified`);
 	}
 
 	return provider;

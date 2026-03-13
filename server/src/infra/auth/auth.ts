@@ -9,7 +9,7 @@ import { auth as authTable } from "@/infra/db/tables/auth.table";
 import mailService from "@/infra/services/mail";
 
 export const auth = betterAuth({
-	baseUrl: env.BETTER_AUTH_URL, // Remove this if you getting OAuth issues
+	baseUrl: env.BETTER_AUTH_URL,
 	secret: env.BETTER_AUTH_SECRET,
 
 	trustedOrigins: env.ACCESS_CONTROL_ORIGINS,
@@ -56,6 +56,7 @@ export const auth = betterAuth({
 		google: {
 			clientId: env.GOOGLE_OAUTH_CLIENT_ID,
 			clientSecret: env.GOOGLE_OAUTH_CLIENT_SECRET,
+			redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/google`,
 		},
 	},
 	session: {
@@ -69,16 +70,17 @@ export const auth = betterAuth({
 	advanced: {
 		crossSubDomainCookies: {
 			enabled: true,
+			domain: env.COOKIE_DOMAIN,
 		},
 		defaultCookieAttributes: {
-			sameSite: env.NODE_ENV === "production" ? "none" : "lax",
+			sameSite: "lax",
 			secure: env.NODE_ENV === "production",
 			httpOnly: true,
 		},
 	},
 	account: {
 		storeStateStrategy: "cookie",
-		storeAccountCookie: true, // Store account data after OAuth flow in a cookie (useful for database-less flows)
+		storeAccountCookie: false,
 	},
 	plugins: [twoFactor(), admin()],
 });

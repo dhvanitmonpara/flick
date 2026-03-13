@@ -1,6 +1,8 @@
 function page() {
   return (
-    <div>Coming soon</div>
+    <div className="flex flex-col items-center justify-center h-full">
+      Coming soon
+    </div>
   )
 }
 

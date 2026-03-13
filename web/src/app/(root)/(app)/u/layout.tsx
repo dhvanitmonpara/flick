@@ -8,12 +8,14 @@ import useProfileStore from "@/store/profileStore";
 function PrivateAppLayout({ children }: { children: React.ReactNode }) {
   const profile = useProfileStore((state) => state.profile);
   const navigate = useRouter().push;
+
   useEffect(() => {
-    if (!profile) {
+    if (!profile.id) {
       toast.info("Please login to access profile");
       navigate("/auth/signin");
     }
   }, [navigate, profile]);
+
   return <>{children}</>;
 }
 

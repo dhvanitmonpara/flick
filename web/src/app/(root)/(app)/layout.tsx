@@ -115,8 +115,8 @@ function MobileNav() {
         )}
       </Link>
       <Link
-        href="/u/profile"
-        className={`flex flex-col items-center justify-center w-full h-full ${pathname.startsWith("/u/profile") ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"}`}
+        href={isLoggedIn ? "/u/profile" : "/auth/signin"}
+        className={`flex flex-col items-center justify-center w-full h-full ${isLoggedIn && pathname.startsWith("/u/profile") ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"}`}
       >
         <img
           className="h-7 w-7 rounded-full border border-zinc-200 dark:border-zinc-800 object-cover bg-zinc-100 dark:bg-zinc-800 p-0.5"
