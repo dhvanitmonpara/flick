@@ -56,7 +56,7 @@ export default function BannedWordsPage() {
   const fetchWords = async () => {
     try {
       setLoading(true);
-      const res = await moderationApi.listWords();
+      const res = await moderationApi.listWords() as unknown as { words: BannedWord[] };
       setWords(res?.words ?? []);
     } catch (error: any) {
       toast.error(
@@ -107,14 +107,14 @@ export default function BannedWordsPage() {
           const res = await moderationApi.updateWord(
             editingWord.id,
             updatePayload,
-          );
+          ) as unknown as { word: BannedWord };
           setWords((prev) =>
             prev.map((w) => (w.id === editingWord.id ? res?.word : w)),
           );
           toast.success("Banned word updated successfully");
         }
       } else {
-        const res = await moderationApi.createWord(formData);
+        const res = await moderationApi.createWord(formData) as unknown as { word: BannedWord };
         setWords((prev) => [res?.word ?? {}, ...prev]);
         toast.success("Banned word added successfully");
       }
