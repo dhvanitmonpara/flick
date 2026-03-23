@@ -17,7 +17,11 @@ export type WikiPage = {
   relativePath: string;
 };
 
-const WIKI_ROOT = path.resolve(process.cwd(), "../.qoder/repowiki/en/content");
+const WIKI_ROOT_CANDIDATES = [
+  path.resolve(process.cwd(), "content/repowiki"),
+  path.resolve(process.cwd(), "../.qoder/repowiki/en/content"),
+  path.resolve(process.cwd(), ".qoder/repowiki/en/content"),
+];
 const DEFAULT_PAGE = ["Getting Started"];
 
 export const slugify = (value: string) =>
@@ -52,6 +56,25 @@ const directoryExists = async (absolutePath: string) => {
   }
 };
 
+let cachedWikiRoot: string | null = null;
+
+const getWikiRoot = async () => {
+  if (cachedWikiRoot) {
+    return cachedWikiRoot;
+  }
+
+  for (const candidate of WIKI_ROOT_CANDIDATES) {
+    if (await directoryExists(candidate)) {
+      cachedWikiRoot = candidate;
+      return candidate;
+    }
+  }
+
+  throw new Error(
+    `Wiki content directory not found. Checked: ${WIKI_ROOT_CANDIDATES.join(", ")}`,
+  );
+};
+
 const sanitizeSlugParts = (slugParts: string[]) => {
   const normalizedParts = slugParts.map((part) => decodeURIComponent(part));
 
@@ -65,7 +88,7 @@ const sanitizeSlugParts = (slugParts: string[]) => {
 };
 
 const resolveSlugPath = async (slugParts: string[]) => {
-  let absoluteDir = WIKI_ROOT;
+  let absoluteDir = await getWikiRoot();
   const titleParts: string[] = [];
 
   for (const slugPart of slugParts) {
@@ -139,7 +162,7 @@ const buildNavTree = async (
   return [...fileItems, ...directoryItems];
 };
 
-export const getWikiNav = async () => buildNavTree(WIKI_ROOT);
+export const getWikiNav = async () => buildNavTree(await getWikiRoot());
 
 export const getDefaultWikiHref = () => pageHref(DEFAULT_PAGE.map(slugify));
 
@@ -172,27 +195,28 @@ export const getAllWikiSlugPaths = async (): Promise<string[][]> => {
     return results;
   };
 
-  return walk(WIKI_ROOT);
+  return walk(await getWikiRoot());
 };
 
 export const getWikiPage = async (
   slugParts: string[] = DEFAULT_PAGE.map(slugify),
 ): Promise<WikiPage> => {
+  const wikiRoot = await getWikiRoot();
   const safeSlugParts = sanitizeSlugParts(slugParts);
   const titleParts = await resolveSlugPath(safeSlugParts);
   const directRelativePath = `${path.join(...titleParts)}.md`;
-  const directAbsolutePath = path.join(WIKI_ROOT, directRelativePath);
+  const directAbsolutePath = path.join(wikiRoot, directRelativePath);
   let relativePath = directRelativePath;
   let absolutePath = directAbsolutePath;
 
   if (!(await fileExists(directAbsolutePath))) {
-    const sectionDirectoryPath = path.join(WIKI_ROOT, ...titleParts);
+    const sectionDirectoryPath = path.join(wikiRoot, ...titleParts);
     const sectionIndexRelativePath = path.join(
       ...titleParts,
       `${titleParts[titleParts.length - 1]}.md`,
     );
     const sectionIndexAbsolutePath = path.join(
-      WIKI_ROOT,
+      wikiRoot,
       sectionIndexRelativePath,
     );
 
@@ -219,6 +243,7 @@ export const getWikiPage = async (
 };
 
 export const countWikiPages = async () => {
+  const wikiRoot = await getWikiRoot();
   const walk = async (absoluteDir: string): Promise<number> => {
     const entries = await fs.readdir(absoluteDir, { withFileTypes: true });
     const totals = await Promise.all(
@@ -234,5 +259,5 @@ export const countWikiPages = async () => {
     return totals.reduce((sum, count) => sum + count, 0);
   };
 
-  return walk(WIKI_ROOT);
+  return walk(wikiRoot);
 };
