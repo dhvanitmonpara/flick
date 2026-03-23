@@ -176,11 +176,19 @@ export const getAllWikiSlugPaths = async (): Promise<string[][]> => {
 
     for (const entry of entries) {
       if (entry.isDirectory()) {
+        const sectionSlugParts = [...parentSlugParts, slugify(entry.name)];
+        const sectionIndexPath = path.join(
+          absoluteDir,
+          entry.name,
+          `${entry.name}.md`,
+        );
+
+        if (await fileExists(sectionIndexPath)) {
+          results.push(sectionSlugParts);
+        }
+
         results.push(
-          ...(await walk(path.join(absoluteDir, entry.name), [
-            ...parentSlugParts,
-            slugify(entry.name),
-          ])),
+          ...(await walk(path.join(absoluteDir, entry.name), sectionSlugParts)),
         );
         continue;
       }
@@ -189,7 +197,13 @@ export const getAllWikiSlugPaths = async (): Promise<string[][]> => {
         continue;
       }
 
-      results.push([...parentSlugParts, slugify(toTitle(entry.name))]);
+      const title = toTitle(entry.name);
+      const parentTitle = parentSlugParts[parentSlugParts.length - 1];
+      if (parentTitle && slugify(title) === parentTitle) {
+        continue;
+      }
+
+      results.push([...parentSlugParts, slugify(title)]);
     }
 
     return results;
