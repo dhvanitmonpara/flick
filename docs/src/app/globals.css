@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f1eb;
+  --foreground: #1d1b1a;
+  --primary: #ff785a;
+  --primary-foreground: #ffffff;
+  --surface: rgba(255, 252, 248, 0.86);
+  --surface-soft: rgba(255, 248, 241, 0.72);
+  --surface-strong: #fffdf9;
+  --border: rgba(40, 28, 22, 0.1);
+  --border-strong: rgba(40, 28, 22, 0.18);
+  --muted: #756861;
+  --muted-strong: #524841;
+  --line: rgba(40, 28, 22, 0.12);
+  --code-bg: #221b18;
+  --code-fg: #fff6ee;
+  --code-chip-bg: rgba(28, 22, 20, 0.08);
+  --quote-bg: rgba(255, 120, 90, 0.1);
+  --font-docs-sans:
+    "Avenir Next", "Segoe UI", "Helvetica Neue", "Nimbus Sans", sans-serif;
+  --font-ibm-plex-mono:
+    "IBM Plex Mono", "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+  --font-space-grotesk:
+    "Avenir Next Condensed", "Arial Narrow", "Trebuchet MS", sans-serif;
+  color-scheme: light;
+}
+
+.dark {
+  --background: #0f1417;
+  --foreground: #edf1f1;
+  --surface: rgba(19, 26, 30, 0.86);
+  --surface-soft: rgba(24, 32, 36, 0.74);
+  --surface-strong: #161d21;
+  --border: rgba(226, 235, 235, 0.09);
+  --border-strong: rgba(226, 235, 235, 0.18);
+  --muted: #9dacb1;
+  --muted-strong: #cfdbde;
+  --line: rgba(226, 235, 235, 0.12);
+  --code-bg: #091014;
+  --code-fg: #d8f2f6;
+  --code-chip-bg: rgba(226, 235, 235, 0.08);
+  --quote-bg: rgba(255, 120, 90, 0.12);
+  color-scheme: dark;
+}
+
+@custom-variant dark (&:is(.dark, .dark *));
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-strong: var(--surface-strong);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-muted: var(--muted);
+  --color-muted-strong: var(--muted-strong);
+  --color-line: var(--line);
+  --color-code-bg: var(--code-bg);
+  --color-code-fg: var(--code-fg);
+  --color-code-chip-bg: var(--code-chip-bg);
+  --color-quote-bg: var(--quote-bg);
+  --font-sans: var(--font-docs-sans);
+  --font-mono: var(--font-ibm-plex-mono);
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-docs-sans), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-space-grotesk), sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 22%, transparent);
+}
