@@ -3,6 +3,7 @@ import { WikiMarkdown } from "@/components/wiki-markdown";
 import { WikiShell } from "@/components/wiki-shell";
 import {
   countWikiPages,
+  getAllWikiSlugPaths,
   getDefaultWikiHref,
   getWikiNav,
   getWikiPage,
@@ -13,6 +14,16 @@ type PageProps = {
     slug?: string[];
   }>;
 };
+
+export const dynamicParams = false;
+
+export async function generateStaticParams() {
+  const slugPaths = await getAllWikiSlugPaths();
+
+  return slugPaths.map((slug) => ({
+    slug,
+  }));
+}
 
 export default async function WikiPage({ params }: PageProps) {
   const { slug } = await params;

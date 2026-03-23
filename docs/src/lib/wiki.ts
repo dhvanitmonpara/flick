@@ -143,6 +143,38 @@ export const getWikiNav = async () => buildNavTree(WIKI_ROOT);
 
 export const getDefaultWikiHref = () => pageHref(DEFAULT_PAGE.map(slugify));
 
+export const getAllWikiSlugPaths = async (): Promise<string[][]> => {
+  const walk = async (
+    absoluteDir: string,
+    parentSlugParts: string[] = [],
+  ): Promise<string[][]> => {
+    const entries = await fs.readdir(absoluteDir, { withFileTypes: true });
+    const results: string[][] = [];
+
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        results.push(
+          ...(await walk(path.join(absoluteDir, entry.name), [
+            ...parentSlugParts,
+            slugify(entry.name),
+          ])),
+        );
+        continue;
+      }
+
+      if (!entry.isFile() || !isMarkdownFile(entry.name)) {
+        continue;
+      }
+
+      results.push([...parentSlugParts, slugify(toTitle(entry.name))]);
+    }
+
+    return results;
+  };
+
+  return walk(WIKI_ROOT);
+};
+
 export const getWikiPage = async (
   slugParts: string[] = DEFAULT_PAGE.map(slugify),
 ): Promise<WikiPage> => {
