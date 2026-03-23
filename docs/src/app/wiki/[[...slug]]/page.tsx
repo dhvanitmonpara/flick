@@ -20,9 +20,7 @@ export const dynamicParams = false;
 export async function generateStaticParams() {
   const slugPaths = await getAllWikiSlugPaths();
 
-  return slugPaths.map((slug) => ({
-    slug,
-  }));
+  return [{ slug: [] }, ...slugPaths.map((slug) => ({ slug }))];
 }
 
 export default async function WikiPage({ params }: PageProps) {
