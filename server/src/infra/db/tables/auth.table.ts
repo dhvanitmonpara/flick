@@ -143,10 +143,7 @@ export const twoFactor = pgTable(
 	],
 );
 
-export const userRelations = relations(platformUser, ({ many, one }) => ({
-	session: many(session),
-	account: many(account),
-	twoFactors: many(twoFactor),
+export const userRelations = relations(platformUser, ({ one }) => ({
 	auth: one(auth, {
 		fields: [platformUser.authId],
 		references: [auth.id],
@@ -178,9 +175,12 @@ export const twoFactorRelations = relations(twoFactor, ({ one }) => ({
 	}),
 }));
 
-export const authRelations = relations(auth, ({ one }) => ({
+export const authRelations = relations(auth, ({ one, many }) => ({
 	user: one(platformUser, {
 		fields: [auth.id],
 		references: [platformUser.authId],
 	}),
+	session: many(session),
+	account: many(account),
+	twoFactors: many(twoFactor),
 }));

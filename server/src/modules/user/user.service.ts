@@ -44,6 +44,10 @@ class UserService {
 		return await UserRepo.CachedRead.findByAuthId(authId, {});
 	};
 
+	getUserProfileWithCollege = async (authId: string) => {
+		return await UserRepo.CachedRead.findByAuthId(authId, { college: true });
+	};
+
 	acceptTerms = async (userId: string, authId: string) => {
 		await UserRepo.Write.updateById(userId, { isAcceptedTerms: true });
 

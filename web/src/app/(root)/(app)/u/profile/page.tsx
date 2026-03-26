@@ -9,7 +9,7 @@ import {
   isUser,
 } from "@/utils/helpers";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { BsDot } from "react-icons/bs";
+import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import type { User as UserEntity } from "@/types/User";
 import type { College as CollegeEntity } from "@/types/College";
@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import SkeletonCard from "@/components/skeletons/PostSkeleton";
 import { userApi } from "@/services/api/user";
 import { postApi } from "@/services/api/post";
+import { collegeApi, type Branch } from "@/services/api/college";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,10 +30,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Edit2 } from "lucide-react";
+import { Edit2, GraduationCap, BookOpen, Flame } from "lucide-react";
 
 interface Profile extends UserEntity {
   college: CollegeEntity;
@@ -47,28 +55,39 @@ function ProfilePage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editBranch, setEditBranch] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [loadingBranches, setLoadingBranches] = useState(false);
 
   const user = useProfileStore((state) => state.profile);
 
   useEffect(() => {
-    if (!user.id) {
-      (async () => {
-        const response = await userApi.getProfile();
-
-        if (response.status === 200) {
-          setProfile({ ...response.data, posts: [] });
-          setEditBranch(response.data.branch || "");
-          fetchUserPosts(response.data.id);
-        } else {
-          console.error("Failed to fetch profile data");
-        }
-      })();
-    } else {
-      setProfile({ ...user, posts: [] } as any);
-      setEditBranch(user.branch || "");
-      fetchUserPosts(user.id);
-    }
+    (async () => {
+      // Always use the dedicated endpoint that returns user + college in one call
+      const response = await userApi.getProfileWithCollege();
+      if (response.status === 200) {
+        const userData = response.data;
+        setProfile({ ...userData, posts: [] });
+        setEditBranch(userData.branch || "");
+        fetchUserPosts(userData.id);
+      } else {
+        console.error("Failed to fetch profile data");
+      }
+    })();
   }, [user.id]);
+
+  // Load branches when the edit modal opens
+  useEffect(() => {
+    if (!isEditModalOpen) return;
+    const collegeId = profile?.collegeId;
+    if (!collegeId) return;
+
+    setLoadingBranches(true);
+    collegeApi
+      .getCollegeBranches(collegeId)
+      .then((data) => setBranches(data))
+      .catch(() => toast.error("Failed to load branches"))
+      .finally(() => setLoadingBranches(false));
+  }, [isEditModalOpen, profile?.collegeId]);
 
   async function fetchUserPosts(userId: string) {
     try {
@@ -86,7 +105,7 @@ function ProfilePage() {
 
   const handleSaveProfile = async () => {
     if (!editBranch.trim()) {
-      toast.error("Branch cannot be empty");
+      toast.error("Please select a branch");
       return;
     }
 
@@ -106,33 +125,82 @@ function ProfilePage() {
   };
 
   return (
-    <div className="py-8 md:py-12 px-4 md:px-0">
+    <div className="pb-8 md:pb-12 w-full max-w-5xl mx-auto">
       {profile ? (
         <>
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6 pb-6 pt-4">
-            <Avatar className="cursor-pointer w-24 h-24 md:w-28 md:h-28 transition-colors duration-300 border-2 border-transparent hover:border-zinc-400">
-              <AvatarImage
-                src={
-                  isCollege(profile.college)
-                    ? profile.college.profile
-                    : "Unknown College"
-                }
-                alt={profile.username}
-              />
-              <AvatarFallback className="bg-zinc-200 cursor-pointer select-none text-xl">
-                {profile.username?.slice(0, 2)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
-              <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 mt-2 md:mt-0">
-                <h4 className="text-2xl font-semibold">{profile.username}</h4>
+          <div className="relative">
+            {/* Banner Background */}
+            <div className="h-32 md:h-48 w-full bg-linear-to-r from-primary/20 via-primary/5 to-zinc-100 dark:to-zinc-900 md:rounded-b-2xl border-b border-zinc-200 dark:border-zinc-800" />
+
+            {/* Avatar positioned outside to overlap */}
+            <div className="absolute -bottom-12 md:-bottom-16 left-6 md:left-8">
+              <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-background bg-background shadow-sm transition-transform duration-300 hover:scale-[1.02]">
+                <AvatarImage
+                  src={
+                    isCollege(profile.college)
+                      ? profile.college.profile
+                      : undefined
+                  }
+                  alt={profile.username}
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-zinc-200 cursor-pointer select-none text-2xl md:text-3xl font-medium">
+                  {profile.username?.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          </div>
+
+          <div className="mt-14 md:mt-20 px-4 md:px-8">
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+              <div className="flex-1">
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                  {profile.username}
+                </h1>
+
+                <div className="flex flex-wrap items-center gap-2 mt-3 md:mt-4 text-sm md:text-base">
+                  <Badge
+                    variant="secondary"
+                    className="gap-1.5 font-normal px-2.5 py-0.5 rounded-full"
+                  >
+                    <GraduationCap className="h-3.5 w-3.5 text-zinc-500" />
+                    {isCollege(profile.college)
+                      ? profile.college.name
+                      : "Unknown College"}
+                  </Badge>
+
+                  {profile.branch && (
+                    <Badge
+                      variant="secondary"
+                      className="gap-1.5 font-normal px-2.5 py-0.5 rounded-full"
+                    >
+                      <BookOpen className="h-3.5 w-3.5 text-zinc-500" />
+                      {profile.branch}
+                    </Badge>
+                  )}
+
+                  <Badge
+                    variant="secondary"
+                    className="gap-1.5 font-medium px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-700 hover:bg-orange-100/80 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/40 border-orange-200 dark:border-orange-800"
+                  >
+                    <Flame className="h-3.5 w-3.5" />
+                    {profile.karma} Karma
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="shrink-0 mt-2 md:mt-0">
                 <Dialog
                   open={isEditModalOpen}
                   onOpenChange={setIsEditModalOpen}
                 >
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 gap-1">
-                      <Edit2 className="h-3.5 w-3.5" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 gap-2 shadow-sm rounded-full px-4"
+                    >
+                      <Edit2 className="h-4 w-4" />
                       Edit Profile
                     </Button>
                   </DialogTrigger>
@@ -141,7 +209,7 @@ function ProfilePage() {
                       <DialogTitle>Edit Profile</DialogTitle>
                       <DialogDescription>
                         Make changes to your profile here. Click save when
-                        you're done.
+                        you&apos;re done.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -160,19 +228,40 @@ function ProfilePage() {
                         <Label htmlFor="branch" className="text-right">
                           Branch
                         </Label>
-                        <Input
-                          id="branch"
-                          value={editBranch}
-                          onChange={(e) => setEditBranch(e.target.value)}
-                          className="col-span-3"
-                        />
+                        <div className="col-span-3">
+                          {loadingBranches ? (
+                            <Skeleton className="h-10 w-full rounded-md" />
+                          ) : (
+                            <Select
+                              value={editBranch}
+                              onValueChange={setEditBranch}
+                            >
+                              <SelectTrigger id="branch" className="w-full">
+                                <SelectValue placeholder="Select a branch" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {branches.length > 0 ? (
+                                  branches.map((b) => (
+                                    <SelectItem key={b.id} value={b.name}>
+                                      {b.name}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value={editBranch || "_none"} disabled>
+                                    No branches available
+                                  </SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <DialogFooter>
                       <Button
                         type="submit"
                         onClick={handleSaveProfile}
-                        disabled={isSaving}
+                        disabled={isSaving || loadingBranches}
                       >
                         {isSaving ? "Saving..." : "Save changes"}
                       </Button>
@@ -180,26 +269,12 @@ function ProfilePage() {
                   </DialogContent>
                 </Dialog>
               </div>
-              <p className="text-zinc-600 dark:text-zinc-500 flex flex-wrap justify-center md:justify-start items-center gap-x-0.5 gap-y-1 mt-3 md:mt-2 text-sm md:text-base">
-                <span>
-                  {isCollege(profile.college)
-                    ? profile.college.name
-                    : "Unknown College"}
-                </span>
-                <BsDot size={20} className="hidden md:block" />
-                <span className="hidden md:inline">{profile.branch}</span>
-                <BsDot size={20} className="hidden md:block" />
-                <span className="hidden md:inline">{profile.karma} Karma</span>
-              </p>
-              <p className="text-zinc-600 dark:text-zinc-500 flex md:hidden justify-center items-center gap-x-0.5 mt-1 text-sm">
-                <span>{profile.branch}</span>
-                <BsDot size={20} />
-                <span>{profile.karma} Karma</span>
-              </p>
             </div>
           </div>
-          <div className="mt-6 md:mt-2">
-            <h3 className="text-lg font-semibold mb-4 border-b pb-2">Posts</h3>
+          <div className="mt-8 md:mt-12 px-4 md:px-8">
+            <h3 className="text-lg font-semibold mb-6 border-b-2 border-primary/20 w-max pb-1 pr-8">
+              Activity
+            </h3>
             {loadingPosts ? (
               <div className="space-y-6">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -211,7 +286,6 @@ function ProfilePage() {
                 const postedBy = post.postedBy;
 
                 if (!isUser(postedBy)) {
-                  // postedBy is just a string, fallback
                   return (
                     <Post
                       key={post.id}
@@ -236,7 +310,6 @@ function ProfilePage() {
                   );
                 }
 
-                // postedBy is a full User object here
                 return (
                   <Post
                     key={post.id}
@@ -261,28 +334,16 @@ function ProfilePage() {
                 );
               })
             ) : (
-              <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                <div className="w-16 h-16 mb-4 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                  <svg
-                    className="w-8 h-8 text-zinc-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
-                    />
-                  </svg>
+              <div className="flex flex-col items-center justify-center py-20 px-4 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/20 max-w-2xl mx-auto my-8">
+                <div className="w-20 h-20 mb-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <BookOpen className="w-10 h-10 opacity-80" />
                 </div>
-                <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+                <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-2 tracking-tight">
                   No posts yet
                 </h3>
-                <p className="text-zinc-500 dark:text-zinc-400 max-w-sm">
-                  This user hasn&apos;t posted anything yet.
+                <p className="text-zinc-500 dark:text-zinc-400 max-w-sm text-base">
+                  When this user starts sharing their thoughts and ideas,
+                  they&apos;ll appear right here.
                 </p>
               </div>
             )}
@@ -291,7 +352,7 @@ function ProfilePage() {
       ) : (
         <>
           <ProfileSkeleton />
-          <div className="mt-6 space-y-6">
+          <div className="mt-10 px-4 md:px-8 space-y-6">
             {Array.from({ length: 3 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
@@ -304,17 +365,23 @@ function ProfilePage() {
 
 export function ProfileSkeleton() {
   return (
-    <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6 pb-6 pt-4">
-      <Skeleton className="w-24 h-24 md:w-28 md:h-28 rounded-full" />
-      <div className="space-y-3 flex flex-col items-center md:items-start mt-2 md:mt-0">
-        <Skeleton className="h-8 w-48" />
-        <div className="flex flex-col md:flex-row items-center gap-2 mt-2">
-          <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-4 w-4 rounded-full hidden md:block" />
-          <Skeleton className="h-5 w-24" />
-          <Skeleton className="h-4 w-4 rounded-full hidden md:block" />
-          <Skeleton className="h-5 w-20" />
+    <div className="w-full">
+      <div className="relative">
+        <Skeleton className="h-32 md:h-48 w-full md:rounded-b-2xl rounded-none" />
+        <div className="absolute -bottom-12 md:-bottom-16 left-6 md:left-8">
+          <Skeleton className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-background" />
         </div>
+      </div>
+      <div className="mt-14 md:mt-20 px-4 md:px-8 flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div className="space-y-4 w-full md:w-auto">
+          <Skeleton className="h-9 w-48 max-w-full" />
+          <div className="flex flex-wrap gap-2">
+            <Skeleton className="h-7 w-32 rounded-full" />
+            <Skeleton className="h-7 w-24 rounded-full" />
+            <Skeleton className="h-7 w-28 rounded-full" />
+          </div>
+        </div>
+        <Skeleton className="h-9 w-32 rounded-full hidden md:block" />
       </div>
     </div>
   );

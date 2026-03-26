@@ -22,6 +22,7 @@ router
 	.route("/me")
 	.get(UserController.getUserProfile)
 	.patch(UserController.updateUserProfile);
+router.get("/me/profile", UserController.getUserProfileWithCollege);
 router.post("/accept-terms", UserController.acceptTerms);
 
 router.post("/block/:userId", UserController.blockUser);

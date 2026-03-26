@@ -7,6 +7,9 @@ export const userApi = {
   getProfile: async (options?: { signal?: AbortSignal; timeout?: number }) => {
     return http.get("/users/me", options);
   },
+  getProfileWithCollege: async (options?: { signal?: AbortSignal; timeout?: number }) => {
+    return http.get("/users/me/profile", options);
+  },
   acceptTerms: async () => {
     return http.post("/users/accept-terms", {});
   },

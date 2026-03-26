@@ -16,6 +16,10 @@ export interface CollegeRequestInput {
 }
 
 export const collegeApi = {
+  getById: async (collegeId: string) => {
+    const response = await http.get(`/colleges/${collegeId}`);
+    return response;
+  },
   getCollegeBranches: async (collegeId: string): Promise<Branch[]> => {
     const response: AxiosResponse<{ branches: Branch[] }> = await http.get(
       `/colleges/${collegeId}/branches`,

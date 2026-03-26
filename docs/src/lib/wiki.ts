@@ -125,16 +125,24 @@ const buildNavTree = async (
     .filter((entry) => entry.isFile() && isMarkdownFile(entry.name))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const fileItems: WikiNavItem[] = markdownFiles.map((entry) => {
-    const title = toTitle(entry.name);
-    const slugParts = [...parentSlugParts, slugify(title)];
+  const fileItems: WikiNavItem[] = markdownFiles
+    .map((entry): WikiNavItem | null => {
+      const title = toTitle(entry.name);
+      const slugParts = [...parentSlugParts, slugify(title)];
+      const parentFolderSlug = parentSlugParts[parentSlugParts.length - 1];
+      const hasSameNameAsParent = parentFolderSlug && slugify(title) === parentFolderSlug;
 
-    return {
-      title,
-      slugParts,
-      href: pageHref(slugParts),
-    };
-  });
+      if (hasSameNameAsParent) {
+        return null;
+      }
+
+      return {
+        title,
+        slugParts,
+        href: pageHref(slugParts),
+      };
+    })
+    .filter((item): item is WikiNavItem => item !== null);
 
   const directoryItems = await Promise.all(
     directories.map(async (entry) => {
@@ -198,8 +206,8 @@ export const getAllWikiSlugPaths = async (): Promise<string[][]> => {
       }
 
       const title = toTitle(entry.name);
-      const parentTitle = parentSlugParts[parentSlugParts.length - 1];
-      if (parentTitle && slugify(title) === parentTitle) {
+      const parentFolderName = parentSlugParts[parentSlugParts.length - 1];
+      if (parentFolderName && slugify(title) === parentFolderName) {
         continue;
       }
 

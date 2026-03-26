@@ -5,6 +5,11 @@ export {
 	platformUser as users,
 	session,
 	twoFactor,
+	twoFactorRelations,
+	accountRelations,
+	authRelations,
+	sessionRelations,
+	userRelations,
 	verification,
 } from "./auth.table";
 export { bannedWords } from "./banned-word.table";
@@ -19,4 +24,5 @@ export { feedbacks } from "./feedback.table";
 export { notifications } from "./notification.table";
 export { posts } from "./post.table";
 export { userBlocks } from "./user-block.table";
+export { userBlocksRelations } from "./user-block.table";
 export { votes } from "./vote.table";

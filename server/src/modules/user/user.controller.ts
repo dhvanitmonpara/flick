@@ -1,7 +1,7 @@
 import type { Request } from "express";
 import { Controller, HttpResponse } from "@/core/http";
 import * as userSchemas from "@/modules/user/user.schema";
-import { toPublicUser } from "./user.dto";
+import { toPublicUser, toPublicUserWithCollege } from "./user.dto";
 import userService from "./user.service";
 
 @Controller()
@@ -29,6 +29,17 @@ class UserController {
 		return HttpResponse.ok(
 			"User fetched successfully!",
 			toPublicUser(req.user),
+		);
+	}
+
+	static async getUserProfileWithCollege(req: Request) {
+		const user = await userService.getUserProfileWithCollege(req.user.authId);
+		if (!user) {
+			throw new Error("User not found");
+		}
+		return HttpResponse.ok(
+			"User fetched successfully!",
+			toPublicUserWithCollege(user as any),
 		);
 	}
 
