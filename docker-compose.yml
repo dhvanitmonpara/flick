@@ -6,9 +6,42 @@ services:
     ports:
       - "80:8000"
     depends_on:
-      - moderation
+      moderation:
+        condition: service_healthy
+    restart: unless-stopped
+    mem_limit: 512m          # hard cap — protects moderation from OOM
+    mem_reservation: 128m
+    environment:
+      NODE_ENV: production
+      MODERATION_URL: http://moderation:8080
 
   moderation:
-    build: ./moderation
+    build: ./moderation-service
     expose:
-      - "8001"
+      - "8080"
+    restart: unless-stopped
+    mem_limit: 1500m         # ONNX runtime needs ~500-600 MB; headroom for spikes
+    mem_reservation: 512m
+    cpus: "0.6"              # leave 0.4 cores for api + OS on the single vCPU
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s      # ONNX loads fast vs PyTorch's 10-20s cold start
+
+  # Lightweight reverse proxy — handle SSL termination here, not in Node
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    mem_limit: 64m
+    restart: unless-stopped
+
+volumes:
+  caddy_data:

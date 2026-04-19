@@ -8,4 +8,5 @@ __pycache__
 .cache
 .git
 .gitignore
+model
 node_modules

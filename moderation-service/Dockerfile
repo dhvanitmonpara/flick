@@ -1,20 +1,20 @@
+# -------- moderation/Dockerfile --------
 FROM python:3.11-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+
+RUN pip install --no-cache-dir \
+    onnxruntime \
+    fastapi \
+    uvicorn[standard] \
+    transformers \
+    numpy
 
 WORKDIR /app
 
-# install CPU torch + dependencies in one layer
-RUN pip install --no-cache-dir \
-    torch --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir detoxify fastapi uvicorn
+# Copy pre-exported model (do this once locally: see export script below)
+COPY model/ ./model/
+COPY main.py ./
 
-# copy app code
-COPY . .
-
-RUN python -c "from detoxify import Detoxify; Detoxify('multilingual')"
-
-EXPOSE 8000
-
-CMD sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"
+EXPOSE 8080
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
