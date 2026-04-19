@@ -16,8 +16,6 @@ pids
 *.seed
 *.pid.lock
 
-moderation-service/model/
-
 # ai generated files
 .agents
 .qoder
