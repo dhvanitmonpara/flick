@@ -16,6 +16,9 @@ pids
 *.seed
 *.pid.lock
 
+/moderation-service/model/
+*.venv/
+
 # ai generated files
 .agents
 .qoder
@@ -139,5 +142,6 @@ thumb
 sketch
 
 DEV_NOTES.md
+.codex
 
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Node,react

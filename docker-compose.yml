@@ -1,47 +1,80 @@
-version: "3.9"
-
 services:
+  moderation:
+    build:
+      context: ./moderation-service
+      dockerfile: Dockerfile
+    expose:
+      - "8080"
+    restart: unless-stopped
+    mem_limit: 768m
+    cpus: "0.6"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - backend
+
   api:
-    build: ./server
-    ports:
-      - "80:8000"
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    expose:
+      - "8000"
     depends_on:
       moderation:
         condition: service_healthy
     restart: unless-stopped
-    mem_limit: 512m          # hard cap — protects moderation from OOM
-    mem_reservation: 128m
+    mem_limit: 384m
     environment:
       NODE_ENV: production
+      HOST: 0.0.0.0
       MODERATION_URL: http://moderation:8080
-
-  moderation:
-    build: ./moderation-service
-    expose:
-      - "8080"
-    restart: unless-stopped
-    mem_limit: 1500m         # ONNX runtime needs ~500-600 MB; headroom for spikes
-    mem_reservation: 512m
-    cpus: "0.6"              # leave 0.4 cores for api + OS on the single vCPU
     healthcheck:
-      test: ["CMD", "python", "-c",
-             "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s      # ONNX loads fast vs PyTorch's 10-20s cold start
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8000/healthz').then((res) => process.exit(res.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - frontend
+      - backend
 
-  # Lightweight reverse proxy — handle SSL termination here, not in Node
   caddy:
     image: caddy:2-alpine
+    depends_on:
+      api:
+        condition: service_healthy
     ports:
-      - "443:443"
       - "80:80"
+      - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
-    mem_limit: 64m
+      - caddy_config:/config
     restart: unless-stopped
+    networks:
+      - frontend
+
+networks:
+  frontend:
+  backend:
+    internal: true
 
 volumes:
   caddy_data:
+  caddy_config:
