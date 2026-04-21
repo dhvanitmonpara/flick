@@ -39,10 +39,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  
+
 volumes:
   redis-data:
     driver: local
-  
+
   postgres_data:
     driver: local

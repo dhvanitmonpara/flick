@@ -3,8 +3,6 @@ services:
     build:
       context: ./moderation-service
       dockerfile: Dockerfile
-    expose:
-      - "8080"
     restart: unless-stopped
     mem_limit: 768m
     cpus: "0.6"
@@ -34,10 +32,8 @@ services:
         condition: service_healthy
     restart: unless-stopped
     mem_limit: 384m
-    environment:
-      NODE_ENV: production
-      HOST: 0.0.0.0
-      MODERATION_URL: http://moderation:8080
+    env_file:
+      - .env.production
     healthcheck:
       test:
         [
