@@ -1,6 +1,6 @@
 import { env } from "@/config/env";
 import type { CacheProvider } from "./cache.interface";
-import { redisClient } from "./clients/redis.client";
+import { isRedisAvailable, redisClient } from "./clients/redis.client";
 import { MultiTierCacheProvider } from "./providers/multi-tier.provider";
 import { NodeCacheProvider } from "./providers/node-cache.provider";
 import { RedisCacheProvider } from "./providers/redis.provider";
@@ -12,10 +12,12 @@ export function createCacheProvider(): CacheProvider {
 
 	switch (driver) {
 		case "redis":
+			if (!isRedisAvailable()) return new NodeCacheProvider(ttl);
 			return new RedisCacheProvider(redisClient);
 
 		case "multi": {
 			const l1 = new NodeCacheProvider(ttl);
+			if (!isRedisAvailable()) return l1;
 			const l2 = new RedisCacheProvider(redisClient);
 			return new MultiTierCacheProvider(l1, l2, ttl);
 		}

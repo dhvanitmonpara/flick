@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { isDisposableEmailDomain } from "disposable-email-domains-js";
-import { and, eq } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { nanoid } from "nanoid";
 import { env } from "@/config/env";
@@ -15,7 +15,7 @@ import {
 	verification as verificationTable,
 } from "@/infra/db/tables/auth.table";
 import { notifications } from "@/infra/db/tables/notification.table";
-import cache, { redis } from "@/infra/services/cache/index";
+import cache from "@/infra/services/cache/index";
 import mailService from "@/infra/services/mail";
 import { forwardSetCookieHeaders } from "@/lib/better-auth/http-helpers";
 import parseHeaders from "@/lib/better-auth/parse-headers";
@@ -30,6 +30,49 @@ import UserRepo from "../user/user.repo";
 import type { PendingUser } from "./auth.types";
 
 class AuthService {
+	private readonly loginOtpTtlSeconds = 900;
+
+	private loginOtpIdentifier(email: string) {
+		return `otp:login:${email.toLowerCase()}`;
+	}
+
+	private async saveLoginOtpHash(email: string, hashedOtp: string) {
+		const identifier = this.loginOtpIdentifier(email);
+		const expiresAt = new Date(Date.now() + this.loginOtpTtlSeconds * 1000);
+		await db
+			.delete(verificationTable)
+			.where(eq(verificationTable.identifier, identifier));
+		await db.insert(verificationTable).values({
+			id: crypto.randomUUID(),
+			identifier,
+			value: hashedOtp,
+			expiresAt,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		});
+	}
+
+	private async getLoginOtpHash(email: string) {
+		const identifier = this.loginOtpIdentifier(email);
+		const [row] = await db
+			.select({ value: verificationTable.value })
+			.from(verificationTable)
+			.where(
+				and(
+					eq(verificationTable.identifier, identifier),
+					gt(verificationTable.expiresAt, new Date()),
+				),
+			)
+			.limit(1);
+		return row?.value ?? null;
+	}
+
+	private async clearLoginOtp(email: string) {
+		await db
+			.delete(verificationTable)
+			.where(eq(verificationTable.identifier, this.loginOtpIdentifier(email)));
+	}
+
 	getPendingUser = async (
 		signupId: string,
 		options?: { bypassL1?: boolean },
@@ -139,10 +182,10 @@ class AuthService {
 		await cache.del(`otp:${signupId}`);
 
 		// Mark verified
-		await redis.setKeepTtl(`pending:${signupId}`, {
+		await cache.set(`pending:${signupId}`, {
 			...stored,
 			verified: true,
-		});
+		}, 900);
 
 		return { verified: true };
 	};
@@ -775,7 +818,8 @@ class AuthService {
 		if (!existing) {
 			const dummyOtp = (Math.floor(Math.random() * 900000) + 100000).toString();
 			const hashed = await CryptoTools.otp.hash(dummyOtp);
-			await cache.set(cacheKey, hashed, 900);
+			await this.saveLoginOtpHash(email, hashed);
+			await cache.set(cacheKey, hashed, this.loginOtpTtlSeconds);
 			return { success: true };
 		}
 
@@ -788,7 +832,8 @@ class AuthService {
 		}
 
 		const hashed = await CryptoTools.otp.hash(data.otp);
-		await cache.set(cacheKey, hashed, 900);
+		await this.saveLoginOtpHash(email, hashed);
+		await cache.set(cacheKey, hashed, this.loginOtpTtlSeconds);
 
 		return { success: true };
 	};
@@ -808,16 +853,18 @@ class AuthService {
 		}
 
 		const cached = await cache.get<string>(cacheKey);
-		if (!cached) {
+		const otpHash = cached ?? (await this.getLoginOtpHash(email));
+		if (!otpHash) {
 			throw HttpError.forbidden("OTP expired or not found. Request a new one.");
 		}
 
-		const isMatch = await CryptoTools.otp.compare(otp, cached);
+		const isMatch = await CryptoTools.otp.compare(otp, otpHash);
 		if (!isMatch) {
 			const newAttempts = attempts + 1;
 			await cache.set(attemptsKey, newAttempts, 900);
 			if (newAttempts >= 5) {
 				await cache.del(cacheKey);
+				await this.clearLoginOtp(email);
 				throw HttpError.forbidden("Too many OTP attempts. Try later.");
 			}
 			throw HttpError.forbidden("Invalid OTP");
@@ -825,6 +872,7 @@ class AuthService {
 
 		await cache.del(cacheKey);
 		await cache.del(attemptsKey);
+		await this.clearLoginOtp(email);
 
 		// Find the auth user
 		const authUser = await AuthRepo.Read.findByEmail(email);

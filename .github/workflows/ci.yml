@@ -28,4 +28,4 @@ jobs:
             chmod +x deploy.sh
             ./deploy.sh
 
-            echo "✅ Deployment completed"
+            echo "Deployment completed"
